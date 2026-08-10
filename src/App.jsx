@@ -33,13 +33,18 @@ const PLATFORM_APP_LINKS = {
   coupangeats: 'coupangeats://',
   yogiyo: 'https://url.customer.yogiyo.co.kr/MUVJRHpYU2',
   ddangyo: 'ddangyo://',
+  // capture/baemin.py의 BRAND_LOUNGE_DEEPLINK와 같은 주소 — 브랜드관
+  // 목록으로 바로 간다(추측 아니라 캡처 파이프라인이 실기로 확인한 값).
+  baemin: 'baemin://./webview?webview_url=' +
+    'https%3A%2F%2Finapp-webview.baemin.com%2Fbrand-lounge',
 }
 
 // 브랜드별 링크(brandLinks)가 없고 PLATFORM_APP_LINKS도 앱만 여는 커스텀
 // 스킴뿐인 플랫폼(쿠팡이츠·땡겨요)은 앱을 열어도 그 브랜드 화면으로
 // 안 간다 — 최소한 검색이라도 되게 구글 검색으로 보낸다. 앱 안의 실제
 // 브랜드 검색 딥링크 스킴은 확인된 게 없다(추측으로 만들면 안 열리는
-// 경로를 또 만드는 꼴이라 안 쓴다).
+// 경로를 또 만드는 꼴이라 안 쓴다). 배민은 브랜드관 목록 딥링크가 있어
+// 검색 폴백이 필요 없다.
 const PLATFORM_SEARCH_QUERY = {
   coupangeats: '쿠팡이츠',
   ddangyo: '땡겨요',
