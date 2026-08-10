@@ -35,6 +35,22 @@ const PLATFORM_APP_LINKS = {
   ddangyo: 'ddangyo://',
 }
 
+// 브랜드별 링크(brandLinks)가 없고 PLATFORM_APP_LINKS도 앱만 여는 커스텀
+// 스킴뿐인 플랫폼(쿠팡이츠·땡겨요)은 앱을 열어도 그 브랜드 화면으로
+// 안 간다 — 최소한 검색이라도 되게 구글 검색으로 보낸다. 앱 안의 실제
+// 브랜드 검색 딥링크 스킴은 확인된 게 없다(추측으로 만들면 안 열리는
+// 경로를 또 만드는 꼴이라 안 쓴다).
+const PLATFORM_SEARCH_QUERY = {
+  coupangeats: '쿠팡이츠',
+  ddangyo: '땡겨요',
+}
+
+function searchFallbackLink(platformKey, brandName) {
+  const prefix = PLATFORM_SEARCH_QUERY[platformKey]
+  if (!prefix) return null
+  return `https://www.google.com/search?q=${encodeURIComponent(`${prefix} ${brandName}`)}`
+}
+
 // 필터 탭 목록. key는 API가 내려주는 brand.category 값과 맞춰야 한다
 // (실제 브랜드별 분류는 API 쪽 brands.yml이 단일 출처다).
 const CATEGORIES = [
@@ -165,7 +181,9 @@ function detailRows(offer) {
 function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle }) {
   const held = offer.status === 'held'
   const showRangeBadge = offer.qualifier !== null
-  const link = brandLinks?.[offer.platform] ?? PLATFORM_APP_LINKS[offer.platform]
+  const link = brandLinks?.[offer.platform]
+    ?? searchFallbackLink(offer.platform, brandName)
+    ?? PLATFORM_APP_LINKS[offer.platform]
 
   const content = (
     <>
