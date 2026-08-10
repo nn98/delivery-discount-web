@@ -63,6 +63,7 @@ const CATEGORIES = [
   { key: 'chicken', label: '치킨' },
   { key: 'pizza', label: '피자' },
   { key: 'fastfood', label: '패스트푸드' },
+  { key: 'snack', label: '분식' },
   { key: 'cafe', label: '카페' },
   { key: 'convenience', label: '편의점' },
 ]
