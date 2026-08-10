@@ -216,8 +216,11 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle }) {
         <a
           className="offer__chip offer__chip--link"
           href={link}
-          target="_blank"
-          rel="noreferrer"
+          // 커스텀 스킴(coupangeats://, ddangyo://, baemin://)은 새 탭에서
+          // 열면 브라우저가 about:blank만 띄우고 인텐트를 넘기지 않는다.
+          // 같은 탭에서 열어야 앱으로 간다. http(s) 링크만 새 탭에 둔다.
+          target={link.startsWith('http') ? '_blank' : undefined}
+          rel={link.startsWith('http') ? 'noreferrer' : undefined}
           onClick={() => track('offer_link_click', { brand: brandName, platform: offer.platform })}
         >
           {content}
