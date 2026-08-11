@@ -804,9 +804,7 @@ export default function App() {
       <header className="page-head">
         <div className="page-head__row">
           <div className="page-head__banner">
-            <h1 className="page-head__logo">
-              <img src="/main_logo.png" alt="오늘의할인" />
-            </h1>
+            <h1 className="page-head__logo">오늘의할인</h1>
             <div className="page-head__apps" aria-label="비교 대상 배달앱">
               {PLATFORMS.map((p) => <PlatformBadge key={p.key} platformKey={p.key} />)}
             </div>
@@ -831,34 +829,39 @@ export default function App() {
           ) : (
             <AmountBandSlider mode={classifyBy} bands={tabs} active={filterKey} onSelect={handleFilterSelect} />
           )}
-          {/* 멤버십 버튼 + 검색을 한 그룹으로 묶어 레이블 줄 오른쪽 끝에
-              띄운다(position:absolute, .toolbar__actions) — 같은 flex
-              행 안에 있어서 검색이 펼쳐져 폭이 늘어나면 그 왼쪽에 있는
-              멤버십 버튼도 자연히 같이 밀려난다("검색버튼이랑 같이 이동"),
-              별도 좌표 계산이 필요 없다. */}
-          <div className="toolbar__actions">
-            <div className="membership">
-              <button
-                type="button"
-                className="membership-trigger"
-                aria-expanded={menuOpen}
-                aria-label="멤버십(배민클럽/와우/패스) 적용"
-                onClick={() => setMenuOpen((v) => {
-                  if (!v) track('membership_open')
-                  return !v
-                })}
-              >
-                멤버십 <span className="pill pill--pending">구현예정</span>
-              </button>
-              <MembershipMenu
-                open={menuOpen}
-                onClose={() => setMenuOpen(false)}
-                selected={membership}
-                onToggle={toggleMembership}
-              />
-            </div>
-            <SearchControl value={search} onChange={setSearch} />
+        </div>
+      </div>
+
+      {/* 멤버십 + 검색만 화면에 계속 떠 있는다(.floating-actions는
+          position:fixed). 타이틀바와 카테고리 줄은 스크롤과 함께 올라가
+          사라지므로, 스크롤 뒤에도 손에 닿아야 하는 이 둘만 남긴다.
+          바깥 래퍼는 main과 같은 폭·여백을 그대로 따라가 본문 오른쪽 끝에
+          맞고, 자기 영역은 pointer-events:none이라 아래 카드 클릭을 막지
+          않는다. 검색이 펼쳐져 폭이 늘어나면 같은 flex 행의 멤버십 버튼이
+          자연히 왼쪽으로 밀려난다("검색버튼이랑 같이 이동"). */}
+      <div className="floating-actions" aria-label="검색과 멤버십">
+        <div className="floating-actions__inner">
+          <div className="membership">
+            <button
+              type="button"
+              className="membership-trigger"
+              aria-expanded={menuOpen}
+              aria-label="멤버십(배민클럽/와우/패스) 적용"
+              onClick={() => setMenuOpen((v) => {
+                if (!v) track('membership_open')
+                return !v
+              })}
+            >
+              멤버십 <span className="pill pill--pending">구현예정</span>
+            </button>
+            <MembershipMenu
+              open={menuOpen}
+              onClose={() => setMenuOpen(false)}
+              selected={membership}
+              onToggle={toggleMembership}
+            />
           </div>
+          <SearchControl value={search} onChange={setSearch} />
         </div>
       </div>
 

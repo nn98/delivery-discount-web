@@ -54,7 +54,8 @@
   [ADR-002](docs/decisions/ADR-002-temporary-ga4-for-revisit-accuracy.md)
 - `src/main.jsx` — `@vercel/analytics/react`의 `<Analytics />`도 여기서
   마운트(Vercel 대시보드용, 자체 `analytics.js`와는 별개)
-- `public/main_logo.png` — 헤더 로고. "이번주 할인" 텍스트를 대체함
+- `public/main_logo.png` — 예전 헤더 로고 이미지. 지금 헤더는 텍스트
+  `h1`("오늘의할인")이라 화면에서 쓰지 않는다
 - `public/logos/` — 브랜드 로고 (파일명 = API가 내려주는 대표명, 규칙은 `public/logos/README.md` 참고)
 - `public/platform-icons/` — 배민/쿠팡이츠/땡겨요/요기요 아이콘
 - `public/links/` — 각 앱에서 공유 기능으로 받은 브랜드 바로가기 원본 메모
