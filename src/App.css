@@ -64,12 +64,16 @@ main { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 4rem; }
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   margin-bottom: -1.0rem;
-  background: transparent;
-  transition: background 150ms ease;
-}
-/* 맨 위(scrollY 0)에선 없다가, 스크롤하면 위에서 아래로 검정 → 투명. */
-.title-bar--scrolled {
-  background: linear-gradient(-180deg, rgba(0, 0, 0, .3) 0%, transparent 50%);
+  /* 스크롤 상태로 배경을 껐다 켜면 "없던 판이 갑자기 생기는" 것처럼
+     보였다 — 대신 항상 같은 그라데이션을 깔되, 시작색을 페이지 배경색
+     자체(--bg)로 잡는다. 맨 위에선 배경과 완전히 같은 색이라 경계가
+     아예 안 보이고, 카드가 밑으로 지나갈 때만 그 카드가 위쪽에서
+     서서히 가려지면서 아래로 자연스럽게 투명해진다(하단 페이드). */
+  background: linear-gradient(to bottom,
+    var(--bg) 0%,
+    var(--bg) 55%,
+    color-mix(in srgb, var(--bg) 55%, transparent) 80%,
+    transparent 100%);
 }
 .title-bar__inner {
   display: flex;
@@ -1010,7 +1014,7 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
 .site-footer__fine { font-size: .7rem; opacity: .85; }
 
 @media (max-width: 560px) {
-  main { padding: 1.5rem 1rem 3rem; }
+  main { padding: 0 1rem 3rem; }
   /* .brand-grid는 이제 auto-fit/minmax라 이 폭에서 이미 1열이 된다. */
   .banner-dock__inner { padding-left: 1rem; padding-right: 1rem; }
 }
