@@ -58,9 +58,15 @@ main { max-width: 880px; margin: 0 auto; padding: 0.5rem 1.25rem 4rem; }
   gap: .4rem;
   padding: .35rem 0 .55rem;
   margin-bottom: -1.0rem;
-  transition: padding 120ms ease, gap 120ms ease;
+  transition: padding 120ms ease, gap 120ms ease, background 150ms ease;
 }
-.title-bar--collapsed { padding: .15rem 0 .3rem; gap: .25rem; }
+/* 접히면 카드 위에 바로 얹혀서 구분이 잘 안 됐다 — 옅은 검정
+   그라데이션을 위에서 아래로 살짝 깔아 대비만 확보한다. */
+.title-bar--collapsed {
+  padding: .15rem 0 .3rem;
+  gap: .25rem;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, .16), transparent);
+}
 
 h1 {
   font-size: 1.5rem;
@@ -89,11 +95,10 @@ h1 {
 }
 .title-bar__scroll::-webkit-scrollbar { display: none; }
 
-/* 4칸 선형 그리드 — 한 줄로 나란히. */
+/* 그리드 취소, 한 줄 flex로 — 아이콘끼리 좀 더 붙인다. */
 .page-head__apps {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: .3rem;
+  display: flex;
+  gap: .2rem;
   margin: 0;
   flex: none;
 }
@@ -101,7 +106,6 @@ h1 {
   width: 34px; height: 34px; border-radius: 10px;
   transition: width 120ms ease, height 120ms ease;
 }
-.title-bar--collapsed .page-head__apps { gap: .2rem; }
 .title-bar--collapsed .page-head__apps .platform-badge { width: 20px; height: 20px; border-radius: 7px; }
 
 /* 배지 바로 아래 뜨는 멤버십 안내 팝오버 — 순수 CSS hover/focus,

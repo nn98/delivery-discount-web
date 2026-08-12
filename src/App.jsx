@@ -502,20 +502,36 @@ export default function App() {
   // 스크롤 56px 넘으면 콤팩트 모드로 접힌다(배지·패딩 축소, 빠르게
   // — 120ms). 마우스를 올리면 다시 펼쳐 보여준다(hover, 살짝 들어오는
   // 지연을 둬서 스치기만 해도 안 열리게, 나가는 지연을 둬서 버튼
-  // 사이 이동 중 깜빡이지 않게). compact는 스크롤 상태와 hover를
-  // AND/NOT으로만 합치므로, hover 중 스크롤 이벤트가 몇 번 더 와도
-  // (예전 겪은 "펼치자마자 도로 줄어듦" 버그, scrollTop 보정 때문에
-  // sticky 박스가 커질 때 발생) hover가 유지되는 한 절대 다시 안
-  // 접힌다 — 소비형 플래그가 아니라서 그 버그 자체가 성립하지 않는다.
+  // 사이 이동 중 깜빡이지 않게).
   const [scrolledPast, setScrolledPast] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const compact = scrolledPast && !hovered
+  const titleBarRef = useRef(null)
+  const mouseYRef = useRef(-1)
+  useEffect(() => {
+    const onMove = (e) => { mouseYRef.current = e.clientY }
+    window.addEventListener('mousemove', onMove, { passive: true })
+    return () => window.removeEventListener('mousemove', onMove)
+  }, [])
   useEffect(() => {
     const THRESHOLD = 56
-    const onScroll = () => setScrolledPast(window.scrollY > THRESHOLD)
+    const onScroll = () => {
+      setScrolledPast(window.scrollY > THRESHOLD)
+      // sticky라 스크롤해도 타이틀바는 화면상 같은 자리에 그대로
+      // 있는다 — 커서가 그 위에 "가만히 멈춰 선" 채로(휠/키보드로만
+      // 스크롤) 스크롤하면 mouseleave가 안 뜬다. hovered가 true인
+      // 동안은 매 스크롤마다 커서 y좌표를 타이틀바의 지금 경계와 다시
+      // 대조해서, 실제로는 벗어나 있는데도 계속 펼친 채로 안 접히는
+      // 걸 막는다(카테고리 클릭으로 최상단 이동 후 다시 안 접히던 버그).
+      if (hovered && titleBarRef.current) {
+        const r = titleBarRef.current.getBoundingClientRect()
+        const stillOver = mouseYRef.current >= r.top && mouseYRef.current <= r.bottom
+        if (!stillOver) setHovered(false)
+      }
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-  const compact = scrolledPast && !hovered
+  }, [hovered])
   const hoverTimerRef = useRef(null)
   const handleTitleBarEnter = () => {
     clearTimeout(hoverTimerRef.current)
@@ -524,6 +540,15 @@ export default function App() {
   const handleTitleBarLeave = () => {
     clearTimeout(hoverTimerRef.current)
     hoverTimerRef.current = setTimeout(() => setHovered(false), 150)
+  }
+  // 터치 기기는 hover가 없다 — 접힌 채로 첫 탭은 실제 버튼(카테고리
+  // 선택 등)을 누르는 대신 펼치기만 한다(캡처 단계에서 가로채
+  // preventDefault). 펼쳐진 다음 탭부터는 그 버튼이 정상 동작한다.
+  const handleTitleBarClickCapture = (e) => {
+    if (!compact) return
+    e.preventDefault()
+    e.stopPropagation()
+    setHovered(true)
   }
 
   // URL 해시(#brand-이름)로 카드 하나를 콕 집어 공유할 수 있게 한다.
@@ -603,9 +628,11 @@ export default function App() {
           ·초기화·검색은 항상 붙어 있어야 하는 조작이라 스크롤 영역
           바깥에 고정한다. */}
       <div
+        ref={titleBarRef}
         className={`title-bar${compact ? ' title-bar--collapsed' : ''}`}
         onMouseEnter={handleTitleBarEnter}
         onMouseLeave={handleTitleBarLeave}
+        onClickCapture={handleTitleBarClickCapture}
       >
         <h1 className="sr-only">오늘의할인 — 배달앱 브랜드 할인 비교</h1>
         <div className="title-bar__scroll" onWheel={handleLabelsWheel}>
