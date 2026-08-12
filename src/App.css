@@ -128,6 +128,36 @@ h1 {
   pointer-events: auto;
 }
 
+/* 플랫폼을 필터로 고르면 드러나는 멤버십 칩 줄(progressive disclosure).
+   여전히 "구현예정" 배지가 붙지만, 배지 hover 팝오버(정보만)와 달리
+   실제로 눌러서 켜고 끌 수 있는 진짜 버튼이다. */
+.membership-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin: -.4rem 0 .8rem;
+}
+.membership-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .5rem .3rem .7rem;
+  font-size: .8rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+.membership-chip:hover { border-color: var(--text-muted); color: var(--text); }
+.membership-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.membership-chip--active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-color: var(--accent);
+}
+
 
 /* ---------------------------------------------------------------------------
    당일 행사 배너 (EventBanner.jsx)
