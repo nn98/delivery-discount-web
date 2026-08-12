@@ -80,21 +80,29 @@ h1 {
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
+  /* 스크롤 가능함을 암시하는 페이드 — 시작/끝 위치와 무관하게 항상
+     양쪽 다 건다(스크롤 위치별로 동적으로 빼는 건 JS가 필요해서
+     생략, 끝에서도 옅게 페이드되는 정도는 허용). */
+  mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent);
   scrollbar-width: none;
 }
 .title-bar__scroll::-webkit-scrollbar { display: none; }
 
+/* 4칸 선형 그리드 — 한 줄로 나란히. */
 .page-head__apps {
-  display: flex;
-  gap: .35rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .3rem;
   margin: 0;
   flex: none;
 }
 .page-head__apps .platform-badge {
-  width: 40px; height: 40px; border-radius: 11px;
+  width: 34px; height: 34px; border-radius: 10px;
   transition: width 120ms ease, height 120ms ease;
 }
-.title-bar--collapsed .page-head__apps .platform-badge { width: 26px; height: 26px; border-radius: 8px; }
+.title-bar--collapsed .page-head__apps { gap: .2rem; }
+.title-bar--collapsed .page-head__apps .platform-badge { width: 20px; height: 20px; border-radius: 7px; }
 
 /* 배지 바로 아래 뜨는 멤버십 안내 팝오버 — 순수 CSS hover/focus,
    JS 상태 없이 :hover(마우스)와 :focus-within(키보드 탭)만으로 연다. */
