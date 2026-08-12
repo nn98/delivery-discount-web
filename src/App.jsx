@@ -598,6 +598,21 @@ export default function App() {
           </div>
           <CategoryBar categories={tabs} active={filterKey} onSelect={handleFilterSelect} />
         </div>
+        {/* 옆으로 더 스크롤할 게 있다는 힌트 — 오른쪽으로 살짝 반복 이동. */}
+        <svg
+          className="scroll-hint-arrow"
+          aria-hidden="true"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="9 6 15 12 9 18" />
+        </svg>
         <button
           type="button"
           className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}

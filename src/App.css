@@ -48,6 +48,8 @@ main { max-width: 880px; margin: 0 auto; padding: 0.5rem 1.25rem 4rem; }
    둘 다 넘칠 수 있는 목록이라 따로 스크롤하면 한쪽만 밀리고 나머지는
    안 따라와 어색했다. 분류 선택(▾)·안내(?)·초기화·검색은 스크롤
    영역 밖에 고정한다. */
+/* 카드 위에 바로 얹혀서 구분이 잘 안 됐다 — 옅은 검정 그라데이션을
+   위에서 아래로 살짝 깔아 대비만 확보한다. */
 .title-bar {
   position: sticky;
   top: 0;
@@ -57,6 +59,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0.5rem 1.25rem 4rem; }
   gap: .4rem;
   padding: .35rem 0 .55rem;
   margin-bottom: -1.0rem;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, .16), transparent);
 }
 h1 {
   font-size: 1.5rem;
@@ -377,6 +380,20 @@ h1 {
   white-space: nowrap;
 }
 .pill--pending { background: var(--pending-bg); color: var(--pending-text); }
+
+/* 옆으로 더 있다는 힌트 — 오른쪽으로 살짝 갔다가 돌아오길 반복한다. */
+.scroll-hint-arrow {
+  flex: none;
+  color: var(--text-muted);
+  animation: scroll-hint-nudge 1.4s ease-in-out infinite;
+}
+@keyframes scroll-hint-nudge {
+  0%, 100% { transform: translateX(0); opacity: .5; }
+  50% { transform: translateX(4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint-arrow { animation: none; }
+}
 
 .filter-reset-btn {
   display: flex;
