@@ -1,14 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { fetchBrands } from './api.js'
+import { fetchBanners, fetchBrands } from './api.js'
 import { track } from './analytics.js'
-
-const PLATFORMS = [
-  { key: 'baemin', label: '배민', initial: '배' },
-  { key: 'coupangeats', label: '쿠팡이츠', initial: '쿠' },
-  { key: 'ddangyo', label: '땡겨요', initial: '땡' },
-  { key: 'yogiyo', label: '요기요', initial: '요' },
-]
-const PLATFORM_BY_KEY = Object.fromEntries(PLATFORMS.map((p) => [p.key, p]))
+import EventBanner from './EventBanner.jsx'
+import { BrandLogo, PlatformBadge, PLATFORMS, PLATFORM_BY_KEY } from './logos.jsx'
 
 // brands.yml에 브랜드별 링크가 없는 앱은 여기 링크로 앱만 연다.
 // 전부 실기 ADB로 착지 화면까지 확인한 값이다(2026-08-05).
@@ -109,10 +103,6 @@ const MEMBERSHIP_OPTIONS = [
   { key: 'ddangyo', label: '지역화폐' },
 ]
 
-function assetSrc(base, name) {
-  return `${base}/${encodeURIComponent(name)}.png`
-}
-
 function won(value) {
   return `${value.toLocaleString()}원`
 }
@@ -121,49 +111,6 @@ function won(value) {
 // 쓰되, 공백만 앵커에서 다루기 까다로우니 치환한다.
 function brandCardId(name) {
   return `brand-${name.trim().replace(/\s+/g, '_')}`
-}
-
-// 폴백 글자(span)는 position:absolute라 static인 img보다 항상 위에 그려진다
-// (DOM 순서와 무관하게 positioned 요소가 위로 쌓임). onError로 깨진 이미지만
-// 숨기던 이전 방식은 "로드는 됐지만 저해상도라 흐릿한" 로고 위에 글자가 겹쳐
-// 보이는 문제가 있었다(예: 또래오래, 파파존스). 로드 성공 시 폴백을 직접
-// 숨겨서 이미지·글자 중 하나만 보이게 한다.
-function hideSiblingFallback(e) {
-  const fallback = e.currentTarget.nextElementSibling
-  if (fallback) fallback.style.display = 'none'
-}
-
-function PlatformBadge({ platformKey }) {
-  const p = PLATFORM_BY_KEY[platformKey]
-  return (
-    <span className={`platform-badge platform-badge--${p.key}`} title={p.label}>
-      <img
-        src={assetSrc('/platform-icons', p.key)}
-        alt=""
-        onLoad={hideSiblingFallback}
-        onError={(e) => { e.currentTarget.style.display = 'none' }}
-      />
-      <span className="platform-badge__fallback" aria-hidden="true">{p.initial}</span>
-      <span className="sr-only">{p.label}</span>
-    </span>
-  )
-}
-
-function BrandLogo({ name }) {
-  const fileName = name
-      .replace(/[^a-zA-Z0-9가-힣]+/g, '_')
-      .replace(/^_|_$/g, '');
-  return (
-    <span className="brand-logo">
-      <img
-        src={assetSrc('/logos', fileName)}
-        alt={name}
-        onLoad={hideSiblingFallback}
-        onError={(e) => { e.currentTarget.style.display = 'none' }}
-      />
-      <span className="brand-logo__fallback" aria-hidden="true">{name.trim().charAt(0)}</span>
-    </span>
-  )
 }
 
 function offerAmountText(offer) {
@@ -687,9 +634,12 @@ function MembershipMenu({ open, onClose, selected, onToggle }) {
         aria-label="멤버십·지역화폐 반영"
         aria-hidden={!open}
       >
+        {/* 트리거가 26px 원으로 줄면서 "멤버십 구현예정" 라벨이 원 안에 안
+            들어간다. 멤버십 로직이 아직 없다는 사실 자체는 계속 드러나야
+            하므로 배지를 없애지 않고 여기로 옮겼다. */}
         <div className="dropdown__head">
           <span className="dropdown__title">멤버십·지역화폐 반영</span>
-          <span className="pill pill--pending">준비 중</span>
+          <span className="pill pill--pending">구현예정</span>
         </div>
         <p className="dropdown__note">
           체크해두면 이후 각 앱의 멤버십·지역화폐 혜택까지 반영한 실질 금액을 보여줄 예정입니다.
@@ -717,6 +667,7 @@ function MembershipMenu({ open, onClose, selected, onToggle }) {
 
 export default function App() {
   const [brands, setBrands] = useState(null)
+  const [banners, setBanners] = useState([])
   const [error, setError] = useState(null)
   const [membership, setMembership] = useState({})
   const [menuOpen, setMenuOpen] = useState(false)
@@ -740,6 +691,12 @@ export default function App() {
 
   useEffect(() => {
     fetchBrands().then(setBrands).catch((e) => setError(e.message))
+  }, [])
+
+  // 배너 실패는 삼킨다. 카드 그리드와 달리 배너는 부가 정보라, 못 불러왔다는
+  // 사실을 화면에 띄울 이유가 없다 — 빈 목록과 같게 다룬다.
+  useEffect(() => {
+    fetchBanners().then(setBanners).catch(() => setBanners([]))
   }, [])
 
   const toggleMembership = (key) =>
@@ -812,8 +769,17 @@ export default function App() {
         </div>
       </header>
 
-      <div className="toolbar">
-        <div className="toolbar__labels">
+      {/* 배너가 0건이거나 호출이 실패하면 아무것도 그리지 않는다(EventBanner가
+          null을 돌려준다). 카드 그리드의 "불러오기 실패"와 다르게 다룬다 —
+          배너는 부가 정보라서 실패가 화면을 어지럽히면 안 된다. */}
+      <EventBanner banners={banners} />
+
+      {/* 분류 화살표, 안내, 카테고리, 멤버십, 검색이 떠 있는 툴바 하나다.
+          첫 화면에서는 배너 아래 제자리에 있다가 스크롤하면 상단에 붙는다
+          (position:sticky). 멤버십 버튼이 카테고리 탭 위를 덮어 선택
+          하이라이트까지 가리던 문제가 같은 flex 행에 놓이면서 사라진다. */}
+      <div className="toolbar" aria-label="분류와 검색">
+        <div className="toolbar__inner">
           <ClassifyPicker
             mode={classifyBy}
             onSelect={(mode) => {
@@ -829,18 +795,7 @@ export default function App() {
           ) : (
             <AmountBandSlider mode={classifyBy} bands={tabs} active={filterKey} onSelect={handleFilterSelect} />
           )}
-        </div>
-      </div>
 
-      {/* 멤버십 + 검색만 화면에 계속 떠 있는다(.floating-actions는
-          position:fixed). 타이틀바와 카테고리 줄은 스크롤과 함께 올라가
-          사라지므로, 스크롤 뒤에도 손에 닿아야 하는 이 둘만 남긴다.
-          바깥 래퍼는 main과 같은 폭·여백을 그대로 따라가 본문 오른쪽 끝에
-          맞고, 자기 영역은 pointer-events:none이라 아래 카드 클릭을 막지
-          않는다. 검색이 펼쳐져 폭이 늘어나면 같은 flex 행의 멤버십 버튼이
-          자연히 왼쪽으로 밀려난다("검색버튼이랑 같이 이동"). */}
-      <div className="floating-actions" aria-label="검색과 멤버십">
-        <div className="floating-actions__inner">
           <div className="membership">
             <button
               type="button"
@@ -852,7 +807,10 @@ export default function App() {
                 return !v
               })}
             >
-              멤버십 <span className="pill pill--pending">구현예정</span>
+              <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2.5" y="5" width="19" height="14" rx="3" />
+                <line x1="2.5" y1="10" x2="21.5" y2="10" />
+              </svg>
             </button>
             <MembershipMenu
               open={menuOpen}
