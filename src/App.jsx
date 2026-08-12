@@ -67,6 +67,8 @@ const CATEGORIES = [
   { key: 'snack', label: '분식' },
   { key: 'cafe', label: '카페' },
   { key: 'convenience', label: '편의점' },
+  { key: 'korean', label: '한식' },
+  { key: 'chinese', label: '중식' },
 ]
 
 // 카테고리 탭을 무엇 기준으로 나눌지. 'discount'/'minOrder'는 브랜드
