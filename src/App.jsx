@@ -562,57 +562,67 @@ export default function App() {
           배너는 부가 정보라서 실패가 화면을 어지럽히면 안 된다. */}
       <EventBanner banners={banners} />
       {/* 플랫폼 배지와 카테고리 탭을 한 스크롤 영역에 같이 넣는다. main 밖에 두어 full-bleed가 100vw 트릭 없이 자연히 성립하고, sticky도 안 깨진다. */}
+      {/* 두 줄로 나눈다 — 윗줄은 앱(필터)과 검색·초기화, 아랫줄은 카테고리.
+          한 줄에 다 넣으면 좁은 화면에서 배지·탭이 서로 밀어내 둘 다 잘렸다.
+          main 밖에 두어 full-bleed가 100vw 트릭 없이 성립하고 sticky도 안 깨진다. */}
       <div className="title-bar">
         <div className="title-bar__inner">
-        <h1 className="sr-only">오늘의할인 — 배달앱 브랜드 할인 비교</h1>
-        <div className="title-bar__scroll" onWheel={handleLabelsWheel}>
-          <div className="page-head__apps" aria-label="비교 대상 배달앱">
-            {PLATFORMS.map((p) => (
-              <span key={p.key} className="platform-badge-wrap">
-                <PlatformBadge
-                  platformKey={p.key}
-                  onClick={(e) => { e.stopPropagation(); togglePlatform(p.key) }}
-                  active={platformFilter.size === 0 ? undefined : platformFilter.has(p.key)}
-                />
-                {/* hover(또는 키보드 포커스)하면 그 앱의 멤버십 안내가
-                    배지 바로 아래 뜬다. 로직은 여전히 보류 상태(계산 안
-                    바뀜), 안내만 옮겼다. */}
-                <div className="membership-popover" role="note">
-                  <span className="membership-popover__title">{MEMBERSHIP_LABEL[p.key]}</span>
-                  <span className="pill pill--pending">구현예정</span>
-                </div>
-              </span>
-            ))}
+          <h1 className="sr-only">오늘의할인 — 배달앱 브랜드 할인 비교</h1>
+
+          {/* 1줄: 앱 배지(필터 토글) + 검색·초기화 */}
+          <div className="title-bar__row title-bar__row--apps">
+            <div className="page-head__apps" aria-label="비교 대상 배달앱">
+              {PLATFORMS.map((p) => (
+                <span key={p.key} className="platform-badge-wrap">
+                  <PlatformBadge
+                    platformKey={p.key}
+                    onClick={(e) => { e.stopPropagation(); togglePlatform(p.key) }}
+                    active={platformFilter.size === 0 ? undefined : platformFilter.has(p.key)}
+                  />
+                  {/* hover(또는 키보드 포커스)하면 그 앱의 멤버십 안내가
+                      배지 바로 아래 뜬다. 로직은 여전히 보류 상태. */}
+                  <div className="membership-popover" role="note">
+                    <span className="membership-popover__title">{MEMBERSHIP_LABEL[p.key]}</span>
+                    <span className="pill pill--pending">구현예정</span>
+                  </div>
+                </span>
+              ))}
+            </div>
+            <button
+              type="button"
+              className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}
+              onClick={resetFilters}
+              aria-label="필터 초기화"
+            >
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <polyline points="21 3 21 9 15 9" />
+              </svg>
+            </button>
+            <SearchControl value={search} onChange={setSearch} />
           </div>
-          <CategoryBar categories={tabs} active={filterKey} onSelect={handleFilterSelect} />
-        </div>
-        {/* 옆으로 더 스크롤할 게 있다는 힌트 — 오른쪽으로 살짝 반복 이동. */}
-        <svg
-          className="scroll-hint-arrow"
-          aria-hidden="true"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="9 6 15 12 9 18" />
-        </svg>
-        <button
-          type="button"
-          className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}
-          onClick={resetFilters}
-          aria-label="필터 초기화"
-        >
-          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 1 1-3-6.7" />
-            <polyline points="21 3 21 9 15 9" />
-          </svg>
-        </button>
-        <SearchControl value={search} onChange={setSearch} />
+
+          {/* 2줄: 카테고리 탭 — 이 줄만 가로 스크롤한다. */}
+          <div className="title-bar__row title-bar__row--tabs">
+            <div className="title-bar__scroll" onWheel={handleLabelsWheel}>
+              <CategoryBar categories={tabs} active={filterKey} onSelect={handleFilterSelect} />
+            </div>
+            {/* 옆으로 더 있다는 힌트 — 오른쪽으로 살짝 반복 이동. */}
+            <svg
+              className="scroll-hint-arrow"
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="9 6 15 12 9 18" />
+            </svg>
+          </div>
         </div>
         {/* 선택한 앱의 멤버십 — 타이틀바 아래 여백에 얇게 붙는다.
             absolute라 카드 그리드를 밀어내지 않고, 아직 계산 로직이
