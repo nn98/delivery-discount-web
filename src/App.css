@@ -163,15 +163,26 @@ h1 {
   pointer-events: auto;
 }
 
-/* 선택한 앱의 멤버십 — 배지 옆에 얇게 붙는 라벨. 아직 계산 로직이
-   없어서 누를 수 없는 표시용이고, 자리는 최소로 차지한다(글씨뿐이라
-   테두리만 옅게, 높이는 배지보다 낮게). */
+/* 선택한 앱의 멤버십 — 타이틀바 바로 아래 여백에 얇게 붙는 줄.
+   absolute라 문서 흐름에서 빠져 카드 그리드를 안 밀어낸다. 아직
+   계산 로직이 없어 누를 수 없는 표시용이다. */
+.membership-tags {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+  max-width: 880px;
+  margin: -.2rem auto 0;
+  padding: 0 .75rem;
+  pointer-events: none;
+}
 .membership-tag {
   flex: none;
-  align-self: center;
-  margin-left: .15rem;
-  padding: .1rem .4rem;
-  font-size: .68rem;
+  padding: .05rem .4rem;
+  font-size: .66rem;
   line-height: 1.5;
   white-space: nowrap;
   color: var(--pending-text);

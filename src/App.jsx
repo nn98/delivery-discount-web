@@ -582,14 +582,6 @@ export default function App() {
                 </div>
               </span>
             ))}
-            {/* 선택한 앱의 멤버십은 배지 바로 옆에 얇은 라벨로만 붙는다 —
-                아직 계산 로직이 없어 누를 수 없고(disabled), 자리도 최소로
-                차지하면서 어떤 앱 걸 말하는지는 바로 읽힌다. */}
-            {PLATFORMS.filter((p) => platformFilter.has(p.key)).map((p) => (
-              <span key={`m-${p.key}`} className="membership-tag" title="구현예정">
-                {MEMBERSHIP_LABEL[p.key]}
-              </span>
-            ))}
           </div>
           <CategoryBar categories={tabs} active={filterKey} onSelect={handleFilterSelect} />
         </div>
@@ -621,6 +613,18 @@ export default function App() {
         </button>
         <SearchControl value={search} onChange={setSearch} />
         </div>
+        {/* 선택한 앱의 멤버십 — 타이틀바 아래 여백에 얇게 붙는다.
+            absolute라 카드 그리드를 밀어내지 않고, 아직 계산 로직이
+            없어 누를 수 없는 표시용이다. */}
+        {platformFilter.size > 0 && (
+          <div className="membership-tags" aria-label="선택한 앱 멤버십">
+            {PLATFORMS.filter((p) => platformFilter.has(p.key)).map((p) => (
+              <span key={p.key} className="membership-tag" title="구현예정">
+                {MEMBERSHIP_LABEL[p.key]}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {error && <p className="msg msg--error">불러오기 실패: {error}</p>}
