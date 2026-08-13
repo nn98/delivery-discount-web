@@ -79,8 +79,28 @@ main { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 4rem; }
   gap: .4rem;
   min-width: 0;
 }
-/* 앱 줄: 배지가 왼쪽에 몰리고 검색·초기화가 오른쪽 끝으로. */
+/* 앱 줄: 배지만 남아 왼쪽에 몰린다. */
 .title-bar__row--apps .page-head__apps { margin-right: auto; }
+
+/* 검색·초기화 — 바 안이 아니라 바 바로 아래 여백에 떠 있다.
+   absolute라 문서 흐름에서 빠져 카드 그리드를 밀어내지 않고,
+   윗줄은 배지 전용으로 비워둔다. 컨테이너는 클릭을 통과시키고
+   버튼만 받는다(그 아래 카드가 가려지지 않게). */
+.title-bar__float {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: .4rem;
+  max-width: 880px;
+  margin: -.2rem auto 0;
+  padding: 0 .75rem;
+  pointer-events: none;
+  z-index: 5;
+}
+.title-bar__float > * { pointer-events: auto; }
 
 h1 {
   font-size: 1.5rem;
@@ -112,25 +132,25 @@ h1 {
 }
 .title-bar__scroll::-webkit-scrollbar { display: none; }
 
-/* 아이콘끼리 살짝 겹치게 — 음수 margin으로 뒤 요소를 왼쪽으로 당긴다. */
+/* 아이콘끼리 살짝 겹치게 — 음수 margin으로 뒤 요소를 왼쪽으로 당긴다.
+   왼쪽 여백 없이 바 시작점에 붙인다. */
 .page-head__apps {
   display: flex;
   margin: 0;
   flex: none;
-  padding-left: 8px;
 }
 /* 줄을 나눠 자리가 생긴 만큼 배지를 키운다 — 앱 필터가 이 화면의
-   1차 조작이라 제일 크게 잡는다. 원형은 검색·초기화 버튼과 한 세트로
-   읽히게 유지하고, 흰 로고(쿠팡이츠 등)가 흰 배경에 묻히지 않도록
-   옅은 회색 그라데이션 + 링을 배지 자체에 깐다. */
+   1차 조작이라 제일 크게 잡는다. 배경·테두리·그림자는 전부 걷어내
+   로고만 남긴다(칩 네 개가 나란히 서면 로고보다 판이 먼저 읽혔다). */
 .page-head__apps .platform-badge {
   width: 46px; height: 46px; border-radius: 50%;
-  margin-left: -8px;
-  background-image: linear-gradient(160deg, rgba(255, 255, 255, .55), rgba(0, 0, 0, .16));
-  border: 1px solid rgba(0, 0, 0, .12);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+  margin-left: -6px;
+  background: none;
+  border: 0;
+  box-shadow: none;
   transition: width 120ms ease, height 120ms ease;
 }
+.page-head__apps .platform-badge-wrap:first-child .platform-badge { margin-left: 0; }
 .page-head__apps .platform-badge img { padding: 7px; }
 
 /* 배지 바로 아래 뜨는 멤버십 안내 팝오버 — 순수 CSS hover/focus,

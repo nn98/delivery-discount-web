@@ -569,7 +569,7 @@ export default function App() {
         <div className="title-bar__inner">
           <h1 className="sr-only">오늘의할인 — 배달앱 브랜드 할인 비교</h1>
 
-          {/* 1줄: 앱 배지(필터 토글) + 검색·초기화 */}
+          {/* 1줄: 앱 배지(필터 토글)만. 검색·초기화는 바 아래로 띄운다. */}
           <div className="title-bar__row title-bar__row--apps">
             <div className="page-head__apps" aria-label="비교 대상 배달앱">
               {PLATFORMS.map((p) => (
@@ -588,18 +588,6 @@ export default function App() {
                 </span>
               ))}
             </div>
-            <button
-              type="button"
-              className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}
-              onClick={resetFilters}
-              aria-label="필터 초기화"
-            >
-              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12a9 9 0 1 1-3-6.7" />
-                <polyline points="21 3 21 9 15 9" />
-              </svg>
-            </button>
-            <SearchControl value={search} onChange={setSearch} />
           </div>
 
           {/* 2줄: 카테고리 탭 — 이 줄만 가로 스크롤한다. */}
@@ -623,6 +611,23 @@ export default function App() {
               <polyline points="9 6 15 12 9 18" />
             </svg>
           </div>
+        </div>
+        {/* 검색·초기화는 바 안에서 빼내 바로 아래 여백에 띄운다.
+            absolute라 카드 그리드를 밀어내지 않고, 윗줄 배지 공간을
+            통째로 비워준다. */}
+        <div className="title-bar__float">
+          <button
+            type="button"
+            className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}
+            onClick={resetFilters}
+            aria-label="필터 초기화"
+          >
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-3-6.7" />
+              <polyline points="21 3 21 9 15 9" />
+            </svg>
+          </button>
+          <SearchControl value={search} onChange={setSearch} />
         </div>
         {/* 선택한 앱의 멤버십 — 타이틀바 아래 여백에 얇게 붙는다.
             absolute라 카드 그리드를 밀어내지 않고, 아직 계산 로직이
