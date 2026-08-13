@@ -90,12 +90,6 @@ h1 {
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
-  /* 이 줄 위에서의 터치 제스처는 가로 스크롤 전용. 기본값(auto)이면
-     모바일에서 탭을 옆으로 넘기려고 스와이프해도 브라우저가 세로
-     스크롤로 채가서 화면이 통째로 위로 날아가 버린다. 끝까지 밀었을
-     때 페이지로 스크롤이 이어지는 것도 막는다(overscroll-behavior). */
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
   /* 오른쪽으로 더 있다는 걸 암시하는 페이드만 건다 — 왼쪽엔 배지가
      고정으로 걸려 있어 페이드가 필요 없다. */
   mask-image: linear-gradient(to right, black calc(100% - 14px), transparent);
