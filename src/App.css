@@ -135,13 +135,78 @@ h1 {
 /* 배지와 같은 한 줄, 오른쪽 남는 공간을 차지한다. 판(하이라이트)은
    탭 자기 높이만큼만 컴팩트하게 차지한다 — 배지 높이(40px)에 맞춰
    늘리거나 끌어올리지 않는다. */
-.title-bar__categories {
+/* 카테고리 토글 — 바에 상시로 놓이는 건 앱 필터(1차 조작)뿐이고,
+   분류는 눌렀을 때만 펼쳐지는 2차 조작이다. 지금 고른 분류를 라벨로
+   보여줘 접힌 상태에서도 무엇이 걸려 있는지 읽힌다. */
+.category-toggle {
   display: flex;
   align-items: center;
-  gap: .25rem;
-  flex: 1 1 auto;
-  min-width: 0;
-  margin-left: .4rem;
+  gap: .3rem;
+  flex: none;
+  margin-left: auto;
+  padding: .45rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.category-toggle:hover { border-color: var(--text-muted); }
+.category-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.category-toggle--active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+.category-toggle__chevron { transition: transform 180ms ease; }
+.category-toggle--open .category-toggle__chevron { transform: rotate(180deg); }
+
+/* 펼친 목록 — absolute라 카드 그리드를 밀어내지 않는다. */
+.category-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  max-width: min(92vw, 420px);
+  margin-top: .3rem;
+  margin-right: .75rem;
+  padding: .6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
+  animation: category-panel-in 140ms ease;
+}
+@keyframes category-panel-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .category-panel { animation: none; }
+}
+.category-panel__item {
+  padding: .4rem .7rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 5%, var(--surface));
+  color: var(--text-muted);
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.category-panel__item:hover { color: var(--text); }
+.category-panel__item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.category-panel__item--active {
+  background: var(--text);
+  color: var(--bg);
 }
 /* 카테고리 줄만 가로 스크롤한다. 하이라이트 좌표계(.category-bar,
    position:relative)는 그대로 두고 이 래퍼가 스크롤만 맡는다 —
@@ -186,21 +251,33 @@ h1 {
    파일의 투명 픽셀이 들고 있다. 그래서 배지는 판을 깔지 않고 그림만 꽉
    채운다 — 배경·테두리·그림자·안쪽 여백 전부 0. 모서리가 투명이라
    음수 margin으로 바싹 붙여도 서로 잘려 보이지 않는다. */
+/* 로고 32px을 그보다 큰 상자로 감싼다 — 로고만 덩그러니 놓여 있으면
+   "그림"으로 읽히고 누를 수 있다는 게 안 보였다. 눌리는 판이 있어야
+   필터 버튼임이 드러난다. 선택 상태는 판의 배경·테두리로 나타낸다. */
 .page-head__apps .platform-badge {
-  width: 40px; height: 40px;
-  /* 왼쪽은 직각, 오른쪽 아래만 둥글게. 아이콘 파일은 네 모서리가 다
-     둥근 앱 아이콘이라 CSS만으론 각을 되살릴 수 없다 — 그림을 살짝
-     키워(scale) 둥근 모서리를 클립 밖으로 밀어내고, 이 상자의 모양이
-     그대로 배지 모양이 되게 한다. */
-  border-radius: 0 0 12px 0;
-  overflow: hidden;
-
-  background: none;
-  border: 0;
+  width: 46px; height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  overflow: visible;
+  background: var(--surface);
+  border: 1px solid var(--border);
   box-shadow: none;
-  transition: width 120ms ease, height 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
-.page-head__apps .platform-badge img { padding: 0; transform: scale(1.1); }
+.page-head__apps .platform-badge img {
+  width: 32px; height: 32px;
+  position: static;
+  padding: 0;
+  transform: none;
+  border-radius: 7px;
+}
+/* 고른 앱 — 판이 눌린 것처럼 진해진다. */
+.page-head__apps .platform-badge[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--text) 10%, var(--surface));
+  border-color: var(--text);
+}
 
 /* 배지 바로 아래 뜨는 멤버십 안내 팝오버 — 순수 CSS hover/focus,
    JS 상태 없이 :hover(마우스)와 :focus-within(키보드 탭)만으로 연다. */
@@ -871,14 +948,16 @@ h1 {
   .brand-grid { animation: none; }
 }
 
+/* 상세를 펼친 상태가 기본이라 카드 하나가 담는 양이 늘었다 — 여백을
+   키워 핵심(브랜드·최고 할인)과 그 외(차순위·상세)가 눌리지 않게 한다. */
 .brand-card {
   display: flex;
   flex-direction: column;
-  gap: .65rem;
+  gap: .8rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 1rem;
+  padding: 1.15rem 1.15rem 1.25rem;
   transition: box-shadow 200ms ease, border-color 200ms ease;
 }
 .brand-card:hover { box-shadow: 0 2px 10px rgba(0, 0, 0, .04); }
@@ -994,6 +1073,19 @@ h1 {
   scrollbar-width: none;
 }
 .offer-list::-webkit-scrollbar { display: none; }
+
+/* 최고 할인 한 건만 단독으로 놓는 줄. 나머지와 같은 격자에 섞이면
+   "어느 게 제일 센가"를 매번 눈으로 비교해야 한다 — 답을 먼저 크게
+   보여주고, 비교는 아래 줄에서 하게 한다. */
+.offer-list--hero {
+  margin-bottom: .5rem;
+}
+.offer-list--hero .offer { flex: 1 1 100%; }
+
+/* 차순위는 가로 선형 그리드. 대표값이 아니라 "그 외 선택지"라는 게
+   크기 차이로 바로 읽히게 둔다. */
+.offer-list--rest { gap: .4rem; }
+
 .offer { position: relative; display: flex; flex-direction: column; flex: 1 1 0; min-width: 68px; }
 
 .offer__chip {
@@ -1115,6 +1207,29 @@ h1 {
   right: -8px;
 }
 
+/* 최고 할인 칩 — 단독 줄이라 세로로도 여유가 있다. 금액을 키우고
+   여백을 늘려 "이게 답"이라는 게 크기만으로 읽히게 한다. */
+.offer--hero .offer__chip {
+  padding: .95rem 1rem;
+  border-radius: 12px;
+}
+.offer--hero .offer__amount { font-size: 1.35rem; }
+/* 플랫폼 로고를 링크 버튼 옆에 붙여 키운다 — 어느 앱으로 가는
+   링크인지가 누르기 전에 보이게. 모서리에 겹쳐 얹던 작은 배지와
+   달리 흐름 안에 자리를 차지한다. */
+.offer--hero .offer__icon-badge {
+  position: static;
+  display: flex;
+  align-items: center;
+  margin-left: .55rem;
+}
+.offer--hero .offer__icon-badge .platform-badge {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+}
+.offer--hero .offer__chip { justify-content: center; gap: 0; }
+
+
 /* 목록 액면 금액이 실제론 못 받는 상태(재고 소진)거나 매일 바뀌는
    상태(랜덤박스)일 때 붙는 상태 라벨(schema `badge`). offer__range-badge
    (최대, 칩 위쪽 가운데)와 동시에 뜰 수 있어 자리를 겹치지 않게
@@ -1196,12 +1311,14 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
 .platform-badge--dim { filter: grayscale(1) brightness(1.25) contrast(.55); }
 
 /* 펼친 상세. 카드 안에 상자를 또 그리지 않고 실선 하나로만 나눈다. */
+/* 플랫폼별 상세 — 항목 사이 여백을 넉넉히 줘서 리스트로 읽히게 한다.
+   위쪽 실선이 "여기부터는 부가 정보"라는 경계다. */
 .brand-detail {
   display: flex;
   flex-direction: column;
-  gap: .85rem;
-  margin-top: .35rem;
-  padding-top: .85rem;
+  gap: 1.1rem;
+  margin-top: .5rem;
+  padding-top: 1.1rem;
   border-top: 1px solid var(--border);
   animation: detail-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
