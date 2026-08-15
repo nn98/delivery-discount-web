@@ -1320,6 +1320,13 @@ h1 {
 /* 멤버십 배지는 "멤버십 7,500원" 같은 원문 대신 그 앱의 멤버십 이름을
    박고, 그 앱 고유색으로 고정한다 — 어느 멤버십인지 색으로도 즉시
    갈린다. data-platform은 OfferChip이 넣는다(App.jsx). */
+/* 정액 + 쿠폰을 합쳐 계산한 값이라는 표시. 칩 배경은 흰색 그대로 두고
+   배지로만 알린다 — 배경까지 물들이면 최고 할인 강조와 헷갈린다. */
+.offer__status-badge--sum {
+  color: #0a72c4;
+  background: #e3f2fd;
+}
+
 .offer__status-badge--membership { color: #fff; }
 .offer__status-badge--membership[data-platform="baemin"] { background: #2ac1bc; }
 .offer__status-badge--membership[data-platform="coupangeats"] { background: #333; }

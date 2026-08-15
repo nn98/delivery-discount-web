@@ -131,12 +131,14 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle, bes
             그 앱 하나로 정해져 있으니 "전용쿠폰"은 군더더기다. 그 외
             배지("선착순" 등)는 원문 그대로 둔다. */}
         {offer.badge && (
-          offer.badge.includes('전용쿠폰') ? (
+          offer.badge.endsWith('전용쿠폰') ? (
             <span className="offer__status-badge offer__status-badge--membership" data-platform={offer.platform}>
               {MEMBERSHIP_LABEL[offer.platform] ?? offer.badge}
             </span>
           ) : (
-            <span className="offer__status-badge">{offer.badge}</span>
+            <span className={`offer__status-badge${offer.badge === '정액+쿠폰' ? ' offer__status-badge--sum' : ''}`}>
+              {offer.badge}
+            </span>
           )
         )}
         {offer.soldOut ? (
