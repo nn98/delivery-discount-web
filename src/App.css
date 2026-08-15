@@ -105,7 +105,8 @@ main { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 4rem; }
   padding: 9px .5rem 0;
 }
 /* 검색은 오른쪽 끝에 붙인다 — 그 앞(초기화)까지가 필터 묶음이다. */
-.title-bar__inner .search-control { margin-left: auto; order: 2; }
+.title-bar__inner .category-toggle { margin-left: auto; order: 0; }
+.title-bar__inner .search-control { order: 2; }
 .title-bar__inner .filter-reset-btn { order: 1; }
 
 h1 {
@@ -123,12 +124,14 @@ h1 {
    보여줘 접힌 상태에서도 무엇이 걸려 있는지 읽힌다. */
 .category-toggle {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: .35rem;
+  justify-content: center;
+  gap: .1rem;
   flex: none;
-  padding: .5rem .8rem;
+  padding: .3rem .5rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .07), 0 4px 10px rgba(0, 0, 0, .05);
   color: var(--text);
@@ -145,6 +148,9 @@ h1 {
   border-color: var(--text);
   color: var(--bg);
 }
+/* 글자는 위, 아이콘은 아래 — 원형 아이콘 버튼 둘(초기화·검색)과 나란히
+   설 때 이 버튼만 가로로 길어지지 않게 세로로 쌓는다. */
+.category-toggle__label { font-size: .62rem; font-weight: 700; letter-spacing: .04em; line-height: 1; }
 .category-toggle__icon { transition: transform 180ms ease; }
 .category-toggle--open .category-toggle__icon { transform: rotate(180deg); }
 
@@ -1173,7 +1179,7 @@ h1 {
   width: 51px;
   height: 51px;
   margin-right: .55rem;
-  border: 1.5px solid rgba(255, 255, 255, .75);
+  border: 3px solid rgba(255, 255, 255, .75);
   border-radius: 10px;
   background: rgba(255, 255, 255, .24);
   color: #fff;
@@ -1187,7 +1193,7 @@ h1 {
 /* 표식은 왼쪽 끄트머리에 고정하고 금액은 칩 가운데에 둔다 —
    라벨을 흐름에서 빼(absolute) 금액이 그 폭에 밀리지 않게 한다. */
 .offer--best .offer__amount { display: flex; align-items: center; justify-content: center; width: 100%; }
-.offer--best .offer__best-label { position: absolute; left: 0; top: 50%; transform: translateY(-50%); margin: 0; }
+.offer--best .offer__best-label { position: absolute; left: -10px; top: -10px; transform: none; margin: 0; }
 .offer--best .offer__amount--soldout { color: rgba(255, 255, 255, .75); }
 
 /* "최대"가 붙은 값은 최소주문금액을 채워야 나오는 상한액이다 — 액면
@@ -1463,11 +1469,7 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
 /* 좁은 화면에서는 "카테고리 설정" 글자를 접고 아이콘만 남긴다 —
    한 줄에 앱 버튼 넷과 조작 셋이 같이 서야 한다. */
 @media (max-width: 560px) {
-  .category-toggle__label {
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-  }
-  .category-toggle { padding: .5rem; }
+
   .page-head__apps .platform-badge { width: 60px; height: 60px; border-radius: 14px; }
 }
 /* 360px대 기기 — 앱 버튼 넷과 조작 셋이 한 줄에 들어가야 하므로

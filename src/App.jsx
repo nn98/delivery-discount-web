@@ -484,7 +484,7 @@ function SearchControl({ value, onChange }) {
           aria-label="브랜드 검색 열기"
           onClick={() => setOpen(true)}
         >
-          <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <circle cx="11" cy="11" r="7" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -697,7 +697,7 @@ export default function App() {
             aria-label="카테고리 설정"
             onClick={() => setCatExpanded((v) => !v)}
           >
-            <span className="category-toggle__label">카테고리 설정</span>
+            <span className="category-toggle__label">CATEGORY</span>
             <svg className="category-toggle__icon" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="5" x2="21" y2="5" />
               <line x1="6" y1="10" x2="18" y2="10" />
