@@ -81,10 +81,12 @@ main { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 4rem; }
      자체(--bg)로 잡는다. 맨 위에선 배경과 완전히 같은 색이라 경계가
      아예 안 보이고, 카드가 밑으로 지나갈 때만 위쪽에서 서서히 가려지며
      아래로 자연스럽게 투명해진다(하단 페이드). */
+  /* 앱 버튼에서 판을 걷어내 로고만 남기니 흰 로고(쿠팡이츠)가 밝은
+     배경에 묻혔다 — 바 자체를 어둡게 깔아 어떤 로고든 드러나게 한다. */
   background: linear-gradient(to bottom,
-    var(--bg) 0%,
-    var(--bg) 55%,
-    color-mix(in srgb, var(--bg) 55%, transparent) 80%,
+    #16181d 0%,
+    #16181d 62%,
+    rgba(22, 24, 29, .55) 84%,
     transparent 100%);
 }
 /* 배지와 카테고리를 한 줄에 둔다. 안쪽 여백은 0 — 배지가 화면
@@ -242,19 +244,20 @@ h1 {
    배지가 앉을 빈자리가 생긴다.
    테두리는 쓰지 않는다. 네 개가 나란히 서면 선이 격자처럼 보여
    버튼보다 표가 먼저 읽힌다 — 눌리는 판은 옅은 음영으로만 세운다. */
+/* 판을 걷고 로고만 남긴다 — 버튼 배경·테두리가 있으면 로고보다 판이
+   먼저 읽혔다. 체크 배지는 이제 로고 모서리에 바로 붙는다. */
 .page-head__apps .platform-badge {
-  width: 68px; height: 68px;
+  width: 52px; height: 52px;
   display: flex;
-  /* 로고는 우측 하단으로 — 좌측 상단은 선택 체크 배지 자리다. */
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 3px;
-  border-radius: 16px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 12px;
   overflow: visible;
-  background: var(--surface);
+  background: none;
   border: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .07), 0 4px 10px rgba(0, 0, 0, .05);
-  transition: box-shadow 140ms ease, transform 140ms ease;
+  box-shadow: none;
+  transition: transform 140ms ease;
 }
 .page-head__apps .platform-badge:hover { transform: translateY(-1px); }
 .page-head__apps .platform-badge:active { transform: translateY(0) scale(.97); }
@@ -269,7 +272,7 @@ h1 {
 /* 로고가 흰색인 앱(쿠팡이츠)은 흰 판 위에서 사라진다 — 로고 뒤에
    옅은 회색을 깔아 어떤 로고든 형태가 남게 한다. */
 .page-head__apps .platform-badge img {
-  width: 49px; height: 49px;
+  width: 52px; height: 52px;
   position: static;
   padding: 0;
   transform: none;
@@ -280,15 +283,11 @@ h1 {
 /* 고른 앱 — 글자로 알리는 대신 그 앱 색 테두리를 두른다. 테두리에
    그라데이션을 쓰려면 배경을 두 겹으로 깔고(안쪽 padding-box, 바깥
    border-box) 테두리를 투명하게 비워야 한다. */
-.page-head__apps .platform-badge[aria-pressed="true"] {
-  border: 3px solid transparent;
-  padding: 0;
-  background-image:
-    linear-gradient(var(--surface), var(--surface)),
-    linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .07), 0 4px 10px rgba(0, 0, 0, .05);
+/* 안 고른 앱은 흐리게 물러난다 — 판이 없으니 선택은 체크와 선명도로만
+   갈린다. */
+.page-head__apps .platform-badge[aria-pressed="false"] {
+  opacity: .38;
+  filter: grayscale(1);
 }
 /* 좌측 상단 체크 배지 — 모서리에 걸쳐 로고를 가리지 않는다. */
 .page-head__apps .platform-badge[aria-pressed="true"]::after {
@@ -1221,21 +1220,27 @@ h1 {
 .offer--best .offer__amount { color: #fff; }
 /* 최고 할인 라벨 — 금액 위 배지가 아니라 칩 왼쪽에 붙는 표식이다.
    흰 글씨라 네온 배경 위에서 금액과 한 덩어리로 읽힌다. */
+/* 두 줄짜리 정사각 표식 — 칩 왼쪽 끄트머리에 로고처럼 앉는다. */
 .offer__best-label {
   flex: none;
-  margin-right: .5rem;
-  padding: .12rem .45rem;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, .22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-right: .55rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .24);
   color: #fff;
-  font-size: .72rem;
+  font-size: .62rem;
   font-weight: 800;
-  letter-spacing: -.02em;
-  white-space: nowrap;
+  line-height: 1.15;
+  letter-spacing: -.03em;
 }
-.offer--hero .offer__best-label { font-size: .82rem; padding: .16rem .55rem; }
+.offer--hero .offer__best-label { width: 40px; height: 40px; font-size: .72rem; }
 /* 금액 줄을 가로로 세워 라벨이 왼쪽에 서게 한다. */
-.offer--best .offer__amount { display: flex; align-items: center; justify-content: center; }
+.offer--best .offer__amount { display: flex; align-items: center; justify-content: flex-start; width: 100%; }
 .offer--best .offer__amount--soldout { color: rgba(255, 255, 255, .75); }
 
 /* "최대"가 붙은 값은 최소주문금액을 채워야 나오는 상한액이다 — 액면
@@ -1247,6 +1252,7 @@ h1 {
   border-color: color-mix(in srgb, var(--text) 25%, transparent);
 }
 .offer--capped .offer__amount { color: color-mix(in srgb, var(--text) 62%, transparent); }
+.offer--best.offer--confirmed .offer__amount { color: #fff; }
 .offer--confirmed .offer__amount {
   font-weight: 600;
   font-variant-numeric: tabular-nums;

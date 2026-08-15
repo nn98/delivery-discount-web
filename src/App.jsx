@@ -122,7 +122,12 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle, bes
             후보에서 빠진다) — 같은 자리, 같은 배지를 색만 바꿔 쓴다. */}
         {/* 최고 할인은 칩 왼쪽에 라벨로 붙인다 — 금액 위에 떠 있던
             배지는 카드가 여럿 늘어서면 어느 칩 것인지 헷갈렸다. */}
-        {best && <span className="offer__best-label">최고 할인</span>}
+        {best && (
+          <span className="offer__best-label" aria-label="최고 할인">
+            <span>최고</span>
+            <span>할인</span>
+          </span>
+        )}
         {!best && showRangeBadge && (
           <span className="offer__range-badge">
             {/* "최대"만으로는 그 금액을 받는다는 뜻으로 읽혔다 — 조건을
