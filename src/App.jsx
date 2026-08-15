@@ -554,14 +554,7 @@ export default function App() {
   // 위 방해물이 된다. (2) 켠 멤버십은 그 앱 버튼 밑에 배너로 계속
   // 남는다 — 지금 무슨 조건으로 금액을 보고 있는지가 상시로 보여야
   // 한다. 묻는 칸과 결과 배너를 분리한 이유가 이것이다.
-  const [membershipPrompt, setMembershipPrompt] = useState(null)
   const [membershipOn, setMembershipOn] = useState(() => new Set())
-
-  useEffect(() => {
-    if (!membershipPrompt) return
-    const id = setTimeout(() => setMembershipPrompt(null), 2000)
-    return () => clearTimeout(id)
-  }, [membershipPrompt])
 
   const toggleMembership = (key) => {
     setMembershipOn((prev) => {
@@ -569,7 +562,6 @@ export default function App() {
       if (next.has(key)) next.delete(key); else next.add(key)
       return next
     })
-    setMembershipPrompt(null)
     track('membership_toggle', { platform: key })
   }
 
@@ -668,38 +660,21 @@ export default function App() {
                   onClick={(e) => {
                     e.stopPropagation()
                     togglePlatform(p.key)
-                    // 켤 때만 묻는다 — 끄는 참에 멤버십을 묻는 건 방해다.
-                    setMembershipPrompt(platformFilter.has(p.key) ? null : p.key)
                   }}
                   active={platformFilter.has(p.key)}
                 />
 
-                {/* 켜기/끄기를 묻는 칸. 2초 뒤 스스로 사라지고, 남은
-                    시간이 아래 게이지로 보인다 — 갑자기 없어지는 대신
-                    사라질 것이 미리 보이게. */}
-                {membershipPrompt === p.key && (
-                  <div className="membership-prompt" role="group" aria-label={`${MEMBERSHIP_LABEL[p.key]} 적용`}>
-                    <button
-                      type="button"
-                      className={`membership-prompt__btn${membershipOn.has(p.key) ? ' membership-prompt__btn--on' : ''}`}
-                      onClick={() => toggleMembership(p.key)}
-                    >
-                      {MEMBERSHIP_LABEL[p.key]} {membershipOn.has(p.key) ? '끄기' : '켜기'}
-                    </button>
-                    <span className="membership-prompt__timer" aria-hidden="true" />
-                  </div>
-                )}
-
-                {/* 켠 멤버십은 그 앱 버튼 밑에 계속 붙는다. 여러 앱을
-                    한 줄에 묶지 않는다 — 어느 배너가 어느 앱 것인지
-                    위치로 바로 읽혀야 한다. */}
-                {membershipOn.has(p.key) && (
+                {/* 고른 앱에만 멤버십 버튼이 로고 밑에 붙는다. 2초 뒤
+                    사라지는 칸으로 물어보던 걸 걷었다 — 켜고 끄는 걸
+                    언제든 다시 만질 수 있어야 한다. 위치로 어느 앱
+                    것인지 드러나므로 여러 앱을 한 줄로 묶지 않는다. */}
+                {platformFilter.has(p.key) && (
                   <button
                     type="button"
-                    className="membership-banner"
+                    className={`membership-btn${membershipOn.has(p.key) ? ' membership-btn--on' : ''}`}
                     data-platform={p.key}
+                    aria-pressed={membershipOn.has(p.key)}
                     onClick={() => toggleMembership(p.key)}
-                    title="눌러서 해제"
                   >
                     {MEMBERSHIP_LABEL[p.key]}
                   </button>

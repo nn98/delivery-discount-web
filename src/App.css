@@ -81,12 +81,10 @@ main { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 4rem; }
      자체(--bg)로 잡는다. 맨 위에선 배경과 완전히 같은 색이라 경계가
      아예 안 보이고, 카드가 밑으로 지나갈 때만 위쪽에서 서서히 가려지며
      아래로 자연스럽게 투명해진다(하단 페이드). */
-  /* 앱 버튼에서 판을 걷어내 로고만 남기니 흰 로고(쿠팡이츠)가 밝은
-     배경에 묻혔다 — 바 자체를 어둡게 깔아 어떤 로고든 드러나게 한다. */
   background: linear-gradient(to bottom,
-    #16181d 0%,
-    #16181d 62%,
-    rgba(22, 24, 29, .55) 84%,
+    var(--bg) 0%,
+    var(--bg) 55%,
+    color-mix(in srgb, var(--bg) 55%, transparent) 80%,
     transparent 100%);
 }
 /* 배지와 카테고리를 한 줄에 둔다. 안쪽 여백은 0 — 배지가 화면
@@ -227,7 +225,7 @@ h1 {
 /* 밀착 — 서로 안 겹치되 최소 간격만 준다. */
 .page-head__apps {
   display: flex;
-  gap: 0;
+  gap: .45rem;
   margin: 0;
   flex: none;
   background: transparent;
@@ -271,13 +269,24 @@ h1 {
 
 /* 로고가 흰색인 앱(쿠팡이츠)은 흰 판 위에서 사라진다 — 로고 뒤에
    옅은 회색을 깔아 어떤 로고든 형태가 남게 한다. */
+/* 로고를 그 앱 색 그라데이션 테두리로 감싼다 — 흰 로고(쿠팡이츠)도
+   테두리가 형태를 잡아줘서 밝은 배경에서 사라지지 않는다. */
 .page-head__apps .platform-badge img {
-  width: 52px; height: 52px;
+  width: 100%; height: 100%;
   position: static;
   padding: 0;
   transform: none;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--text) 5%, #fff);
+  border-radius: 10px;
+  background: #fff;
+}
+.page-head__apps .platform-badge {
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background-image:
+    linear-gradient(#fff, #fff),
+    linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }
 
 /* 고른 앱 — 글자로 알리는 대신 그 앱 색 테두리를 두른다. 테두리에
@@ -310,100 +319,34 @@ h1 {
 }
 
 .platform-badge-wrap { position: relative; }
-
-/* 멤버십 켜기/끄기를 묻는 칸. 배지 바로 밑에 붙고 2초 뒤 스스로
-   사라진다(App.jsx). 아래 게이지가 남은 시간을 보여줘서 갑자기
-   없어지는 대신 사라질 것이 미리 읽힌다. */
-.membership-prompt {
+/* 고른 앱에만 로고 밑에 붙는 멤버십 버튼. 눌러서 켜고 끈다 —
+   2초 뒤 사라지던 칸과 달리 언제든 다시 만질 수 있다. absolute라
+   로고 줄 높이를 밀어내지 않는다. */
+.membership-btn {
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20;
-  margin-top: .35rem;
-  padding: 0 0 3px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
-  overflow: hidden;
-  animation: membership-prompt-in 140ms ease;
-}
-/* 양 끝 배지에선 가운데 정렬이 화면 밖으로 나간다. */
-.platform-badge-wrap:first-child .membership-prompt { left: 0; transform: none; }
-.platform-badge-wrap:last-child .membership-prompt { left: auto; right: 0; transform: none; }
-
-@keyframes membership-prompt-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(-3px); }
-}
-.platform-badge-wrap:first-child .membership-prompt,
-.platform-badge-wrap:last-child .membership-prompt { animation-name: membership-prompt-in-edge; }
-@keyframes membership-prompt-in-edge {
-  from { opacity: 0; transform: translateY(-3px); }
-}
-
-.membership-prompt__btn {
-  display: block;
-  width: 100%;
-  padding: .45rem .7rem;
-  border: 0;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  font-size: .8rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.membership-prompt__btn:hover { background: color-mix(in srgb, var(--text) 6%, var(--surface)); }
-.membership-prompt__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.membership-prompt__btn--on { color: var(--text-muted); }
-
-/* 남은 시간 게이지 — 2초에 걸쳐 폭이 0으로 준다. */
-.membership-prompt__timer {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 3px;
-  width: 100%;
-  background: var(--text);
-  transform-origin: left center;
-  animation: membership-timer 2000ms linear forwards;
-}
-@keyframes membership-timer {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .membership-prompt { animation: none; }
-  .membership-prompt__timer { animation-duration: 2000ms; }
-}
-
-/* 켠 멤버십 배너 — 그 앱 버튼 바로 밑에 계속 붙는다. 여러 앱을 한 줄로
-   묶지 않는다: 어느 배너가 어느 앱 것인지 위치만으로 읽혀야 한다.
-   문서 흐름에서 빼서(absolute) 배지 줄 높이를 안 밀어낸다. */
-.membership-banner {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-top: .25rem;
-  padding: .12rem .45rem;
-  border: 0;
+  margin-top: .3rem;
+  padding: .1rem .4rem;
+  border: 1px solid var(--pc, var(--text));
   border-radius: 999px;
+  background: var(--surface);
+  color: var(--pc, var(--text));
   font: inherit;
-  font-size: .68rem;
+  font-size: .64rem;
   font-weight: 700;
   line-height: 1.6;
   white-space: nowrap;
-  color: #fff;
   cursor: pointer;
 }
-.membership-banner:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.membership-banner[data-platform="baemin"] { background: #2ac1bc; }
-.membership-banner[data-platform="coupangeats"] { background: #333; }
-.membership-banner[data-platform="ddangyo"] { background: #f5a623; }
-.membership-banner[data-platform="yogiyo"] { background: #fa0050; }
+.membership-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 켜면 그 앱 색으로 채운다 — 테두리만 있는 꺼짐과 한눈에 갈린다. */
+.membership-btn--on {
+  background: linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
+  border-color: transparent;
+  color: #fff;
+}
 
 
 /* ---------------------------------------------------------------------------
@@ -1240,7 +1183,10 @@ h1 {
 }
 .offer--hero .offer__best-label { width: 40px; height: 40px; font-size: .72rem; }
 /* 금액 줄을 가로로 세워 라벨이 왼쪽에 서게 한다. */
-.offer--best .offer__amount { display: flex; align-items: center; justify-content: flex-start; width: 100%; }
+/* 표식은 왼쪽 끄트머리에 고정하고 금액은 칩 가운데에 둔다 —
+   라벨을 흐름에서 빼(absolute) 금액이 그 폭에 밀리지 않게 한다. */
+.offer--best .offer__amount { display: flex; align-items: center; justify-content: center; width: 100%; }
+.offer--best .offer__best-label { position: absolute; left: 0; top: 50%; transform: translateY(-50%); margin: 0; }
 .offer--best .offer__amount--soldout { color: rgba(255, 255, 255, .75); }
 
 /* "최대"가 붙은 값은 최소주문금액을 채워야 나오는 상한액이다 — 액면
