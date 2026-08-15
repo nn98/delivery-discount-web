@@ -255,7 +255,7 @@ h1 {
    "그림"으로 읽히고 누를 수 있다는 게 안 보였다. 눌리는 판이 있어야
    필터 버튼임이 드러난다. 선택 상태는 판의 배경·테두리로 나타낸다. */
 .page-head__apps .platform-badge {
-  width: 46px; height: 46px;
+  width: 56px; height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -267,7 +267,7 @@ h1 {
   transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 .page-head__apps .platform-badge img {
-  width: 32px; height: 32px;
+  width: 38px; height: 38px;
   position: static;
   padding: 0;
   transform: none;
@@ -279,89 +279,101 @@ h1 {
   border-color: var(--text);
 }
 
-/* 배지 바로 아래 뜨는 멤버십 안내 팝오버 — 순수 CSS hover/focus,
-   JS 상태 없이 :hover(마우스)와 :focus-within(키보드 탭)만으로 연다. */
 .platform-badge-wrap { position: relative; }
-.membership-popover {
+
+/* 멤버십 켜기/끄기를 묻는 칸. 배지 바로 밑에 붙고 2초 뒤 스스로
+   사라진다(App.jsx). 아래 게이지가 남은 시간을 보여줘서 갑자기
+   없어지는 대신 사라질 것이 미리 읽힌다. */
+.membership-prompt {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translateX(-50%) translateY(2px);
-  display: flex;
-  align-items: center;
-  gap: .35rem;
-  margin-top: .3rem;
-  padding: .4rem .6rem;
+  transform: translateX(-50%);
+  z-index: 20;
+  margin-top: .35rem;
+  padding: 0 0 3px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
-  font-size: .78rem;
-  /* 첫 배지 위에서 열면 왼쪽이, 마지막 배지에선 오른쪽이 화면 밖으로
-     나갔다. 폭을 화면 안으로 묶고 줄바꿈을 허용한다 — 잘려서 못 읽는
-     것보다 두 줄이 낫다. */
-  max-width: min(60vw, 220px);
-  white-space: normal;
-  word-break: keep-all;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 150ms ease, transform 150ms ease;
-  z-index: 20;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
+  overflow: hidden;
+  animation: membership-prompt-in 140ms ease;
 }
-/* 양 끝 배지에선 가운데 정렬이 화면 밖으로 나간다 — 첫 배지는 왼쪽,
-   마지막 배지는 오른쪽 모서리에 맞춘다. */
-.page-head__apps .platform-badge-wrap:first-child .membership-popover {
-  left: 0;
-  transform: translateX(0) translateY(2px);
+/* 양 끝 배지에선 가운데 정렬이 화면 밖으로 나간다. */
+.platform-badge-wrap:first-child .membership-prompt { left: 0; transform: none; }
+.platform-badge-wrap:last-child .membership-prompt { left: auto; right: 0; transform: none; }
+
+@keyframes membership-prompt-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-3px); }
 }
-.page-head__apps .platform-badge-wrap:first-child:hover .membership-popover,
-.page-head__apps .platform-badge-wrap:first-child:focus-within .membership-popover {
-  transform: translateX(0) translateY(0);
-}
-.page-head__apps .platform-badge-wrap:last-child .membership-popover {
-  left: auto;
-  right: 0;
-  transform: translateX(0) translateY(2px);
-}
-.page-head__apps .platform-badge-wrap:last-child:hover .membership-popover,
-.page-head__apps .platform-badge-wrap:last-child:focus-within .membership-popover {
-  transform: translateX(0) translateY(0);
-}
-.platform-badge-wrap:hover .membership-popover,
-.platform-badge-wrap:focus-within .membership-popover {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
+.platform-badge-wrap:first-child .membership-prompt,
+.platform-badge-wrap:last-child .membership-prompt { animation-name: membership-prompt-in-edge; }
+@keyframes membership-prompt-in-edge {
+  from { opacity: 0; transform: translateY(-3px); }
 }
 
-/* 선택한 앱의 멤버십 — 타이틀바 바로 아래 여백에 얇게 붙는 줄.
-   absolute라 문서 흐름에서 빠져 카드 그리드를 안 밀어낸다. 아직
-   계산 로직이 없어 누를 수 없는 표시용이다. */
-.membership-tags {
+.membership-prompt__btn {
+  display: block;
+  width: 100%;
+  padding: .45rem .7rem;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.membership-prompt__btn:hover { background: color-mix(in srgb, var(--text) 6%, var(--surface)); }
+.membership-prompt__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.membership-prompt__btn--on { color: var(--text-muted); }
+
+/* 남은 시간 게이지 — 2초에 걸쳐 폭이 0으로 준다. */
+.membership-prompt__timer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--text);
+  transform-origin: left center;
+  animation: membership-timer 2000ms linear forwards;
+}
+@keyframes membership-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .membership-prompt { animation: none; }
+  .membership-prompt__timer { animation-duration: 2000ms; }
+}
+
+/* 켠 멤버십 배너 — 그 앱 버튼 바로 밑에 계속 붙는다. 여러 앱을 한 줄로
+   묶지 않는다: 어느 배너가 어느 앱 것인지 위치만으로 읽혀야 한다.
+   문서 흐름에서 빼서(absolute) 배지 줄 높이를 안 밀어낸다. */
+.membership-banner {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: .25rem;
-  max-width: 880px;
-  margin: -.2rem auto 0;
-  padding: 0 .75rem;
-  pointer-events: none;
-}
-.membership-tag {
-  flex: none;
-  padding: .05rem .4rem;
-  font-size: .66rem;
-  line-height: 1.5;
-  white-space: nowrap;
-  color: var(--pending-text);
-  background: var(--pending-bg);
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: .25rem;
+  padding: .12rem .45rem;
+  border: 0;
   border-radius: 999px;
-  cursor: default;
-  user-select: none;
+  font: inherit;
+  font-size: .68rem;
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+  color: #fff;
+  cursor: pointer;
 }
+.membership-banner:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.membership-banner[data-platform="baemin"] { background: #2ac1bc; }
+.membership-banner[data-platform="coupangeats"] { background: #333; }
+.membership-banner[data-platform="ddangyo"] { background: #f5a623; }
+.membership-banner[data-platform="yogiyo"] { background: #fa0050; }
 
 
 /* ---------------------------------------------------------------------------
@@ -1163,7 +1175,13 @@ h1 {
 
 /* 배지만으론 목록을 훑을 때 눈에 안 걸린다 — 칩 테두리도 같은 파랑으로
    깔아 그 칩 자체가 최고임을 한 번 더 드러낸다(배경은 그대로 둔다). */
-.offer--best .offer__chip { border-color: #0a72c4; }
+/* 최고 할인은 테두리 대신 배경으로 말한다 — 얇은 선 하나로는 카드가
+   여럿 늘어섰을 때 눈에 안 걸렸다. 배지가 쓰던 네온 계열을 그대로
+   깔고 테두리를 없애 면으로 도드라지게 한다. */
+.offer--best .offer__chip {
+  border-color: transparent;
+  background: linear-gradient(135deg, #e8f4ff 0%, #eef0ff 50%, #fdeafc 100%);
+}
 
 /* "최대"가 붙은 값은 최소주문금액을 채워야 나오는 상한액이다 — 액면
    그대로 다른 확정값과 견주면 안 되므로 칩을 통째로 회색으로 눌러
@@ -1187,11 +1205,11 @@ h1 {
    리본으로 빼서 칩 안쪽 레이아웃과 완전히 분리한다. */
 .offer__range-badge {
   position: absolute;
-  top: -8px;
+  top: -9px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: .55rem;
-  font-weight: 600;
+  font-size: .72rem;
+  font-weight: 700;
   /* "최대"는 확정값이 아니라 조건부 상한이다 — 다른 확정 배지들처럼
      또렷한 색을 주면 확정처럼 읽힌다. 존재감을 낮춰 부가 정보로 둔다. */
   color: var(--text-muted);
@@ -1213,7 +1231,10 @@ h1 {
   padding: .95rem 1rem;
   border-radius: 12px;
 }
-.offer--hero .offer__amount { font-size: 1.35rem; }
+.offer--hero .offer__amount { font-size: 1.5rem; }
+/* 단독 줄이라 배지에도 여유가 있다 — 차순위 칩보다 한 단계 크게. */
+.offer--hero .offer__range-badge { font-size: .84rem; padding: .1rem .45rem; top: -11px; }
+.offer--hero .offer__status-badge { font-size: .78rem; padding: .1rem .45rem; bottom: -11px; }
 /* 플랫폼 로고를 링크 버튼 옆에 붙여 키운다 — 어느 앱으로 가는
    링크인지가 누르기 전에 보이게. 모서리에 겹쳐 얹던 작은 배지와
    달리 흐름 안에 자리를 차지한다. */
@@ -1248,11 +1269,11 @@ h1 {
 
 .offer__status-badge {
   position: absolute;
-  bottom: -8px;
+  bottom: -9px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: .55rem;
-  font-weight: 600;
+  font-size: .7rem;
+  font-weight: 700;
   color: #9a5b00;
   background: #fff3da;
   border-radius: 4px;
@@ -1344,7 +1365,7 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   gap: .4rem;
   margin-bottom: .45rem;
 }
-.detail__platform { font-size: .78rem; color: var(--text-muted); }
+.detail__platform { font-size: .9rem; color: var(--text-muted); }
 .detail__amount {
   margin-left: auto;
   font-size: .82rem;
@@ -1359,11 +1380,11 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   margin: 0;
 }
 .detail__rows dt {
-  font-size: .72rem;
+  font-size: .85rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
-.detail__rows dd { margin: 0; font-size: .78rem; }
+.detail__rows dd { margin: 0; font-size: .9rem; }
 .detail__unknown { color: var(--text-muted); }
 
 .detail__tiers {
@@ -1378,7 +1399,7 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   display: flex;
   justify-content: space-between;
   gap: .6rem;
-  max-width: 280px;
+  max-width: 340px;
 }
 .detail__tier-min { color: var(--text-muted); }
 /* 구간마다 끝나는 날이 다를 때만 붙는다(오퍼 만료일과 같으면 생략) —
@@ -1390,7 +1411,7 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
 }
 .detail__tier-amount { font-weight: 600; font-variant-numeric: tabular-nums; }
 .detail__tier-amount--soldout { opacity: .5; }
-.detail__condition-note { margin: .3rem 0 0; color: var(--text-muted); }
+.detail__condition-note { margin: .35rem 0 0; font-size: .85rem; color: var(--text-muted); }
 
 /* 맨 아래: 이 서비스가 무엇이고 정보를 어떻게 모았는지 밝히는 자리.
    읽히긴 해야 하므로 회색으로 죽이되 본문 너비 안에 그대로 둔다. */

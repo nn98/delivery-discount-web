@@ -536,16 +536,29 @@ export default function App() {
     return () => ro.disconnect()
   }, [])
 
-  // 앱을 고른 직후 3초만 띄우고 스스로 사라진다 — 아직 누를 수 없는
-  // 안내라 계속 자리를 지키면 카드 위 방해물이 된다. 타이머는 선택이
-  // 바뀔 때마다 처음부터 다시 간다(고르는 중엔 계속 보인다).
-  const [showMembership, setShowMembership] = useState(false)
+  // 멤버십은 두 단계다. (1) 앱을 고르면 그 앱 버튼 밑에 켜기/끄기를
+  // 묻는 칸이 2초만 떴다 사라진다 — 물어보는 칸이 계속 남으면 카드
+  // 위 방해물이 된다. (2) 켠 멤버십은 그 앱 버튼 밑에 배너로 계속
+  // 남는다 — 지금 무슨 조건으로 금액을 보고 있는지가 상시로 보여야
+  // 한다. 묻는 칸과 결과 배너를 분리한 이유가 이것이다.
+  const [membershipPrompt, setMembershipPrompt] = useState(null)
+  const [membershipOn, setMembershipOn] = useState(() => new Set())
+
   useEffect(() => {
-    if (platformFilter.size === 0) { setShowMembership(false); return }
-    setShowMembership(true)
-    const id = setTimeout(() => setShowMembership(false), 3000)
+    if (!membershipPrompt) return
+    const id = setTimeout(() => setMembershipPrompt(null), 2000)
     return () => clearTimeout(id)
-  }, [platformFilter])
+  }, [membershipPrompt])
+
+  const toggleMembership = (key) => {
+    setMembershipOn((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key); else next.add(key)
+      return next
+    })
+    setMembershipPrompt(null)
+    track('membership_toggle', { platform: key })
+  }
 
   const isFiltered = filterKey !== 'all' || platformFilter.size > 0 || search.trim() !== ''
   const resetFilters = () => {
@@ -639,15 +652,45 @@ export default function App() {
               <span key={p.key} className="platform-badge-wrap">
                 <PlatformBadge
                   platformKey={p.key}
-                  onClick={(e) => { e.stopPropagation(); togglePlatform(p.key) }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    togglePlatform(p.key)
+                    // 켤 때만 묻는다 — 끄는 참에 멤버십을 묻는 건 방해다.
+                    setMembershipPrompt(platformFilter.has(p.key) ? null : p.key)
+                  }}
                   active={platformFilter.size === 0 ? undefined : platformFilter.has(p.key)}
                 />
-                {/* hover(또는 키보드 포커스)하면 그 앱의 멤버십 안내가
-                    배지 바로 아래 뜬다. 로직은 여전히 보류 상태. */}
-                <div className="membership-popover" role="note">
-                  <span className="membership-popover__title">{MEMBERSHIP_LABEL[p.key]}</span>
-                  <span className="pill pill--pending">구현예정</span>
-                </div>
+
+                {/* 켜기/끄기를 묻는 칸. 2초 뒤 스스로 사라지고, 남은
+                    시간이 아래 게이지로 보인다 — 갑자기 없어지는 대신
+                    사라질 것이 미리 보이게. */}
+                {membershipPrompt === p.key && (
+                  <div className="membership-prompt" role="group" aria-label={`${MEMBERSHIP_LABEL[p.key]} 적용`}>
+                    <button
+                      type="button"
+                      className={`membership-prompt__btn${membershipOn.has(p.key) ? ' membership-prompt__btn--on' : ''}`}
+                      onClick={() => toggleMembership(p.key)}
+                    >
+                      {MEMBERSHIP_LABEL[p.key]} {membershipOn.has(p.key) ? '끄기' : '켜기'}
+                    </button>
+                    <span className="membership-prompt__timer" aria-hidden="true" />
+                  </div>
+                )}
+
+                {/* 켠 멤버십은 그 앱 버튼 밑에 계속 붙는다. 여러 앱을
+                    한 줄에 묶지 않는다 — 어느 배너가 어느 앱 것인지
+                    위치로 바로 읽혀야 한다. */}
+                {membershipOn.has(p.key) && (
+                  <button
+                    type="button"
+                    className="membership-banner"
+                    data-platform={p.key}
+                    onClick={() => toggleMembership(p.key)}
+                    title="눌러서 해제"
+                  >
+                    {MEMBERSHIP_LABEL[p.key]}
+                  </button>
+                )}
               </span>
             ))}
           </div>
@@ -703,18 +746,7 @@ export default function App() {
           </button>
           <SearchControl value={search} onChange={setSearch} />
         </div>
-        {/* 선택한 앱의 멤버십 — 타이틀바 아래 여백에 얇게 붙는다.
-            absolute라 카드 그리드를 밀어내지 않고, 아직 계산 로직이
-            없어 누를 수 없는 표시용이다. */}
-        {showMembership && atTop && (
-          <div className="membership-tags" aria-label="선택한 앱 멤버십">
-            {PLATFORMS.filter((p) => platformFilter.has(p.key)).map((p) => (
-              <span key={p.key} className="membership-tag" title="구현예정">
-                {MEMBERSHIP_LABEL[p.key]}
-              </span>
-            ))}
-          </div>
-        )}
+
       </div>
     <main>
 
