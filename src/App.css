@@ -1170,18 +1170,19 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 51px;
+  height: 51px;
   margin-right: .55rem;
-  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, .75);
+  border-radius: 10px;
   background: rgba(255, 255, 255, .24);
   color: #fff;
-  font-size: .62rem;
+  font-size: .93rem;
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -.03em;
 }
-.offer--hero .offer__best-label { width: 40px; height: 40px; font-size: .72rem; }
+.offer--hero .offer__best-label { width: 60px; height: 60px; font-size: 1.08rem; }
 /* 금액 줄을 가로로 세워 라벨이 왼쪽에 서게 한다. */
 /* 표식은 왼쪽 끄트머리에 고정하고 금액은 칩 가운데에 둔다 —
    라벨을 흐름에서 빼(absolute) 금액이 그 폭에 밀리지 않게 한다. */
@@ -1253,8 +1254,8 @@ h1 {
   margin-left: .55rem;
 }
 .offer--hero .offer__icon-badge .platform-badge {
-  width: 32px; height: 32px;
-  border-radius: 8px;
+  width: 42px; height: 42px;
+  border-radius: 10px;
 }
 .offer--hero .offer__chip { justify-content: center; gap: 0; }
 
@@ -1295,7 +1296,7 @@ h1 {
    갈린다. data-platform은 OfferChip이 넣는다(App.jsx). */
 /* 정액 + 쿠폰을 합쳐 계산한 값이라는 표시. 칩 배경은 흰색 그대로 두고
    배지로만 알린다 — 배경까지 물들이면 최고 할인 강조와 헷갈린다. */
-.offer__status-badge--sum {
+.offer__range-badge--rate {
   color: #0a72c4;
   background: #e3f2fd;
 }
@@ -1476,3 +1477,8 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   .filter-reset-btn, .search-control__btn { width: 34px; height: 34px; }
   .title-bar__inner { gap: .25rem; padding: 0 .35rem; }
 }
+
+/* 최고 칩 외의 로고는 2배로 키운다 — 어느 앱 것인지 스치듯 봐도
+   구분되게. 최고 칩은 링크 옆이라 1.3배만 키웠다(위 규칙). */
+.offer:not(.offer--hero) .offer__icon-badge .platform-badge { width: 40px; height: 40px; border-radius: 9px; }
+.detail__head .platform-badge { width: 40px; height: 40px; border-radius: 9px; }

@@ -128,12 +128,16 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle, bes
             <span>할인</span>
           </span>
         )}
+        {/* 위 칸(qualifier 자리)은 금액의 성격을 말한다 — "최대 할인
+            금액"이나 "n%할인"처럼 그 숫자가 어떻게 나온 값인지. 아래
+            칸은 멤버십·조건 배지 몫이다. */}
         {!best && showRangeBadge && (
           <span className="offer__range-badge">
-            {/* "최대"만으로는 그 금액을 받는다는 뜻으로 읽혔다 — 조건을
-                채워야 도달하는 상한이라는 걸 문구로 못박는다. */}
             {offer.qualifier === '최대' ? '최대 할인 금액' : offer.qualifier}
           </span>
+        )}
+        {!best && !showRangeBadge && /^\d+%할인$/.test(offer.badge || '') && (
+          <span className="offer__range-badge offer__range-badge--rate">{offer.badge}</span>
         )}
         {/* "배민클럽 전용쿠폰" 같은 원문 대신 이름만 남긴다 — 칩이 이미
             그 앱 하나로 정해져 있으니 "전용쿠폰"은 군더더기다. 그 외
@@ -144,9 +148,9 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle, bes
               {MEMBERSHIP_LABEL[offer.platform] ?? offer.badge}
             </span>
           ) : (
-            <span className={`offer__status-badge${/^\d+%할인$/.test(offer.badge) ? ' offer__status-badge--sum' : ''}`}>
-              {offer.badge}
-            </span>
+            !/^\d+%할인$/.test(offer.badge) && (
+              <span className="offer__status-badge">{offer.badge}</span>
+            )
           )
         )}
         {offer.soldOut ? (
