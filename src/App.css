@@ -244,8 +244,9 @@ h1 {
 .page-head__apps .platform-badge {
   width: 68px; height: 68px;
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  /* 로고는 우측 하단으로 — 좌측 상단은 선택 체크 배지 자리다. */
+  align-items: flex-end;
+  justify-content: flex-end;
   padding: 3px;
   border-radius: 16px;
   overflow: visible;
@@ -257,27 +258,13 @@ h1 {
 .page-head__apps .platform-badge:hover { transform: translateY(-1px); }
 .page-head__apps .platform-badge:active { transform: translateY(0) scale(.97); }
 
-/* 고른 앱 — 음영을 눌린 쪽으로 바꾼다(떠 있던 판이 내려앉는다). */
-.page-head__apps .platform-badge[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--text) 7%, var(--surface));
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .16);
-}
-/* 우측 하단 "선택" 배지. 로고가 비켜준 자리에 앉아 색뿐 아니라
-   글자로도 눌린 상태를 못박는다. */
-.page-head__apps .platform-badge[aria-pressed="true"]::after {
-  content: '선택';
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
-  padding: 0 .3rem;
-  border-radius: 999px;
-  background: var(--text);
-  color: var(--bg);
-  font-size: .62rem;
-  font-weight: 700;
-  line-height: 1.6;
-  letter-spacing: -.02em;
-}
+/* 앱마다 자기 색을 변수로 들고 있는다 — 선택 테두리와 체크 배지가
+   같은 색을 쓰므로 한 곳에서만 정한다. */
+.page-head__apps .platform-badge--baemin { --pc: #2ac1bc; --pc2: #6fe0dc; }
+.page-head__apps .platform-badge--coupangeats { --pc: #d62d34; --pc2: #ff6b70; }
+.page-head__apps .platform-badge--ddangyo { --pc: #f5a623; --pc2: #ffd07a; }
+.page-head__apps .platform-badge--yogiyo { --pc: #fa0050; --pc2: #ff5d90; }
+
 .page-head__apps .platform-badge img {
   width: 49px; height: 49px;
   position: static;
@@ -285,10 +272,38 @@ h1 {
   transform: none;
   border-radius: 7px;
 }
-/* 고른 앱 — 판이 눌린 것처럼 진해진다. */
+
+/* 고른 앱 — 글자로 알리는 대신 그 앱 색 테두리를 두른다. 테두리에
+   그라데이션을 쓰려면 배경을 두 겹으로 깔고(안쪽 padding-box, 바깥
+   border-box) 테두리를 투명하게 비워야 한다. */
 .page-head__apps .platform-badge[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--text) 10%, var(--surface));
-  border-color: var(--text);
+  border: 2px solid transparent;
+  padding: 1px;
+  background-image:
+    linear-gradient(var(--surface), var(--surface)),
+    linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .07), 0 4px 10px rgba(0, 0, 0, .05);
+}
+/* 좌측 상단 체크 배지 — 모서리에 걸쳐 로고를 가리지 않는다. */
+.page-head__apps .platform-badge[aria-pressed="true"]::after {
+  content: '✓';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
 }
 
 .platform-badge-wrap { position: relative; }
@@ -1194,17 +1209,23 @@ h1 {
    깔고 테두리를 없애 면으로 도드라지게 한다. */
 .offer--best .offer__chip {
   border-color: transparent;
-  background: linear-gradient(135deg, #e8f4ff 0%, #eef0ff 50%, #fdeafc 100%);
+  /* 파스텔은 배경과 구분이 안 됐다 — 원색 네온으로 올린다. 글자는
+     흰색으로 뒤집어 대비를 확보한다. */
+  background: linear-gradient(120deg, #00c8ff 0%, #4d6bff 45%, #ff3ec8 100%);
+  color: #fff;
 }
+.offer--best .offer__amount { color: #fff; }
+.offer--best .offer__amount--soldout { color: rgba(255, 255, 255, .75); }
 
 /* "최대"가 붙은 값은 최소주문금액을 채워야 나오는 상한액이다 — 액면
    그대로 다른 확정값과 견주면 안 되므로 칩을 통째로 회색으로 눌러
    "여기까지 가능"이라는 성격을 먼저 읽히게 한다. */
 .offer--capped .offer__chip {
-  background: color-mix(in srgb, var(--text) 5%, var(--bg));
+  background: color-mix(in srgb, var(--text) 12%, var(--bg));
   border-style: dashed;
+  border-color: color-mix(in srgb, var(--text) 25%, transparent);
 }
-.offer--capped .offer__amount { color: var(--text-muted); }
+.offer--capped .offer__amount { color: color-mix(in srgb, var(--text) 62%, transparent); }
 .offer--confirmed .offer__amount {
   font-weight: 600;
   font-variant-numeric: tabular-nums;

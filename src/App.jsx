@@ -122,7 +122,9 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle, bes
             후보에서 빠진다) — 같은 자리, 같은 배지를 색만 바꿔 쓴다. */}
         {(best || showRangeBadge) && (
           <span className={`offer__range-badge${best ? ' offer__range-badge--best' : ''}`}>
-            {best ? '최고' : offer.qualifier}
+            {/* "최대"만으로는 그 금액을 받는다는 뜻으로 읽혔다 — 조건을
+                채워야 도달하는 상한이라는 걸 문구로 못박는다. */}
+            {best ? '최고' : offer.qualifier === '최대' ? '최대 할인 금액' : offer.qualifier}
           </span>
         )}
         {/* "배민클럽 전용쿠폰" 같은 원문 대신 이름만 남긴다 — 칩이 이미
