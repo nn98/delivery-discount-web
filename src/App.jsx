@@ -695,6 +695,37 @@ export default function App() {
             ))}
           </div>
 
+          {/* 분류·초기화·검색은 앱 버튼과 같은 선상에 둔다 — 별도 줄로
+              띄우면 같은 조작 묶음인데도 따로 노는 것처럼 보였다.
+              좁은 화면에서는 "카테고리 설정" 글자를 접고 아이콘만 남긴다. */}
+          <button
+            type="button"
+            className={`category-toggle${catExpanded ? ' category-toggle--open' : ''}${filterKey !== 'all' ? ' category-toggle--active' : ''}`}
+            aria-expanded={catExpanded}
+            aria-label="카테고리 설정"
+            onClick={() => setCatExpanded((v) => !v)}
+          >
+            <span className="category-toggle__label">카테고리 설정</span>
+            <svg className="category-toggle__icon" aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="5" x2="21" y2="5" />
+              <line x1="6" y1="10" x2="18" y2="10" />
+              <line x1="9" y1="15" x2="15" y2="15" />
+              <polyline points="8 18 12 22 16 18" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}
+            onClick={resetFilters}
+            aria-label="필터 초기화"
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-3-6.7" />
+              <polyline points="21 3 21 9 15 9" />
+            </svg>
+          </button>
+          <SearchControl value={search} onChange={setSearch} />
+
         </div>
         {/* 카테고리 목록 — 토글을 눌렀을 때만 바 아래로 펼쳐진다.
             absolute라 카드 그리드를 밀어내지 않는다. */}
@@ -714,40 +745,6 @@ export default function App() {
             ))}
           </div>
         )}
-        {/* 검색·초기화는 바 안에서 빼내 바로 아래 여백에 띄운다.
-            absolute라 카드 그리드를 밀어내지 않고, 윗줄 배지 공간을
-            통째로 비워준다. */}
-        <div className="title-bar__float">
-          {/* 분류는 앱 필터(1차 조작)와 달리 눌렀을 때만 펼쳐지는 2차
-              조작이라 바 안이 아니라 이 줄 왼쪽에 둔다. 아이콘은 선
-              세 줄에 아래 화살표 — 목록을 걸러 내린다는 뜻. */}
-          <button
-            type="button"
-            className={`category-toggle${catExpanded ? ' category-toggle--open' : ''}${filterKey !== 'all' ? ' category-toggle--active' : ''}`}
-            aria-expanded={catExpanded}
-            onClick={() => setCatExpanded((v) => !v)}
-          >
-            <span className="category-toggle__label">카테고리 설정</span>
-            <svg className="category-toggle__icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="5" x2="21" y2="5" />
-              <line x1="6" y1="10" x2="18" y2="10" />
-              <line x1="9" y1="15" x2="15" y2="15" />
-              <polyline points="8 18 12 22 16 18" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}
-            onClick={resetFilters}
-            aria-label="필터 초기화"
-          >
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a9 9 0 1 1-3-6.7" />
-              <polyline points="21 3 21 9 15 9" />
-            </svg>
-          </button>
-          <SearchControl value={search} onChange={setSearch} />
-        </div>
 
       </div>
     <main>
