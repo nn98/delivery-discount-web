@@ -136,7 +136,7 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle, bes
               {MEMBERSHIP_LABEL[offer.platform] ?? offer.badge}
             </span>
           ) : (
-            <span className={`offer__status-badge${offer.badge === '정액+쿠폰' ? ' offer__status-badge--sum' : ''}`}>
+            <span className={`offer__status-badge${/^\d+%할인$/.test(offer.badge) ? ' offer__status-badge--sum' : ''}`}>
               {offer.badge}
             </span>
           )
