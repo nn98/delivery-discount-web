@@ -101,7 +101,8 @@ main { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 4rem; }
   gap: .35rem;
   max-width: 880px;
   margin: 0 auto;
-  padding: 0 .5rem;
+  /* 위 여백은 선택 체크 라벨이 버튼 밖으로 나와도 잘리지 않게 둔다. */
+  padding: 9px .5rem 0;
 }
 /* 검색은 오른쪽 끝에 붙인다 — 그 앞(초기화)까지가 필터 묶음이다. */
 .title-bar__inner .search-control { margin-left: auto; order: 2; }
@@ -265,20 +266,23 @@ h1 {
 .page-head__apps .platform-badge--ddangyo { --pc: #f5a623; --pc2: #ffd07a; }
 .page-head__apps .platform-badge--yogiyo { --pc: #fa0050; --pc2: #ff5d90; }
 
+/* 로고가 흰색인 앱(쿠팡이츠)은 흰 판 위에서 사라진다 — 로고 뒤에
+   옅은 회색을 깔아 어떤 로고든 형태가 남게 한다. */
 .page-head__apps .platform-badge img {
   width: 49px; height: 49px;
   position: static;
   padding: 0;
   transform: none;
-  border-radius: 7px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 5%, #fff);
 }
 
 /* 고른 앱 — 글자로 알리는 대신 그 앱 색 테두리를 두른다. 테두리에
    그라데이션을 쓰려면 배경을 두 겹으로 깔고(안쪽 padding-box, 바깥
    border-box) 테두리를 투명하게 비워야 한다. */
 .page-head__apps .platform-badge[aria-pressed="true"] {
-  border: 2px solid transparent;
-  padding: 1px;
+  border: 3px solid transparent;
+  padding: 0;
   background-image:
     linear-gradient(var(--surface), var(--surface)),
     linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
@@ -290,20 +294,20 @@ h1 {
 .page-head__apps .platform-badge[aria-pressed="true"]::after {
   content: '✓';
   position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 18px;
-  height: 18px;
+  left: -7px;
+  top: -7px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
   color: #fff;
-  font-size: .68rem;
+  font-size: .85rem;
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
 }
 
 .platform-badge-wrap { position: relative; }
@@ -1215,6 +1219,23 @@ h1 {
   color: #fff;
 }
 .offer--best .offer__amount { color: #fff; }
+/* 최고 할인 라벨 — 금액 위 배지가 아니라 칩 왼쪽에 붙는 표식이다.
+   흰 글씨라 네온 배경 위에서 금액과 한 덩어리로 읽힌다. */
+.offer__best-label {
+  flex: none;
+  margin-right: .5rem;
+  padding: .12rem .45rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .22);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+}
+.offer--hero .offer__best-label { font-size: .82rem; padding: .16rem .55rem; }
+/* 금액 줄을 가로로 세워 라벨이 왼쪽에 서게 한다. */
+.offer--best .offer__amount { display: flex; align-items: center; justify-content: center; }
 .offer--best .offer__amount--soldout { color: rgba(255, 255, 255, .75); }
 
 /* "최대"가 붙은 값은 최소주문금액을 채워야 나오는 상한액이다 — 액면

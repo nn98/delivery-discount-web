@@ -120,11 +120,14 @@ function OfferChip({ offer, brandLinks, brandName, detailId, open, onToggle, bes
       <span className="offer__amount">
         {/* 최고와 qualifier는 동시에 붙지 않는다(조건 붙은 값은 최고
             후보에서 빠진다) — 같은 자리, 같은 배지를 색만 바꿔 쓴다. */}
-        {(best || showRangeBadge) && (
-          <span className={`offer__range-badge${best ? ' offer__range-badge--best' : ''}`}>
+        {/* 최고 할인은 칩 왼쪽에 라벨로 붙인다 — 금액 위에 떠 있던
+            배지는 카드가 여럿 늘어서면 어느 칩 것인지 헷갈렸다. */}
+        {best && <span className="offer__best-label">최고 할인</span>}
+        {!best && showRangeBadge && (
+          <span className="offer__range-badge">
             {/* "최대"만으로는 그 금액을 받는다는 뜻으로 읽혔다 — 조건을
                 채워야 도달하는 상한이라는 걸 문구로 못박는다. */}
-            {best ? '최고' : offer.qualifier === '최대' ? '최대 할인 금액' : offer.qualifier}
+            {offer.qualifier === '최대' ? '최대 할인 금액' : offer.qualifier}
           </span>
         )}
         {/* "배민클럽 전용쿠폰" 같은 원문 대신 이름만 남긴다 — 칩이 이미
@@ -274,11 +277,11 @@ function BrandCard({ brand, highlighted, onInteract }) {
   // 같은 최대군끼리·같은 비최대군끼리는 금액 큰 순.
   // 그 브랜드에서 가장 큰 확정 할인액. 조건이 붙은 값(qualifier)과 품절은
   // 비교에서 뺀다 — 같은 선에서 견줄 수 없는 값이다. 동점이면 동점인
-  // 만큼 전부 표시한다(하나만 고르면 거짓 우열이 생긴다). 비교 대상이
-  // 하나뿐이면 최고랄 것도 없어 표시하지 않는다.
+  // 만큼 전부 표시한다(하나만 고르면 거짓 우열이 생긴다). 하나뿐이어도
+  // 그 값이 그 브랜드에서 받을 수 있는 최고다 — 그대로 표시한다.
   const bestAmount = useMemo(() => {
     const plain = brand.offers.filter((o) => !o.qualifier && o.amount != null && !o.soldOut)
-    if (plain.length < 2) return null
+    if (plain.length === 0) return null
     return Math.max(...plain.map((o) => o.amount))
   }, [brand.offers])
 
@@ -491,8 +494,9 @@ export default function App() {
   const [search, setSearch] = useState('')
 
   // 헤더의 플랫폼 배지를 눌러 그 앱에 오퍼가 있는 브랜드만 본다.
-  // 여러 개 동시 선택 가능(Set), 전부 해제하면 원래대로 전체 표시.
-  const [platformFilter, setPlatformFilter] = useState(() => new Set())
+  // 처음엔 전부 선택된 상태다 — 빈 Set(=필터 없음)을 기본으로 두면
+  // 선택·미선택·기본 세 가지 모양이 생겨 무엇이 켜져 있는지 헷갈렸다.
+  const [platformFilter, setPlatformFilter] = useState(() => new Set(PLATFORMS.map((p) => p.key)))
   const togglePlatform = (key) => {
     setPlatformFilter((prev) => {
       const next = new Set(prev)
@@ -564,10 +568,10 @@ export default function App() {
     track('membership_toggle', { platform: key })
   }
 
-  const isFiltered = filterKey !== 'all' || platformFilter.size > 0 || search.trim() !== ''
+  const isFiltered = filterKey !== 'all' || platformFilter.size < PLATFORMS.length || search.trim() !== ''
   const resetFilters = () => {
     setFilterKey('all')
-    setPlatformFilter(new Set())
+    setPlatformFilter(new Set(PLATFORMS.map((p) => p.key)))
     setSearch('')
     track('filters_reset')
   }
@@ -662,7 +666,7 @@ export default function App() {
                     // 켤 때만 묻는다 — 끄는 참에 멤버십을 묻는 건 방해다.
                     setMembershipPrompt(platformFilter.has(p.key) ? null : p.key)
                   }}
-                  active={platformFilter.size === 0 ? undefined : platformFilter.has(p.key)}
+                  active={platformFilter.has(p.key)}
                 />
 
                 {/* 켜기/끄기를 묻는 칸. 2초 뒤 스스로 사라지고, 남은
