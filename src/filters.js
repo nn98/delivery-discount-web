@@ -20,6 +20,17 @@ export const CATEGORIES = [
   { key: 'chinese', label: '중식' },
 ]
 
+// 멤버십/지역화폐 반영 로직은 아직 없다. delivery-discount-api 레포의
+// docs/specs/2026-07-28-product-brief.md에 "UI만 배치, 로직 보류"로 명시된
+// 의도적 보류 상태 — 계산 모델이 나오면 그 레포 docs/plans에 계획이 생긴다.
+export const MEMBERSHIP_OPTIONS = [
+  { key: 'baemin', label: '배민클럽' },
+  { key: 'coupangeats', label: '쿠팡와우' },
+  { key: 'yogiyo', label: '요기패스' },
+  { key: 'ddangyo', label: '지역화폐' },
+]
+export const MEMBERSHIP_LABEL = Object.fromEntries(MEMBERSHIP_OPTIONS.map((m) => [m.key, m.label]))
+
 export const SORT_KEYS = [
   { key: 'amount', label: '할인액' },
   { key: 'minOrder', label: '최소주문금액' },

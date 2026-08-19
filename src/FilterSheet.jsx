@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { track } from './analytics.js'
 import { PlatformBadge, PLATFORMS } from './logos.jsx'
-import { CATEGORIES, SORT_KEYS, defaultFilters, isDefaultFilters } from './filters.js'
+import { CATEGORIES, MEMBERSHIP_OPTIONS, SORT_KEYS, defaultFilters, isDefaultFilters } from './filters.js'
 
 /**
  * 아래에서 올라오는 필터 시트. 앱·분류·정렬을 한 자리에서 고르고
@@ -13,6 +14,7 @@ import { CATEGORIES, SORT_KEYS, defaultFilters, isDefaultFilters } from './filte
  */
 export default function FilterSheet({ open, filters, onApply, onClose }) {
   const [draft, setDraft] = useState(filters)
+  const [membershipHint, setMembershipHint] = useState(null)
 
   // 열릴 때만 동기화한다. 열려 있는 동안 바깥 값이 바뀌어도(메뉴바에서
   // 분류를 켜는 등) draft를 덮지 않는다 — 고르던 게 날아간다.
@@ -59,7 +61,12 @@ export default function FilterSheet({ open, filters, onApply, onClose }) {
                 type="button"
                 className={`sheet__app${draft.platforms.has(p.key) ? ' sheet__app--on' : ''}`}
                 aria-pressed={draft.platforms.has(p.key)}
-                onClick={() => toggleIn('platforms', p.key)}
+                onClick={() => {
+                  toggleIn('platforms', p.key)
+                  // 바의 플랫폼 배지가 여기로 옮겨왔다 — 조작 위치만
+                  // 바뀐 것이라 같은 이벤트 이름을 그대로 쓴다.
+                  track('platform_filter_toggle', { platform: p.key, from: 'sheet' })
+                }}
               >
                 <PlatformBadge platformKey={p.key} active={draft.platforms.has(p.key)} />
                 <span>{p.label}</span>
@@ -73,6 +80,31 @@ export default function FilterSheet({ open, filters, onApply, onClose }) {
             <p className="sheet__warn">앱을 하나도 안 고르면 결과가 비어 있다.</p>
           )}
 
+          <h2 className="sheet__title">멤버십</h2>
+          {/* 멤버십 반영 로직은 아직 없다(api docs/specs의 의도적 보류).
+              자리와 이름을 미리 두되 누르면 상태가 안 바뀌고 "구현 예정"만
+              알린다 — 눌렀는데 아무 일도 안 일어나면 고장으로 읽힌다.
+              수요는 그대로 집계한다. */}
+          <div className="sheet__chips">
+            {MEMBERSHIP_OPTIONS.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                className={`sheet__chip sheet__chip--soon${membershipHint === m.key ? ' sheet__chip--hint' : ''}`}
+                aria-disabled="true"
+                title="구현 예정입니다"
+                onClick={() => {
+                  setMembershipHint(m.key)
+                  setTimeout(() => setMembershipHint((cur) => (cur === m.key ? null : cur)), 1600)
+                  track('membership_toggle', { platform: m.key, state: 'soon', from: 'sheet' })
+                }}
+              >
+                {m.label}
+                {membershipHint === m.key && <span className="sheet__soon">구현 예정</span>}
+              </button>
+            ))}
+          </div>
+
           <h2 className="sheet__title">분류</h2>
           <div className="sheet__chips">
             {CATEGORIES.map((c) => (
@@ -81,7 +113,10 @@ export default function FilterSheet({ open, filters, onApply, onClose }) {
                 type="button"
                 className={`sheet__chip${draft.categories.has(c.key) ? ' sheet__chip--on' : ''}`}
                 aria-pressed={draft.categories.has(c.key)}
-                onClick={() => toggleIn('categories', c.key)}
+                onClick={() => {
+                  toggleIn('categories', c.key)
+                  track('category_change', { category: c.key, from: 'sheet' })
+                }}
               >
                 {c.label}
               </button>
