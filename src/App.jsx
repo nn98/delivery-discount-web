@@ -337,26 +337,13 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
       ref={cardRef}
       className={`brand-card ${open ? 'brand-card--open' : ''} ${highlighted ? 'brand-card--highlighted' : ''}`}
     >
-      <button
-        type="button"
-        className="brand-card__head"
-        aria-expanded={open}
-        aria-controls={detailId}
-        onClick={toggle}
-      >
+      {/* 헤더는 이름표다. 펼침 트리거는 카드 아래 한 곳뿐이다 —
+          헤더 전체·화살표·아래 버튼 셋이 같은 일을 하면 어느 것을
+          눌러야 하는지 생각하게 된다. */}
+      <div className="brand-card__head">
         <BrandLogo name={brand.name} />
         <h2 className="brand-card__name">{brand.name}</h2>
-        {/* 화살표 왼쪽 안내 문구. 마우스가 있는 환경에서 hover할 때만
-            드러난다(App.css @media (hover: hover)) — 펼치지는 않는다,
-            펼침은 클릭 전용. 여기에 원본 캡처 미리보기를 넣지 않는다:
-            판독 근거는 상세를 펼쳐야 보는 정보지 스치며 보는 정보가
-            아니고, 브랜드 수만큼 이미지를 hover마다 물면 무겁다. */}
-        {/* 아래로 펼치는 화살표. 헤더 자체가 펼침 버튼이라는 신호가
-            없으면 카드를 눌러볼 생각을 안 한다 — 아래 "접기/자세히"는
-            카드 끝까지 내려가야 보인다. */}
-        <span className="brand-card__chevron" aria-hidden="true" />
-        <span className="sr-only">상세 조건 {open ? '접기' : '펼치기'}</span>
-      </button>
+      </div>
 
       {/* 담기 + 버튼. 헤더 버튼의 형제라 눌러도 카드가 안 펼쳐진다.
           아래 담기 줄과 같은 동작이고, 스크롤 중에 카드 아래까지 안 가도

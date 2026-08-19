@@ -310,10 +310,15 @@ h1 {
 
 .banner-slot {
   position: relative;
+  /* main 바깥에 있어 폭 제약이 없었다 — 넓은 화면에서 배너만 카드
+     격자를 넘어 끝까지 늘어났다. 본문과 같은 규격(880 + 좌우 1.25rem)에
+     맞춘다. */
+  max-width: 880px;
+  margin: 0 auto 2px;
+  padding: 0 1.25rem;
+
   /* 메뉴바에 바로 붙고, 아래로도 거의 붙는다 — 배너와 카드가 한
      덩어리로 읽혀야 배너가 목록 위에 떠 있는 별개 층으로 안 보인다. */
-  padding-top: 0;
-  margin-bottom: 2px;
 }
 
 .banner {
@@ -476,7 +481,12 @@ h1 {
    뷰포트가 아니라 본문 폭을 따라간다는 이 레포 규칙을 그대로 따른다 —
    하단만 화면 끝까지 채우면 위는 880px, 아래는 화면 폭으로 어긋난다.
    안 보일 때 visibility:hidden이라 탭 순서에서도 빠진다. */
+/* 하단 플로팅도 본문 폭을 넘지 않는다 — 화면이 넓으면 배너만 끝까지
+   늘어나 목록과 어긋나 보인다. */
 .banner-dock {
+  max-width: 880px;
+  margin-left: auto;
+  margin-right: auto;
   position: fixed;
   left: 0;
   right: 0;
@@ -499,7 +509,12 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   .banner { animation: none; }
-  .banner-dock { transition: opacity 200ms ease, visibility 200ms; transform: none; }
+  /* 하단 플로팅도 본문 폭을 넘지 않는다 — 화면이 넓으면 배너만 끝까지
+   늘어나 목록과 어긋나 보인다. */
+.banner-dock {
+  max-width: 880px;
+  margin-left: auto;
+  margin-right: auto; transition: opacity 200ms ease, visibility 200ms; transform: none; }
 }
 
 .sub { color: var(--text-muted); font-size: .9rem; margin: 0; text-align: center; }
@@ -866,21 +881,15 @@ h1 {
 
 /* 1행: 로고 + 이름. 상세를 펼치는 버튼이기도 하다 — 카드에서 가장 큰
    과녁이라 모바일에서 엄지로 누르기 가장 쉽다. */
+/* 헤더는 이름표다 — 더는 버튼이 아니라 커서·포커스링을 걷었다.
+   오른쪽 여백은 + 버튼이 이름을 덮지 않게 남긴다. */
 .brand-card__head {
   display: flex;
   align-items: center;
   gap: .7rem;
   width: 100%;
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
+  padding-right: 44px;
 }
-.brand-card__head { padding-right: 44px; }
-.brand-card__head:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .brand-card__name {
   font-size: .98rem;
   font-weight: 600;
