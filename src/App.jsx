@@ -351,6 +351,10 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
             펼침은 클릭 전용. 여기에 원본 캡처 미리보기를 넣지 않는다:
             판독 근거는 상세를 펼쳐야 보는 정보지 스치며 보는 정보가
             아니고, 브랜드 수만큼 이미지를 hover마다 물면 무겁다. */}
+        {/* 아래로 펼치는 화살표. 헤더 자체가 펼침 버튼이라는 신호가
+            없으면 카드를 눌러볼 생각을 안 한다 — 아래 "접기/자세히"는
+            카드 끝까지 내려가야 보인다. */}
+        <span className="brand-card__chevron" aria-hidden="true" />
         <span className="sr-only">상세 조건 {open ? '접기' : '펼치기'}</span>
       </button>
 
