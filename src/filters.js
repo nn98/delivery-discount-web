@@ -117,7 +117,7 @@ export function sortBrands(brands, { sortKey, sortDir }) {
  * 오퍼를 켜고 끈다 — 끈 앱 금액이 카드에 남아 있으면 토글이 무슨 일을
  * 했는지 알 수 없고 "최고 할인"도 끈 앱 값으로 잡힌다.
  */
-export function applyFilters(brands, filters) {
+export function applyFilters(brands, filters, { cart, cartOnly } = {}) {
   const q = filters.search.trim()
   const visible = brands
     .map((b) => {
@@ -126,6 +126,9 @@ export function applyFilters(brands, filters) {
     })
     .filter((b) => {
       if (b.offers.length === 0) return false
+      // 담아둔 것만 보기. 다른 조건보다 먼저 건다 — 담아둔 브랜드를
+      // 보러 왔는데 분류 필터에 걸려 안 보이면 담은 의미가 없다.
+      if (cartOnly) return cart.has(b.name)
       if (q !== '' && !b.name.includes(q)) return false
       // 아무 분류도 안 고르면 전체다.
       if (filters.categories.size === 0) return true

@@ -54,6 +54,8 @@ function searchFallbackLink(platformKey, brandName) {
   return `https://www.google.com/search?q=${encodeURIComponent(`${prefix} ${brandName}`)}`
 }
 
+const CART_KEY = 'dk_cart'
+
 function won(value) {
   return `${value.toLocaleString()}원`
 }
@@ -272,7 +274,7 @@ function BrandGridSkeleton() {
 // highlighted는 URL 해시(#brand-이름)로 이 카드를 콕 집어 공유했을 때만
 // true — 스크롤해서 보여주고 테두리를 강조한다. 카드를 만지면
 // onInteract로 App에 알려 하이라이트를 끈다(계속 남아있으면 거슬린다).
-function BrandCard({ brand, highlighted, onInteract }) {
+function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
   // qualifier="최대"인 오퍼는 금액과 무관하게 항상 맨 뒤로 민다 —
   // confirmed든 held든, "최대"는 실제 최소주문금액을 채워야 진짜 값이
   // 나오는 상한액이라 액면 그대로 다른 확정값과 비교하면 왜곡된다.
@@ -335,6 +337,17 @@ function BrandCard({ brand, highlighted, onInteract }) {
       ref={cardRef}
       className={`brand-card ${open ? 'brand-card--open' : ''} ${highlighted ? 'brand-card--highlighted' : ''}`}
     >
+      {/* 담기 체크박스. 헤더 버튼 안에 두면 누를 때마다 카드가 같이
+          펼쳐진다 — 형제로 두고 절대 배치한다. */}
+      <label className="brand-card__check" title={checked ? '담기 해제' : '담아두기'}>
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={() => onToggleCheck(brand.name)}
+        />
+        <span className="sr-only">{brand.name} 담아두기</span>
+      </label>
+
       <button
         type="button"
         className="brand-card__head"
@@ -634,10 +647,48 @@ export default function App() {
   //
   // 오퍼를 걷어내고 나서 남는 게 없는 카드는 뺀다. 그 브랜드에서 볼
   // 것이 하나도 없는데 이름만 남기면 빈 카드가 격자를 채운다.
+  // 담아둔 브랜드. 비교하려고 몇 개를 골라두면 스크롤을 오가지 않고
+  // 그것만 모아 볼 수 있다. 브랜드명이 곧 키다(API가 별칭을 이미 대표명
+  // 하나로 합쳐 내려준다). localStorage라 새로고침해도 남고, 사이트
+  // 데이터를 지우면 끊긴다 — visitorId와 같은 한계다.
+  const [cart, setCart] = useState(() => {
+    try {
+      const raw = localStorage.getItem(CART_KEY)
+      return new Set(raw ? JSON.parse(raw) : [])
+    } catch {
+      return new Set()
+    }
+  })
+  const [cartOnly, setCartOnly] = useState(false)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_KEY, JSON.stringify([...cart]))
+    } catch {
+      /* 사파리 프라이빗 등 — 못 적으면 이번 세션에만 남는다 */
+    }
+  }, [cart])
+
+  const toggleCart = (name) => {
+    setCart((prev) => {
+      const next = new Set(prev)
+      const adding = !next.has(name)
+      if (adding) next.add(name); else next.delete(name)
+      track('cart_toggle', { brand: name, state: adding ? 'add' : 'remove' })
+      return next
+    })
+  }
+
+  // 담은 게 하나도 없으면 모아보기를 켜둔 채로 둘 이유가 없다 — 빈
+  // 화면만 남는다.
+  useEffect(() => {
+    if (cart.size === 0) setCartOnly(false)
+  }, [cart.size])
+
   // 필터·정렬 규칙은 filters.js가 단일 출처다(시트·메뉴바와 같은 규칙).
   const visibleBrands = useMemo(
-    () => (brands ? applyFilters(brands, filters) : brands),
-    [brands, filters],
+    () => (brands ? applyFilters(brands, filters, { cart, cartOnly }) : brands),
+    [brands, filters, cart, cartOnly],
   )
 
 
@@ -661,7 +712,39 @@ export default function App() {
           시트로 옮겼다 — 앱·분류·정렬이 한 자리에 모여야 무엇이 걸려
           있는지 한 번에 읽힌다. 바에 남는 건 자주 만지는 것뿐이다. */}
       <div className="title-bar" ref={titleBarRef}>
-        <h1 className="sr-only">오늘의할인 — 배달앱 브랜드 할인 비교</h1>
+        {/* 1행 — 이름과 상시 조작(검색·담아둔 것). 배달앱들이 쓰는 구조
+            그대로다: 위는 정체성과 도구, 아래는 분류. */}
+        <div className="title-bar__top">
+          <h1 className="title-bar__brand">오늘의할인 <span aria-hidden="true">🍔</span></h1>
+
+          <div className="title-bar__tools">
+            <SearchControl value={search} onChange={setSearch} />
+
+            {/* 담아둔 브랜드만 모아 본다. 개수를 배지로 달아 몇 개
+                담았는지 열지 않고도 안다. */}
+            <button
+              type="button"
+              className={`cart-btn${cartOnly ? ' cart-btn--on' : ''}`}
+              aria-pressed={cartOnly}
+              disabled={cart.size === 0}
+              aria-label={cartOnly ? '전체 보기' : '담아둔 브랜드만 보기'}
+              title={cart.size === 0 ? '담아둔 브랜드가 없다' : (cartOnly ? '전체 보기' : '담아둔 것만 보기')}
+              onClick={() => {
+                setCartOnly((v) => {
+                  track('cart_view_toggle', { state: v ? 'off' : 'on', count: cart.size })
+                  return !v
+                })
+              }}
+            >
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="20" r="1.4" />
+                <circle cx="18" cy="20" r="1.4" />
+                <path d="M2 3h3l2.4 12.2a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.3L21 7H6" />
+              </svg>
+              {cart.size > 0 && <span className="cart-btn__count">{cart.size}</span>}
+            </button>
+          </div>
+        </div>
 
         <MenuBar
           selected={filters.categories}
@@ -673,7 +756,22 @@ export default function App() {
             있는지(칩)와 그걸 푸는 수단(X·초기화)이 같은 줄에 있어야 한다. */}
         <div className="title-bar__ops">
           <span className="filter-chips">
-            {CATEGORIES.filter((c) => filters.categories.has(c.key)).map((c) => (
+            {/* 모아보기가 켜져 있으면 다른 조건이 안 먹는다 — 결과가 왜
+                이런지 알려면 그 사실이 먼저 보여야 한다. */}
+            {cartOnly && (
+              <span className="filter-chip filter-chip--cart">
+                담아둔 {cart.size}개만
+                <button
+                  type="button"
+                  className="filter-chip__clear"
+                  aria-label="전체 보기"
+                  onClick={() => setCartOnly(false)}
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {!cartOnly && CATEGORIES.filter((c) => filters.categories.has(c.key)).map((c) => (
               <span className="filter-chip" key={c.key}>
                 {c.label}
                 <button
@@ -686,7 +784,7 @@ export default function App() {
                 </button>
               </span>
             ))}
-            {filters.platforms.size < PLATFORMS.length && (
+            {!cartOnly && filters.platforms.size < PLATFORMS.length && (
               <span className="filter-chip">
                 앱 {filters.platforms.size}개
                 <button
@@ -699,7 +797,7 @@ export default function App() {
                 </button>
               </span>
             )}
-            {search.trim() !== '' && (
+            {!cartOnly && search.trim() !== '' && (
               <span className="filter-chip filter-chip--search">
                 {search}
                 <button
@@ -725,7 +823,6 @@ export default function App() {
               <polyline points="21 3 21 9 15 9" />
             </svg>
           </button>
-          <SearchControl value={search} onChange={setSearch} />
         </div>
       </div>
 
@@ -770,6 +867,8 @@ export default function App() {
               brand={b}
               highlighted={linkedBrand === brandCardId(b.name)}
               onInteract={() => setLinkedBrand(null)}
+              checked={cart.has(b.name)}
+              onToggleCheck={toggleCart}
             />
           ))}
         </div>

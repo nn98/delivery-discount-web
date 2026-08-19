@@ -1952,3 +1952,97 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   font-size: .7rem;
   color: var(--pending-text);
 }
+
+
+/* ── 상단 바 1행: 이름 + 도구(2026-08-19) ─────────────────────────
+   배달앱들이 쓰는 구조를 따른다 — 위는 정체성과 상시 도구(검색·담아둔
+   것), 아래는 분류. 조작이 한 줄에 다 섞여 있으면 무엇이 "지금 보는
+   범위"이고 무엇이 "도구"인지 구분이 안 된다. */
+.title-bar__top {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: .7rem 1.25rem .35rem;
+}
+.title-bar__brand {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.title-bar__tools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.cart-btn {
+  position: relative;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: .35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+}
+.cart-btn:hover:not(:disabled) { color: var(--text); }
+.cart-btn:disabled { opacity: .35; cursor: default; }
+/* 켜져 있으면 목록 전체가 그 범위로 좁혀진 상태다 — 버튼 하나만 보고도
+   알 수 있게 반전한다. */
+.cart-btn--on { background: var(--text); color: #fff; }
+.cart-btn__count {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* ── 브랜드 카드 담기 체크박스 ─────────────────────────────────────
+   카드 좌측 상단. 헤더 버튼의 형제로 두고 절대 배치한다 — 버튼 안에
+   넣으면 체크할 때마다 카드가 같이 펼쳐진다. */
+.brand-card { position: relative; }
+.brand-card__check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.brand-card__check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--text);
+}
+/* 로고가 체크박스 자리까지 오지 않게 헤더 왼쪽을 비운다. */
+.brand-card__head { padding-left: 34px; }
+
+.filter-chip--cart {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+}
+.filter-chip--cart .filter-chip__clear { color: #fff; }
