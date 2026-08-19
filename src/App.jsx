@@ -511,7 +511,7 @@ function SiteFooter() {
  * 입력하는 동안에는 목록이 흔들리지 않는다. 엔터나 돋보기로 확정해야
  * 필터가 걸린다 — 글자마다 다시 거르면 지우는 중에도 결과가 요동친다.
  */
-function SearchControl({ value, onChange }) {
+function SearchControl({ value, onChange, chips }) {
   const [draft, setDraft] = useState(value)
 
   // 바깥에서 검색어를 지우면(칩의 X, 초기화) 입력창도 따라 비어야 한다.
@@ -521,6 +521,11 @@ function SearchControl({ value, onChange }) {
 
   return (
     <div className="search-field">
+      {/* 걸린 조건은 검색창 안에 토큰으로 앉는다. 바 아래 따로 줄을
+          두면 조건이 없을 때 빈 줄이 남고, 있을 때는 검색과 필터가
+          서로 다른 층에 있는 것처럼 보인다 — 둘 다 "지금 무엇을
+          보고 있는가"를 말하는 같은 정보다. */}
+      {chips}
       <input
         type="search"
         className="search-field__input"
@@ -733,7 +738,37 @@ export default function App() {
           {/* 로고가 있던 자리를 검색 입력이 차지한다. 바에서 가장 넓은
               자리를 쓰는 것이 곧 이 화면의 주된 조작이라는 뜻이다 —
               이름은 스크린리더용으로만 남긴다. */}
-          <SearchControl value={search} onChange={setSearch} />
+          <SearchControl
+            value={search}
+            onChange={setSearch}
+            chips={(
+              <>
+                {/* 모아보기가 켜지면 다른 조건이 안 먹는다 — 결과가 왜
+                    이런지 알려면 그 사실만 보여야 한다. */}
+                {cartOnly && (
+                  <span className="search-chip search-chip--cart">
+                    담아둔 {cart.size}개
+                    <button type="button" className="search-chip__x" aria-label="전체 보기"
+                      onClick={() => setCartOnly(false)}>×</button>
+                  </span>
+                )}
+                {!cartOnly && CATEGORIES.filter((c) => filters.categories.has(c.key)).map((c) => (
+                  <span className="search-chip" key={c.key}>
+                    {c.label}
+                    <button type="button" className="search-chip__x" aria-label={`${c.label} 해제`}
+                      onClick={() => toggleCategory(c.key)}>×</button>
+                  </span>
+                ))}
+                {!cartOnly && filters.platforms.size < PLATFORMS.length && (
+                  <span className="search-chip">
+                    앱 {filters.platforms.size}
+                    <button type="button" className="search-chip__x" aria-label="앱 선택 초기화"
+                      onClick={() => setFilters((f) => ({ ...f, platforms: new Set(PLATFORMS.map((x) => x.key)) }))}>×</button>
+                  </span>
+                )}
+              </>
+            )}
+          />
 
           <div className="title-bar__tools">
             {/* 초기화 · 필터 · 담아둔 것 순. 왼쪽 검색에서 오른쪽으로
@@ -780,6 +815,10 @@ export default function App() {
                   track('cart_view_toggle', { state: v ? 'off' : 'on', count: cart.size })
                   return !v
                 })
+                // 목록이 통째로 갈리므로 보던 위치는 의미가 없다.
+                // 순간이동이다 — 새 목록을 보는 게 목적이지 이동 과정을
+                // 보여주는 게 목적이 아니다.
+                window.scrollTo(0, 0)
               }}
             >
               <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -799,64 +838,6 @@ export default function App() {
 
         {/* 걸린 필터·초기화·검색은 메뉴바 아래 한 줄로. 지금 뭐가 걸려
             있는지(칩)와 그걸 푸는 수단(X·초기화)이 같은 줄에 있어야 한다. */}
-        <div className="title-bar__ops">
-          <span className="filter-chips">
-            {/* 모아보기가 켜져 있으면 다른 조건이 안 먹는다 — 결과가 왜
-                이런지 알려면 그 사실이 먼저 보여야 한다. */}
-            {cartOnly && (
-              <span className="filter-chip filter-chip--cart">
-                담아둔 {cart.size}개만
-                <button
-                  type="button"
-                  className="filter-chip__clear"
-                  aria-label="전체 보기"
-                  onClick={() => setCartOnly(false)}
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {!cartOnly && CATEGORIES.filter((c) => filters.categories.has(c.key)).map((c) => (
-              <span className="filter-chip" key={c.key}>
-                {c.label}
-                <button
-                  type="button"
-                  className="filter-chip__clear"
-                  aria-label={`${c.label} 해제`}
-                  onClick={() => toggleCategory(c.key)}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            {!cartOnly && filters.platforms.size < PLATFORMS.length && (
-              <span className="filter-chip">
-                앱 {filters.platforms.size}개
-                <button
-                  type="button"
-                  className="filter-chip__clear"
-                  aria-label="앱 선택 초기화"
-                  onClick={() => setFilters((f) => ({ ...f, platforms: new Set(PLATFORMS.map((x) => x.key)) }))}
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {!cartOnly && search.trim() !== '' && (
-              <span className="filter-chip filter-chip--search">
-                {search}
-                <button
-                  type="button"
-                  className="filter-chip__clear"
-                  aria-label="검색어 지우기"
-                  onClick={() => setSearch('')}
-                >
-                  ×
-                </button>
-              </span>
-            )}
-          </span>
-        </div>
       </div>
 
       {/* 배너는 바 아래에 둔다. 흐름 맨 위에 두면 fixed인 타이틀바가
@@ -881,9 +862,31 @@ export default function App() {
           도착했을 때 레이아웃이 튀지 않는다. */}
       {!error && !brands && <BrandGridSkeleton />}
 
+      {/* 담아둔 것만 보는 중이라는 표시와 비우는 길. 검색창 토큰은
+          "지금 무엇을 보는가"를 말하고, 이 줄은 "그래서 무엇을 할 수
+          있는가"를 말한다 — 비우기를 토큰 옆에 두면 X(모아보기 끄기)와
+          뜻이 헷갈린다. */}
+      {cartOnly && (
+        <div className="cart-bar">
+          <span className="cart-bar__label">담아둔 브랜드 {cart.size}개</span>
+          <button
+            type="button"
+            className="cart-bar__clear"
+            onClick={() => {
+              track('cart_clear', { count: cart.size })
+              setCart(new Set())
+            }}
+          >
+            비우기
+          </button>
+        </div>
+      )}
+
       {visibleBrands && visibleBrands.length === 0 && (
         <p className="msg">
-          {search.trim() ? `"${search}" 검색 결과가 없습니다.` : '이 분류엔 브랜드가 없습니다.'}
+          {cartOnly
+            ? '담아둔 브랜드가 없습니다.'
+            : (search.trim() ? `"${search}" 검색 결과가 없습니다.` : '이 분류엔 브랜드가 없습니다.')}
         </p>
       )}
 
