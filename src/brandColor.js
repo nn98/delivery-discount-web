@@ -23,44 +23,6 @@ export function platformSeed(platformKey) {
   return PLATFORM_SEED[platformKey] ?? NEUTRAL_SEED
 }
 
-/**
- * 담기 버튼 색. 브랜드마다 플랫폼 색 중 하나를 골라 쓴다.
- *
- * <p>무채색 화면에 액센트가 하나뿐이면 그 색이 곧 "담기"라는 신호가
- * 되지만, 갈색 하나로 고정하면 화면이 칙칙해진다. 앱들이 쓰는 색을
- * 돌려 쓰면 이 서비스가 다루는 대상이 무엇인지도 같이 말한다.
- *
- * <p>무작위가 아니라 브랜드명으로 정한다 — 매번 굴리면 새로고침할
- * 때마다 같은 카드가 다른 색이 돼 "왜 바뀌었지"가 된다. 이름이 같으면
- * 언제 봐도 같은 색이다.
- */
-const SAVE_SEEDS = Object.values(PLATFORM_SEED)
-
-export function saveSeed(brandName) {
-  let h = 0
-  for (let i = 0; i < brandName.length; i += 1) {
-    h = (h * 31 + brandName.charCodeAt(i)) >>> 0
-  }
-  return SAVE_SEEDS[h % SAVE_SEEDS.length]
-}
-
-/**
- * 담기 버튼에 꽂을 CSS 변수. 씨앗색을 그대로 배경에 쓰면 밝은 색
- * (배민 민트)에서 흰 글씨가 안 읽힌다 — 흰 글씨 대비 4.5:1이 될
- * 때까지 어둡게 내린 값을 쓴다(bannerPalette와 같은 규칙).
- */
-export function savePalette(brandName) {
-  const [r, g, b] = hexToRgb(saveSeed(brandName))
-  const [h, sat, l] = rgbToHsl(r, g, b)
-  const base = darkenUntil(h, sat, l, [255, 255, 255], 4.5)
-  return {
-    '--save': css(h, sat, base),
-    '--save-hover': css(h, sat, clamp(base - 7, 0, 100)),
-    '--save-soft': css(h, Math.min(sat, 70), 94),
-    '--save-soft-ink': css(h, sat, clamp(base - 4, 0, 100)),
-  }
-}
-
 /* ---------- 색 변환 ---------- */
 
 function hexToRgb(hex) {

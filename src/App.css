@@ -8,8 +8,9 @@
   --accent: #171717;
   --pending-bg: #fbf3db;
   --pending-text: #956400;
-  /* --save*는 카드마다 다르다(brandColor.savePalette가 꽂는다).
-     여기 값은 그 변수가 없을 때의 폴백일 뿐이다. */
+  /* 담기 버튼. 브랜드마다 플랫폼 색을 돌려 쓰다가 검정으로 통일했다 —
+     카드마다 색이 다르면 "이 색은 무슨 뜻이지"를 매번 묻게 되고,
+     정작 브랜드색을 쓰는 배너와도 신호가 겹쳤다. */
   --save: #171717;
   --save-hover: #333333;
   --save-soft: #f1f0ee;
@@ -1899,8 +1900,8 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
 }
 .brand-card__add:hover { color: var(--save); }
 .brand-card__add--on {
-  background: var(--save);
-  color: #fff;
+  background: var(--save-soft);
+  color: var(--save-soft-ink);
 }
 .brand-card__add:active { transform: scale(.94); }
 

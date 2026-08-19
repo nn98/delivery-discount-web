@@ -3,7 +3,6 @@ import { fetchBanners, fetchBrands } from './api.js'
 import { track } from './analytics.js'
 import EventBanner from './EventBanner.jsx'
 import { BrandLogo, PlatformBadge, PLATFORMS, PLATFORM_BY_KEY } from './logos.jsx'
-import { savePalette } from './brandColor.js'
 import FilterSheet from './FilterSheet.jsx'
 import MenuBar from './MenuBar.jsx'
 import { CATEGORIES, MEMBERSHIP_LABEL, applyFilters, defaultFilters, isDefaultFilters } from './filters.js'
@@ -337,9 +336,6 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
       id={brandCardId(brand.name)}
       ref={cardRef}
       className={`brand-card ${open ? 'brand-card--open' : ''} ${highlighted ? 'brand-card--highlighted' : ''}`}
-      /* 담기 버튼 색은 브랜드마다 다르다(플랫폼 색을 돌려 쓴다) —
-         카드 단위 변수로 꽂아 CSS는 어디에 칠할지만 정한다. */
-      style={savePalette(brand.name)}
     >
       <button
         type="button"
