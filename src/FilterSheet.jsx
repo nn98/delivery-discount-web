@@ -1,0 +1,142 @@
+import { useEffect, useState } from 'react'
+import { PlatformBadge, PLATFORMS } from './logos.jsx'
+import { CATEGORIES, SORT_KEYS, defaultFilters, isDefaultFilters } from './filters.js'
+
+/**
+ * 아래에서 올라오는 필터 시트. 앱·분류·정렬을 한 자리에서 고르고
+ * "적용"을 눌러야 목록이 바뀐다.
+ *
+ * <p>시트 안에서 만지는 값은 draft다 — 조건을 셋 다 바꾸는 동안 목록이
+ * 매번 다시 그려지면 무엇을 고르는 중인지 보이지 않고, 중간 상태(예:
+ * 앱을 전부 껐다가 다시 켜는 도중)에서 결과가 0건으로 깜빡인다.
+ * 열 때마다 지금 적용된 값으로 draft를 채운다.
+ */
+export default function FilterSheet({ open, filters, onApply, onClose }) {
+  const [draft, setDraft] = useState(filters)
+
+  // 열릴 때만 동기화한다. 열려 있는 동안 바깥 값이 바뀌어도(메뉴바에서
+  // 분류를 켜는 등) draft를 덮지 않는다 — 고르던 게 날아간다.
+  useEffect(() => {
+    if (open) setDraft(filters)
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 시트가 떠 있는 동안 뒤 목록이 같이 스크롤되면 시트를 닫았을 때
+  // 엉뚱한 위치에 있다.
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [open])
+
+  // ESC로 닫는다. 키보드만 쓰는 사용자에게 닫을 길이 배경 클릭뿐이면 안 된다.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  if (!open) return null
+
+  const toggleIn = (field, key) => setDraft((d) => {
+    const next = new Set(d[field])
+    if (next.has(key)) next.delete(key); else next.add(key)
+    return { ...d, [field]: next }
+  })
+
+  return (
+    <div className="sheet-scrim" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <section className="sheet" role="dialog" aria-modal="true" aria-label="필터">
+        <div className="sheet__grip" aria-hidden="true" />
+
+        <div className="sheet__body">
+          <h2 className="sheet__title">배달앱</h2>
+          <div className="sheet__apps">
+            {PLATFORMS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                className={`sheet__app${draft.platforms.has(p.key) ? ' sheet__app--on' : ''}`}
+                aria-pressed={draft.platforms.has(p.key)}
+                onClick={() => toggleIn('platforms', p.key)}
+              >
+                <PlatformBadge platformKey={p.key} active={draft.platforms.has(p.key)} />
+                <span>{p.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* 앱을 전부 끄면 볼 게 없다. 막지 않고 알려만 준다 — 막으면
+              마지막 하나를 끄려다 안 꺼져서 고장으로 읽힌다. */}
+          {draft.platforms.size === 0 && (
+            <p className="sheet__warn">앱을 하나도 안 고르면 결과가 비어 있다.</p>
+          )}
+
+          <h2 className="sheet__title">분류</h2>
+          <div className="sheet__chips">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                className={`sheet__chip${draft.categories.has(c.key) ? ' sheet__chip--on' : ''}`}
+                aria-pressed={draft.categories.has(c.key)}
+                onClick={() => toggleIn('categories', c.key)}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <p className="sheet__hint">
+            {draft.categories.size === 0 ? '아무것도 안 고르면 전체다.' : `${draft.categories.size}개 선택`}
+          </p>
+
+          <h2 className="sheet__title">정렬</h2>
+          <div className="sheet__chips">
+            {SORT_KEYS.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                className={`sheet__chip${draft.sortKey === s.key ? ' sheet__chip--on' : ''}`}
+                aria-pressed={draft.sortKey === s.key}
+                onClick={() => setDraft((d) => ({ ...d, sortKey: s.key }))}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="sheet__chips">
+            {[['desc', '높은 순'], ['asc', '낮은 순']].map(([dir, label]) => (
+              <button
+                key={dir}
+                type="button"
+                className={`sheet__chip${draft.sortDir === dir ? ' sheet__chip--on' : ''}`}
+                aria-pressed={draft.sortDir === dir}
+                onClick={() => setDraft((d) => ({ ...d, sortDir: dir }))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* 확정 없는 브랜드가 뒤로 가는 건 정렬 기준과 무관하게 늘
+              적용된다 — 순서가 기대와 다를 때 여기서 이유를 찾는다. */}
+          <p className="sheet__hint">받을 수 있는 값이 확정 안 된 브랜드는 어느 기준에서도 뒤에 선다.</p>
+        </div>
+
+        <div className="sheet__actions">
+          <button
+            type="button"
+            className="sheet__reset"
+            disabled={isDefaultFilters(draft)}
+            onClick={() => setDraft((d) => ({ ...defaultFilters(), search: d.search }))}
+          >
+            초기화
+          </button>
+          <button type="button" className="sheet__apply" onClick={() => onApply(draft)}>
+            적용
+          </button>
+        </div>
+      </section>
+    </div>
+  )
+}

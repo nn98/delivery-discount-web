@@ -3,6 +3,9 @@ import { fetchBanners, fetchBrands } from './api.js'
 import { track } from './analytics.js'
 import EventBanner from './EventBanner.jsx'
 import { BrandLogo, PlatformBadge, PLATFORMS, PLATFORM_BY_KEY } from './logos.jsx'
+import FilterSheet from './FilterSheet.jsx'
+import MenuBar from './MenuBar.jsx'
+import { CATEGORIES, applyFilters, defaultFilters, isDefaultFilters } from './filters.js'
 
 // brands.yml에 브랜드별 링크가 없는 앱은 여기 링크로 앱만 연다.
 // 전부 실기 ADB로 착지 화면까지 확인한 값이다(2026-08-05).
@@ -50,20 +53,6 @@ function searchFallbackLink(platformKey, brandName) {
   if (!prefix) return null
   return `https://www.google.com/search?q=${encodeURIComponent(`${prefix} ${brandName}`)}`
 }
-
-// 필터 탭 목록. key는 API가 내려주는 brand.category 값과 맞춰야 한다
-// (실제 브랜드별 분류는 API 쪽 brands.yml이 단일 출처다).
-const CATEGORIES = [
-  { key: 'all', label: '전체' },
-  { key: 'chicken', label: '치킨' },
-  { key: 'pizza', label: '피자' },
-  { key: 'fastfood', label: '패스트푸드' },
-  { key: 'snack', label: '분식' },
-  { key: 'cafe', label: '카페' },
-  { key: 'convenience', label: '편의점' },
-  { key: 'korean', label: '한식' },
-  { key: 'chinese', label: '중식' },
-]
 
 // 멤버십/지역화폐 반영 로직은 아직 없다. delivery-discount-api 레포의
 // docs/specs/2026-07-28-product-brief.md에 "UI만 배치, 로직 보류"로 명시된
@@ -544,20 +533,43 @@ export default function App() {
   const [brands, setBrands] = useState(null)
   const [banners, setBanners] = useState([])
   const [error, setError] = useState(null)
-  const [filterKey, setFilterKey] = useState('all')
-  const [search, setSearch] = useState('')
+  // 앱·분류·정렬·검색을 한 덩어리로 든다. 시트가 draft를 만들어 통째로
+  // 돌려주므로 낱개 상태로 쪼개 두면 "적용" 한 번에 여러 setState가 나가
+  // 중간 상태로 한 번 더 그려진다.
+  const [filters, setFilters] = useState(defaultFilters)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
-  // 헤더의 플랫폼 배지를 눌러 그 앱에 오퍼가 있는 브랜드만 본다.
-  // 처음엔 전부 선택된 상태다 — 빈 Set(=필터 없음)을 기본으로 두면
-  // 선택·미선택·기본 세 가지 모양이 생겨 무엇이 켜져 있는지 헷갈렸다.
-  const [platformFilter, setPlatformFilter] = useState(() => new Set(PLATFORMS.map((p) => p.key)))
+  const { search } = filters
+  const setSearch = (v) => setFilters((f) => ({ ...f, search: typeof v === 'function' ? v(f.search) : v }))
+
   const togglePlatform = (key) => {
-    setPlatformFilter((prev) => {
-      const next = new Set(prev)
+    setFilters((f) => {
+      const next = new Set(f.platforms)
       if (next.has(key)) next.delete(key); else next.add(key)
-      return next
+      return { ...f, platforms: next }
     })
     track('platform_filter_toggle', { platform: key })
+  }
+
+  // 메뉴바에서 분류를 켜고 끈다 — 여기서는 바로 반영한다(시트와 달리
+  // 조건 하나만 빠르게 만지는 자리다).
+  const toggleCategory = (key) => {
+    setFilters((f) => {
+      const next = new Set(f.categories)
+      if (next.has(key)) next.delete(key); else next.add(key)
+      return { ...f, categories: next }
+    })
+    track('category_change', { category: key })
+  }
+
+  const applyFromSheet = (draft) => {
+    setFilters(draft)
+    setSheetOpen(false)
+    track('filters_apply', {
+      platforms: draft.platforms.size,
+      categories: draft.categories.size,
+      sort: `${draft.sortKey}_${draft.sortDir}`,
+    })
   }
 
   // 멤버십 라벨은 타이틀바 아래 여백에 떠 있어서, 스크롤해서 카드가
@@ -608,11 +620,9 @@ export default function App() {
     track('membership_toggle', { platform: key, state: 'soon' })
   }
 
-  const isFiltered = filterKey !== 'all' || platformFilter.size < PLATFORMS.length || search.trim() !== ''
+  const isFiltered = !isDefaultFilters(filters)
   const resetFilters = () => {
-    setFilterKey('all')
-    setPlatformFilter(new Set(PLATFORMS.map((p) => p.key)))
-    setSearch('')
+    setFilters(defaultFilters())
     track('filters_reset')
   }
 
@@ -648,7 +658,6 @@ export default function App() {
     fetchBanners().then(setBanners).catch(() => setBanners([]))
   }, [])
 
-  const tabs = CATEGORIES
 
   // category는 API가 brands.yml에서 읽어 내려준다. 분류가 없는 브랜드는
   // null이라 "전체"에서만 보인다. 검색은 항상 같이 적용된다.
@@ -659,51 +668,12 @@ export default function App() {
   //
   // 오퍼를 걷어내고 나서 남는 게 없는 카드는 뺀다. 그 브랜드에서 볼
   // 것이 하나도 없는데 이름만 남기면 빈 카드가 격자를 채운다.
-  const visibleBrands = useMemo(() => {
-    if (!brands) return brands
-    const q = search.trim()
-    return brands
-      .map((b) => {
-        const offers = b.offers.filter((o) => platformFilter.has(o.platform))
-        return offers.length === b.offers.length ? b : { ...b, offers }
-      })
-      .filter((b) => {
-        if (b.offers.length === 0) return false
-        const inSearch = q === '' || b.name.includes(q)
-        if (!inSearch) return false
-        if (filterKey === 'all') return true
-        return b.category === filterKey
-      })
-  }, [brands, filterKey, search, platformFilter])
+  // 필터·정렬 규칙은 filters.js가 단일 출처다(시트·메뉴바와 같은 규칙).
+  const visibleBrands = useMemo(
+    () => (brands ? applyFilters(brands, filters) : brands),
+    [brands, filters],
+  )
 
-  // 화살표를 눌러 아래로 펼치면 스크롤 띠 대신 여러 줄 그리드로 카테고리
-  // 전부를 한 번에 보여준다. 카테고리를 실제로 고르면 다시 접는다 —
-  // 펼쳐둔 채로 남으면 매번 화면을 도로 차지한다.
-  const [catExpanded, setCatExpanded] = useState(false)
-
-  // 펼친 목록은 바깥을 만지면 닫힌다. 토글을 다시 찾아 눌러야만 닫히면
-  // 목록이 카드 위에 얹힌 채로 길을 막는다. pointerdown이라 클릭이
-  // 완성되기 전에 닫히고, 목록 안쪽 클릭은 target으로 걸러낸다.
-  useEffect(() => {
-    if (!catExpanded) return
-    const close = (e) => {
-      if (e.target.closest('.category-panel, .category-toggle')) return
-      setCatExpanded(false)
-    }
-    document.addEventListener('pointerdown', close)
-    return () => document.removeEventListener('pointerdown', close)
-  }, [catExpanded])
-  const handleFilterSelect = (key) => {
-    setCatExpanded(false)
-    setFilterKey(key)
-    if (key !== filterKey) {
-      track('category_change', { category: key })
-      // 분류를 바꾸면 목록 자체가 갈리므로 보던 위치는 의미가 없다.
-      // 순간이동이다(smooth 아님) — 새 목록을 훑는 게 목적이지
-      // 이동 과정을 보여주는 게 목적이 아니다.
-      window.scrollTo(0, 0)
-    }
-  }
 
   return (
     <>
@@ -711,6 +681,13 @@ export default function App() {
           null을 돌려준다). 카드 그리드의 "불러오기 실패"와 다르게 다룬다 —
           배너는 부가 정보라서 실패가 화면을 어지럽히면 안 된다. */}
       <EventBanner banners={banners} />
+
+      <FilterSheet
+        open={sheetOpen}
+        filters={filters}
+        onApply={applyFromSheet}
+        onClose={() => setSheetOpen(false)}
+      />
       {/* 플랫폼 배지와 카테고리 탭을 한 스크롤 영역에 같이 넣는다. main 밖에 두어 full-bleed가 100vw 트릭 없이 자연히 성립하고, sticky도 안 깨진다. */}
 
       {/* 고정된 바가 문서 흐름에서 빠진 만큼을 대신 차지하는 자리. 높이는
@@ -763,32 +740,32 @@ export default function App() {
             <span className="category-toggle-wrap">
               <button
                 type="button"
-                className={`category-toggle${catExpanded ? ' category-toggle--open' : ''}${filterKey !== 'all' ? ' category-toggle--active' : ''}`}
-                aria-expanded={catExpanded}
-                aria-label="카테고리 설정"
-                onClick={() => setCatExpanded((v) => !v)}
+                className={`category-toggle${sheetOpen ? ' category-toggle--open' : ''}${filters.categories.size > 0 ? ' category-toggle--active' : ''}`}
+                aria-expanded={sheetOpen}
+                aria-label="필터 열기"
+                onClick={() => { setSheetOpen(true); track('filter_sheet_open') }}
               >
-                <span className="category-toggle__label">CATEGORY</span>
+                <span className="category-toggle__label">FILTER</span>
               </button>
 
-              {/* 지금 걸린 필터는 조작을 접어도 남는다 — 안 보이면 결과가
-                  왜 줄었는지 알 수 없다. 분류와 검색어를 한 줄에 모아
-                  토글 아래에 건다. X로 각각 그 자리에서 푼다. */}
-              {(filterKey !== 'all' || search.trim() !== '') && (
+              {/* 지금 걸린 필터는 시트를 닫아도 남는다 — 안 보이면 결과가
+                  왜 줄었는지 알 수 없다. 고른 분류마다 칩 하나, 검색어가
+                  있으면 그것도 한 줄에 모은다. X로 각각 그 자리에서 푼다. */}
+              {(filters.categories.size > 0 || search.trim() !== '') && (
                 <span className="filter-chips">
-                  {filterKey !== 'all' && (
-                    <span className="filter-chip">
-                      {tabs.find((c) => c.key === filterKey)?.label ?? filterKey}
+                  {CATEGORIES.filter((c) => filters.categories.has(c.key)).map((c) => (
+                    <span className="filter-chip" key={c.key}>
+                      {c.label}
                       <button
                         type="button"
                         className="filter-chip__clear"
-                        aria-label="카테고리 해제"
-                        onClick={() => setFilterKey('all')}
+                        aria-label={`${c.label} 해제`}
+                        onClick={() => toggleCategory(c.key)}
                       >
                         ×
                       </button>
                     </span>
-                  )}
+                  ))}
                   {search.trim() !== '' && (
                     <span className="filter-chip filter-chip--search">
                       {search}
@@ -820,25 +797,13 @@ export default function App() {
           </div>
 
         </div>
-        {/* 카테고리 목록 — 토글을 눌렀을 때만 바 아래로 펼쳐진다.
-            absolute라 카드 그리드를 밀어내지 않는다. */}
-        {catExpanded && (
-          <div className="category-panel" role="listbox" aria-label="카테고리 선택">
-            {tabs.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                role="option"
-                aria-selected={filterKey === c.key}
-                className={`category-panel__item${filterKey === c.key ? ' category-panel__item--active' : ''}`}
-                onClick={() => handleFilterSelect(c.key)}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        )}
-
+        {/* 선형 메뉴바. 타이틀바 아래에 붙어 같이 따라온다 — 스크롤을
+            내려도 분류를 바로 켜고 끌 수 있어야 한다. */}
+        <MenuBar
+          selected={filters.categories}
+          onToggle={toggleCategory}
+          onOpenFilters={() => { setSheetOpen(true); track('filter_sheet_open', { from: 'menubar' }) }}
+        />
       </div>
     <main>
 
@@ -871,7 +836,7 @@ export default function App() {
         // diff) 다른 브랜드로 순간이동한 것처럼 튄다. 새로 마운트되면
         // fade-in 애니메이션이 다시 걸려 "갈아치웠다"가 아니라 "다음
         // 목록이 떠올랐다"로 읽힌다.
-        <div className="brand-grid" key={filterKey}>
+        <div className="brand-grid" key={[...filters.categories].sort().join(",")}>
           {visibleBrands.map((b) => (
             <BrandCard
               key={b.name}
