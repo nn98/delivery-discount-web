@@ -13,8 +13,11 @@ import { CATEGORIES } from './filters.js'
  * <p>여기서 누른 건 바로 반영한다. 시트는 여러 조건을 한 번에 바꾸는
  * 자리라 "적용"이 필요하지만, 메뉴바는 분류 하나를 빠르게 켜고 끄는
  * 자리다 — 여기까지 적용 버튼을 요구하면 손이 두 번 간다.
+ *
+ * <p>필터 버튼은 상단 바에 있다. 여기에도 두면 같은 문을 두 개 만드는
+ * 셈이라, 분류만 남긴다.
  */
-export default function MenuBar({ selected, onToggle, onOpenFilters }) {
+export default function MenuBar({ selected, onToggle }) {
   return (
     <nav className="menu-bar" aria-label="분류 메뉴">
       <div className="menu-bar__inner">
@@ -36,21 +39,6 @@ export default function MenuBar({ selected, onToggle, onOpenFilters }) {
           })}
         </ul>
 
-        {/* 메뉴바에서 시트를 다시 열 수 있어야 한다 — 스크롤을 내린
-            상태에서 정렬이나 앱을 바꾸려고 맨 위까지 올라가야 하면
-            시트를 따로 둔 뜻이 없다. */}
-        <button
-          type="button"
-          className="menu-bar__more"
-          aria-label="필터 열기"
-          onClick={onOpenFilters}
-        >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-            <line x1="4" y1="7" x2="20" y2="7" />
-            <line x1="7" y1="12" x2="17" y2="12" />
-            <line x1="10" y1="17" x2="14" y2="17" />
-          </svg>
-        </button>
       </div>
     </nav>
   )

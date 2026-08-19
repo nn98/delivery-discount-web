@@ -337,17 +337,6 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
       ref={cardRef}
       className={`brand-card ${open ? 'brand-card--open' : ''} ${highlighted ? 'brand-card--highlighted' : ''}`}
     >
-      {/* 담기 체크박스. 헤더 버튼 안에 두면 누를 때마다 카드가 같이
-          펼쳐진다 — 형제로 두고 절대 배치한다. */}
-      <label className="brand-card__check" title={checked ? '담기 해제' : '담아두기'}>
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={() => onToggleCheck(brand.name)}
-        />
-        <span className="sr-only">{brand.name} 담아두기</span>
-      </label>
-
       <button
         type="button"
         className="brand-card__head"
@@ -413,6 +402,23 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
       <div id={detailId} className="brand-detail" hidden={!open}>
         {open && sortedOffers.map((o) => <OfferDetail key={o.platform} offer={o} />)}
       </div>
+
+      {/* 담기는 카드 맨 아래 한 줄로 붙인다. 카드 위에 얹은 체크박스는
+          로고·이름과 자리를 다투고 무엇을 체크하는 건지도 흐렸다 —
+          카드 폭을 그대로 쓰는 줄이면 목적이 글자로 드러난다. */}
+      <button
+        type="button"
+        className={`brand-card__save${checked ? ' brand-card__save--on' : ''}`}
+        aria-pressed={checked}
+        onClick={() => onToggleCheck(brand.name)}
+      >
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          {checked
+            ? <polyline points="20 6 9 17 4 12" />
+            : <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>}
+        </svg>
+        {checked ? '담김' : '담기'}
+      </button>
     </article>
   )
 }
@@ -462,70 +468,42 @@ function SiteFooter() {
 // 펼쳐진다. 줄 안에서 폭을 넓히면 옆 조작들이 밀려 배치가 매번 다시
 // 잡혔다. 열려 있는 동안 버튼은 색을 뒤집어 지금 무엇이 켜져 있는지
 // 알린다. 검색어는 접어도 App의 search 상태에 남아 필터링은 계속 걸린다.
+/**
+ * 상시 노출 검색 입력. 예전에는 돋보기 버튼을 눌러야 패널이 열렸는데,
+ * 로고 자리를 이 입력으로 바꾸면서 접을 이유가 없어졌다 — 바에서 가장
+ * 넓은 자리를 차지하는 것이 곧 이 화면의 주된 조작이라는 뜻이다.
+ *
+ * 입력하는 동안에는 목록이 흔들리지 않는다. 엔터나 돋보기로 확정해야
+ * 필터가 걸린다 — 글자마다 다시 거르면 지우는 중에도 결과가 요동친다.
+ */
 function SearchControl({ value, onChange }) {
-  const [open, setOpen] = useState(false)
-  // 패널 안에서 고치는 동안에는 목록이 흔들리지 않는다 — 확정(엔터나
-  // 검색 버튼)해야 필터가 걸린다. 카테고리를 고르는 것과 같은 리듬이다.
   const [draft, setDraft] = useState(value)
-  const inputRef = useRef(null)
 
-  useEffect(() => {
-    if (open) {
-      setDraft(value)
-      inputRef.current?.focus()
-    }
-  }, [open, value])
+  // 바깥에서 검색어를 지우면(칩의 X, 초기화) 입력창도 따라 비어야 한다.
+  useEffect(() => { setDraft(value) }, [value])
 
-  useEffect(() => {
-    if (!open) return
-    const close = (e) => {
-      if (e.target.closest('.search-control')) return
-      setOpen(false)
-    }
-    document.addEventListener('pointerdown', close)
-    return () => document.removeEventListener('pointerdown', close)
-  }, [open])
-
-  const submit = () => {
-    onChange(draft.trim())
-    setOpen(false)
-  }
+  const submit = () => onChange(draft.trim())
 
   return (
-    <div className="search-control">
-      <button
-        type="button"
-        className={`search-control__btn${open ? ' search-control__btn--open' : ''}`}
-        aria-expanded={open}
-        aria-label={open ? '브랜드 검색 닫기' : '브랜드 검색 열기'}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <div className="search-field">
+      <input
+        type="search"
+        className="search-field__input"
+        placeholder="브랜드 검색"
+        aria-label="브랜드 검색"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') submit()
+          if (e.key === 'Escape') { setDraft(''); onChange('') }
+        }}
+      />
+      <button type="button" className="search-field__submit" aria-label="검색" onClick={submit}>
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
           <circle cx="11" cy="11" r="7" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       </button>
-
-      {open && (
-        <div className="category-panel search-panel">
-          <input
-            ref={inputRef}
-            type="search"
-            className="search-control__input"
-            placeholder="브랜드 검색"
-            aria-label="브랜드 검색"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') submit()
-              if (e.key === 'Escape') setOpen(false)
-            }}
-          />
-          <button type="button" className="search-panel__submit" onClick={submit}>
-            검색
-          </button>
-        </div>
-      )}
     </div>
   )
 }
@@ -715,10 +693,43 @@ export default function App() {
         {/* 1행 — 이름과 상시 조작(검색·담아둔 것). 배달앱들이 쓰는 구조
             그대로다: 위는 정체성과 도구, 아래는 분류. */}
         <div className="title-bar__top">
-          <h1 className="title-bar__brand">오늘의할인 <span aria-hidden="true">🍔</span></h1>
+          <h1 className="sr-only">오늘의할인 — 배달앱 브랜드 할인 비교</h1>
+
+          {/* 로고가 있던 자리를 검색 입력이 차지한다. 바에서 가장 넓은
+              자리를 쓰는 것이 곧 이 화면의 주된 조작이라는 뜻이다 —
+              이름은 스크린리더용으로만 남긴다. */}
+          <SearchControl value={search} onChange={setSearch} />
 
           <div className="title-bar__tools">
-            <SearchControl value={search} onChange={setSearch} />
+            {/* 초기화 · 필터 · 담아둔 것 순. 왼쪽 검색에서 오른쪽으로
+                갈수록 범위가 넓은 조작이다. */}
+            <button
+              type="button"
+              className={`icon-btn${isFiltered ? ' icon-btn--active' : ''}`}
+              onClick={resetFilters}
+              aria-label="필터 초기화"
+              title="필터 초기화"
+            >
+              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <polyline points="21 3 21 9 15 9" />
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              className={`icon-btn${sheetOpen ? ' icon-btn--on' : ''}`}
+              aria-expanded={sheetOpen}
+              aria-label="필터 열기"
+              title="필터"
+              onClick={() => { setSheetOpen(true); track('filter_sheet_open') }}
+            >
+              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="7" y1="12" x2="17" y2="12" />
+                <line x1="10" y1="17" x2="14" y2="17" />
+              </svg>
+            </button>
 
             {/* 담아둔 브랜드만 모아 본다. 개수를 배지로 달아 몇 개
                 담았는지 열지 않고도 안다. */}
@@ -749,7 +760,6 @@ export default function App() {
         <MenuBar
           selected={filters.categories}
           onToggle={toggleCategory}
-          onOpenFilters={() => { setSheetOpen(true); track('filter_sheet_open', { from: 'menubar' }) }}
         />
 
         {/* 걸린 필터·초기화·검색은 메뉴바 아래 한 줄로. 지금 뭐가 걸려
@@ -811,18 +821,6 @@ export default function App() {
               </span>
             )}
           </span>
-
-          <button
-            type="button"
-            className={`filter-reset-btn${isFiltered ? ' filter-reset-btn--active' : ''}`}
-            onClick={resetFilters}
-            aria-label="필터 초기화"
-          >
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a9 9 0 1 1-3-6.7" />
-              <polyline points="21 3 21 9 15 9" />
-            </svg>
-          </button>
         </div>
       </div>
 

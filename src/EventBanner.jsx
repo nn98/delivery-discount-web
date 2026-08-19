@@ -100,16 +100,6 @@ function BannerCard({ banner, palette, position, dots, onClose }) {
           position,
         })}
       >
-        <span className="banner__logo">
-          {banner.brand
-            ? <BrandLogo name={banner.brand} />
-            : (
-              <span className="brand-logo brand-logo--platform">
-                <img src={platformIconSrc(banner.platform)} alt={platform?.label ?? banner.platform} />
-              </span>
-            )}
-        </span>
-
         <span className="banner__amount">{banner.amount}</span>
 
         {/* 기간은 금액 우측 상단, 부가정보는 그 아래. extra가 없으면 줄이
@@ -118,6 +108,19 @@ function BannerCard({ banner, palette, position, dots, onClose }) {
         <span className="banner__meta">
           <span className="banner__period">{banner.period}</span>
           {banner.extra && <span className="banner__extra">{banner.extra}</span>}
+        </span>
+
+        {/* 로고는 오른쪽 세로 가운데. 금액을 먼저 읽고 "어느 브랜드냐"로
+            눈이 옮겨가는 순서다 — 왼쪽에 두면 로고가 먼저 걸려 금액이
+            늦게 읽힌다. */}
+        <span className="banner__logo">
+          {banner.brand
+            ? <BrandLogo name={banner.brand} />
+            : (
+              <span className="brand-logo brand-logo--platform">
+                <img src={platformIconSrc(banner.platform)} alt={platform?.label ?? banner.platform} />
+              </span>
+            )}
         </span>
       </a>
 
