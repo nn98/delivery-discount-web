@@ -311,11 +311,10 @@ h1 {
 .banner-slot {
   position: relative;
   /* main 바깥에 있어 폭 제약이 없었다 — 넓은 화면에서 배너만 카드
-     격자를 넘어 끝까지 늘어났다. 본문과 같은 규격(880 + 좌우 1.25rem)에
-     맞춘다. */
+     격자를 넘어 끝까지 늘어났다. 본문 너비(880px)에 맞추되 좌우 여백은
+     두지 않는다 — 배너는 카드 격자 위를 꽉 채우는 한 덩어리다. */
   max-width: 880px;
   margin: 0 auto 2px;
-  padding: 0 1.25rem;
 
   /* 메뉴바에 바로 붙고, 아래로도 거의 붙는다 — 배너와 카드가 한
      덩어리로 읽혀야 배너가 목록 위에 떠 있는 별개 층으로 안 보인다. */
@@ -844,11 +843,40 @@ h1 {
      않게 12px. */
   padding-top: 12px;
   align-items: start;
-  animation: brand-grid-in 180ms ease;
+  /* 목록이 갈릴 때 0.5초에 걸쳐 떠오른다. 순간이동은 "갈아치웠다"로
+     읽혀 무엇이 바뀐 건지 안 보인다 — 카드가 아래에서 올라오면 새
+     목록이라는 사실 자체가 눈에 들어온다. */
+  animation: brand-grid-in 500ms cubic-bezier(.16, 1, .3, 1);
 }
 @keyframes brand-grid-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 카드는 한꺼번에 뜨지 않고 차례로 올라온다. 동시에 다 뜨면 0.5초를
+   기다린 값이 안 나온다 — 순서가 보여야 "목록이 새로 그려졌다"가
+   읽힌다. 앞 8장까지만 계단을 준다(그 아래는 화면 밖이라 의미 없다). */
+.brand-grid > * {
+  animation: brand-card-in 460ms cubic-bezier(.16, 1, .3, 1) backwards;
+}
+.brand-grid > *:nth-child(1) { animation-delay: 0ms; }
+.brand-grid > *:nth-child(2) { animation-delay: 40ms; }
+.brand-grid > *:nth-child(3) { animation-delay: 80ms; }
+.brand-grid > *:nth-child(4) { animation-delay: 120ms; }
+.brand-grid > *:nth-child(5) { animation-delay: 160ms; }
+.brand-grid > *:nth-child(6) { animation-delay: 200ms; }
+.brand-grid > *:nth-child(7) { animation-delay: 240ms; }
+.brand-grid > *:nth-child(n+8) { animation-delay: 280ms; }
+
+@keyframes brand-card-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 움직임을 줄이라고 설정한 사용자에게는 계단도 이동도 없다. */
+@media (prefers-reduced-motion: reduce) {
+  .brand-grid,
+  .brand-grid > * { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-grid { animation: none; }

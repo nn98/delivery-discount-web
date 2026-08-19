@@ -686,6 +686,30 @@ export default function App() {
     if (cart.size === 0) setCartOnly(false)
   }, [cart.size])
 
+  // 조건이 하나라도 바뀌면 이 값이 바뀌고, 그러면 카드 격자가 새로
+  // 마운트돼 등장 애니메이션이 다시 걸린다. 정렬만 바꿔도 순서가 통째로
+  // 달라지므로 분류와 똑같이 "새 목록"으로 다룬다.
+  const gridKey = [
+    [...filters.categories].sort().join('|'),
+    [...filters.platforms].sort().join('|'),
+    filters.sortKey,
+    filters.sortDir,
+    filters.search.trim(),
+    cartOnly ? 'cart' : '',
+  ].join('/')
+
+  // 조건이 바뀌면 목록 자체가 갈리므로 보던 위치는 의미가 없다. 맨 위로
+  // 올려 새 목록을 처음부터 보게 한다 — 첫 렌더에는 건너뛴다(들어오자마자
+  // 스크롤이 튀면 안 된다).
+  const firstGrid = useRef(true)
+  useEffect(() => {
+    if (firstGrid.current) {
+      firstGrid.current = false
+      return
+    }
+    window.scrollTo(0, 0)
+  }, [gridKey])
+
   // 필터·정렬 규칙은 filters.js가 단일 출처다(시트·메뉴바와 같은 규칙).
   const visibleBrands = useMemo(
     () => (brands ? applyFilters(brands, filters, { cart, cartOnly }) : brands),
@@ -798,10 +822,6 @@ export default function App() {
                   track('cart_view_toggle', { state: v ? 'off' : 'on', count: cart.size })
                   return !v
                 })
-                // 목록이 통째로 갈리므로 보던 위치는 의미가 없다.
-                // 순간이동이다 — 새 목록을 보는 게 목적이지 이동 과정을
-                // 보여주는 게 목적이 아니다.
-                window.scrollTo(0, 0)
               }}
             >
               <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -879,7 +899,7 @@ export default function App() {
         // diff) 다른 브랜드로 순간이동한 것처럼 튄다. 새로 마운트되면
         // fade-in 애니메이션이 다시 걸려 "갈아치웠다"가 아니라 "다음
         // 목록이 떠올랐다"로 읽힌다.
-        <div className="brand-grid" key={[...filters.categories].sort().join(",")}>
+        <div className="brand-grid" key={gridKey}>
           {visibleBrands.map((b) => (
             <BrandCard
               key={b.name}
