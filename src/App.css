@@ -2007,3 +2007,12 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   transition: color .16s ease, border-color .16s ease;
 }
 .cart-bar__clear:hover { color: #9f2f2d; border-color: #9f2f2d; }
+
+
+/* 상단 배너 모서리를 직각으로 둔다 — 배너는 카드 격자 위를 가로지르는
+   띠이지 카드와 같은 층의 상자가 아니다. 둥글리면 큰 카드처럼 보여
+   목록의 일부로 읽힌다.
+
+   위 여백은 두지 않는다. B안은 바가 두 줄(메뉴바 포함)이라 이미 배너와
+   목록 사이가 충분히 갈린다 — A안에만 14px을 준다. */
+.banner--top { border-radius: 0; }
