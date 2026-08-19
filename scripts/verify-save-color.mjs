@@ -1,3 +1,10 @@
+// 담기 버튼 색이 흰 글씨를 못 받치면 금액보다 먼저 눈에 띄는 자리가
+// 통째로 안 읽힌다. 플랫폼 색을 그대로 배경에 쓰면 배민 민트(#0bebd0)가
+// 특히 위험해서, savePalette가 대비 4.5:1까지 어둡게 내린다.
+//
+// 색 계산부는 logos.jsx를 import하는 brandColor.js에서 그대로 가져온다
+// (node가 .jsx를 못 읽어 import 줄만 걷어낸 사본을 쓴다).
+
 // 배너 색. 시드색 하나를 정하고, 거기서 배경·테두리·글자·강조를 파생한다.
 //
 // 우선순위는 banners.yml의 color -> 로고에서 뽑기 -> 플랫폼 색이다.
@@ -5,7 +12,7 @@
 // 색을 진짜 브랜드색인 양 입히게 되고, 나중에 로고를 확보하면 색이 통째로
 // 바뀌어 "어제 본 그 배너"가 아니게 된다.
 
-import { brandLogoSrc } from './logos.jsx'
+
 
 // 플랫폼 폴백 색. public/platform-icons/*.png에서 가장 넓은 채도 있는
 // 색 구간을 실제로 추출한 값이다(아이콘이 바뀌면 다시 뽑아야 한다).
@@ -181,12 +188,6 @@ const MIN_PIXELS = 8
  *
  * 같은 출처(public/logos/) 이미지라 canvas가 오염되지 않는다.
  */
-export function brandSeed(brandName) {
-  if (!seedCache.has(brandName)) {
-    seedCache.set(brandName, extractSeed(brandLogoSrc(brandName)))
-  }
-  return seedCache.get(brandName)
-}
 
 function extractSeed(src) {
   return new Promise((resolve) => {
@@ -234,3 +235,43 @@ function dominantColor(img) {
   const hex = (v) => Math.round(v / n).toString(16).padStart(2, '0')
   return `#${hex(best[0])}${hex(best[1])}${hex(best[2])}`
 }
+
+
+function contrastWithWhite(hsl) {
+  const m = hsl.match(/hsl\((\d+(?:\.\d+)?) (\d+(?:\.\d+)?)% (\d+(?:\.\d+)?)%\)/)
+  const [h, s, l] = [Number(m[1]), Number(m[2]), Number(m[3])]
+  return 1.05 / (relativeLuminance(hslToRgb(h, s, l)) + 0.05)
+}
+
+const EPS = 0.005
+let failed = 0
+
+// 실제 브랜드명 표본 + 무작위 표본 양쪽을 본다.
+const samples = ['피자헛', '굽네치킨', 'BBQ', '도미노피자', '네네치킨', '버거킹',
+                 '스타벅스', '청년피자', '던킨', '설빙', 'bhc', '맘스터치']
+for (let i = 0; i < 300; i += 1) samples.push('브랜드' + i)
+
+for (const name of samples) {
+  const c = contrastWithWhite(savePalette(name)['--save'])
+  if (c + EPS < 4.5) {
+    console.error(`FAIL ${name}: ${saveSeed(name)} 대비 ${c.toFixed(2)}`)
+    failed += 1
+  }
+}
+
+// 같은 이름이면 언제 불러도 같은 색이어야 한다 — 새로고침마다 바뀌면
+// "왜 색이 달라졌지"가 된다.
+if (saveSeed('피자헛') !== saveSeed('피자헛')) {
+  console.error('FAIL: saveSeed가 같은 이름에 다른 색을 준다')
+  failed += 1
+}
+
+// 네 색이 다 쓰여야 "돌아가며 나온다"가 성립한다.
+const used = new Set(samples.map(saveSeed))
+if (used.size !== 4) {
+  console.error(`FAIL: 쓰인 색이 ${used.size}종뿐이다`)
+  failed += 1
+}
+
+console.log(failed === 0 ? 'save color contrast: PASS' : `save color contrast: FAIL (${failed})`)
+process.exit(failed === 0 ? 0 : 1)

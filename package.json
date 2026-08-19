@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:analytics": "node scripts/verify-analytics-event-id.mjs"
+    "test:analytics": "node scripts/verify-analytics-event-id.mjs",
+    "test:colors": "node scripts/verify-save-color.mjs",
+    "test": "npm run test:analytics && npm run test:colors"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
