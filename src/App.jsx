@@ -706,14 +706,14 @@ export default function App() {
                     e.stopPropagation()
                     togglePlatform(p.key)
                   }}
-                  active={platformFilter.has(p.key)}
+                  active={filters.platforms.has(p.key)}
                 />
 
                 {/* 고른 앱에만 멤버십 버튼이 로고 밑에 붙는다. 2초 뒤
                     사라지는 칸으로 물어보던 걸 걷었다 — 켜고 끄는 걸
                     언제든 다시 만질 수 있어야 한다. 위치로 어느 앱
                     것인지 드러나므로 여러 앱을 한 줄로 묶지 않는다. */}
-                {platformFilter.has(p.key) && (
+                {filters.platforms.has(p.key) && (
                   <button
                     type="button"
                     className="membership-btn membership-btn--soon"
