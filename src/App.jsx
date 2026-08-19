@@ -351,11 +351,25 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
             펼침은 클릭 전용. 여기에 원본 캡처 미리보기를 넣지 않는다:
             판독 근거는 상세를 펼쳐야 보는 정보지 스치며 보는 정보가
             아니고, 브랜드 수만큼 이미지를 hover마다 물면 무겁다. */}
-        <span className="brand-card__hover-affordance">
-          <span className="brand-card__hover-hint" aria-hidden="true">눌러서 펼치기</span>
-          <span className="brand-card__chevron" aria-hidden="true" />
-        </span>
         <span className="sr-only">상세 조건 {open ? '접기' : '펼치기'}</span>
+      </button>
+
+      {/* 담기 + 버튼. 헤더 버튼의 형제라 눌러도 카드가 안 펼쳐진다.
+          아래 담기 줄과 같은 동작이고, 스크롤 중에 카드 아래까지 안 가도
+          바로 담을 수 있는 지름길이다. */}
+      <button
+        type="button"
+        className={`brand-card__add${checked ? ' brand-card__add--on' : ''}`}
+        aria-pressed={checked}
+        aria-label={checked ? `${brand.name} 담기 해제` : `${brand.name} 담기`}
+        title={checked ? '담기 해제' : '담기'}
+        onClick={() => onToggleCheck(brand.name)}
+      >
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+          {checked
+            ? <polyline points="20 6 9 17 4 12" />
+            : <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>}
+        </svg>
       </button>
 
       {/* 최고 할인 하나를 단독 줄로 올리고 나머지는 아래 가로 그리드로
@@ -403,22 +417,35 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
         {open && sortedOffers.map((o) => <OfferDetail key={o.platform} offer={o} />)}
       </div>
 
-      {/* 담기는 카드 맨 아래 한 줄로 붙인다. 카드 위에 얹은 체크박스는
-          로고·이름과 자리를 다투고 무엇을 체크하는 건지도 흐렸다 —
-          카드 폭을 그대로 쓰는 줄이면 목적이 글자로 드러난다. */}
-      <button
-        type="button"
-        className={`brand-card__save${checked ? ' brand-card__save--on' : ''}`}
-        aria-pressed={checked}
-        onClick={() => onToggleCheck(brand.name)}
-      >
-        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          {checked
-            ? <polyline points="20 6 9 17 4 12" />
-            : <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>}
-        </svg>
-        {checked ? '담김' : '담기'}
-      </button>
+      {/* 카드 맨 아래 줄 — 담기와 펼치기. 펼치기를 헤더에서 내린 건
+          헤더가 로고·이름만 갖게 하려는 것이고, 담기와 나란히 두면
+          "이 카드로 할 수 있는 일"이 한자리에 모인다. */}
+      <div className="brand-card__foot">
+        <button
+          type="button"
+          className={`brand-card__save${checked ? ' brand-card__save--on' : ''}`}
+          aria-pressed={checked}
+          onClick={() => onToggleCheck(brand.name)}
+        >
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+            {checked
+              ? <polyline points="20 6 9 17 4 12" />
+              : <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>}
+          </svg>
+          {checked ? '담김' : '담기'}
+        </button>
+
+        <button
+          type="button"
+          className="brand-card__expand"
+          aria-expanded={open}
+          aria-controls={detailId}
+          onClick={toggle}
+        >
+          {open ? '접기' : '자세히'}
+          <span className="brand-card__chevron" aria-hidden="true" />
+        </button>
+      </div>
     </article>
   )
 }
