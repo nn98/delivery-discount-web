@@ -1921,21 +1921,19 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   top: 0;
   right: 0;
   z-index: 3;
-  width: 34px;
-  height: 32px;
+  width: 68px;
+  height: 64px;
   display: grid;
   place-items: center;
   border: 0;
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
   /* 카드 오른쪽 위 모서리를 따른다(카드 반경 14px - 테두리 1px). */
-  border-radius: 0 13px 0 10px;
-  background: var(--surface);
-  color: var(--text-muted);
+  border-radius: 0 13px 0 16px;
+  background: var(--save);
+  color: #fff;
   cursor: pointer;
-  transition: color .16s ease, border-color .16s ease, background .16s ease;
+  transition: background .16s ease;
 }
-.brand-card__add:hover { color: var(--save); }
+.brand-card__add:hover { background: var(--save-hover); }
 .brand-card__add--on {
   background: var(--save-soft);
   color: var(--save-soft-ink);

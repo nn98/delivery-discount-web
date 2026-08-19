@@ -92,11 +92,22 @@ function isDevSession() {
   return safeStore(localStorage, DEV_KEY) === '1'
 }
 
+// 어느 화면 안을 보고 있는지. 두 안을 각각 배포해 비교하므로 빌드
+// 시점에 박힌다 — 같은 빌드가 두 안을 오가지 않아 세션 도중 바뀌지
+// 않는다. 값이 이벤트마다 실려야 나중에 데이터를 안별로 가를 수 있다.
+//
+//   a = 기존 한 줄 바(플랫폼/분류/초기화/검색)
+//   b = 두 줄 바 + 필터 바텀시트
+//
+// 안 붙이면 클릭 수만 쌓이고 "어느 화면에서 눌렀나"를 되짚을 수 없다.
+const VARIANT = import.meta.env?.VITE_UI_VARIANT ?? 'a'
+
 const context = {
   ...identity(),
   device: window.matchMedia('(hover: hover)').matches ? 'desktop' : 'mobile',
   viewport: `${window.innerWidth}x${window.innerHeight}`,
   referrer: referrerKind(),
+  variant: VARIANT,
   dev: isDevSession() || undefined,
 }
 
@@ -137,6 +148,16 @@ function flush(useBeacon = false) {
   post(batch, useBeacon)
 }
 
+// 지금 걸려 있는 조건. 링크를 누른 순간 어떤 필터 상태였는지가
+// "분류를 설정한 사람이 실제로 이동까지 하는가"의 답이라, 이벤트마다
+// 실어 보낸다. 화면이 바꿔주고 여기서는 들고만 있는다 — 이벤트를
+// 쏘는 자리마다 상태를 prop으로 끌고 다니면 새 필터가 늘 때 빠뜨린다.
+let filterContext = {}
+
+export function setFilterContext(next) {
+  filterContext = next
+}
+
 export function track(event, props) {
   if (optedOut()) return
   queue.push({
@@ -144,7 +165,9 @@ export function track(event, props) {
     event,
     ...context,
     path: location.pathname,
-    props: props ?? undefined,
+    props: (props || Object.keys(filterContext).length)
+      ? { ...filterContext, ...props }
+      : undefined,
     clientTs: new Date().toISOString(),
   })
   // 클릭마다 요청을 날리지 않고 잠깐 모은다.

@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { fetchBanners, fetchBrands } from './api.js'
-import { track } from './analytics.js'
+import { setFilterContext, track } from './analytics.js'
 import EventBanner from './EventBanner.jsx'
 import { BrandLogo, PlatformBadge, PLATFORMS, PLATFORM_BY_KEY } from './logos.jsx'
 import FilterSheet from './FilterSheet.jsx'
@@ -356,7 +356,7 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
         title={checked ? '담기 해제' : '담기'}
         onClick={() => onToggleCheck(brand.name)}
       >
-        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+        <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
           {checked
             ? <polyline points="20 6 9 17 4 12" />
             : <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>}
@@ -689,6 +689,20 @@ export default function App() {
   // 조건이 하나라도 바뀌면 이 값이 바뀌고, 그러면 카드 격자가 새로
   // 마운트돼 등장 애니메이션이 다시 걸린다. 정렬만 바꿔도 순서가 통째로
   // 달라지므로 분류와 똑같이 "새 목록"으로 다룬다.
+  // 링크를 누른 순간 어떤 조건이 걸려 있었는지가 "분류를 설정한 사람이
+  // 실제로 이동까지 하는가"의 답이다. A안과 같은 키를 쓴다 — 이름이
+  // 다르면 두 안을 나란히 못 놓는다.
+  useEffect(() => {
+    setFilterContext({
+      fCategory: filters.categories.size === 0 ? 'all' : [...filters.categories].sort().join('+'),
+      fPlatforms: filters.platforms.size,
+      fSearch: filters.search.trim() !== '' || undefined,
+      fCart: cartOnly || undefined,
+      fSaved: cart.size || undefined,
+      fSort: `${filters.sortKey}_${filters.sortDir}`,
+    })
+  }, [filters, cartOnly, cart.size])
+
   const gridKey = [
     [...filters.categories].sort().join('|'),
     [...filters.platforms].sort().join('|'),
