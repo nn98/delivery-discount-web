@@ -356,7 +356,7 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
         title={checked ? '담기 해제' : '담기'}
         onClick={() => onToggleCheck(brand.name)}
       >
-        <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
           {checked
             ? <polyline points="20 6 9 17 4 12" />
             : <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>}
