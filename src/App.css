@@ -19,6 +19,19 @@
 
 * { box-sizing: border-box; }
 
+/* 글자 크기를 화면 폭에 태운다. 화면마다 중단점을 두고 font-size를 다시
+   적어 내려가면, 새 글자가 늘 때마다 그 목록을 빠뜨려 좁은 화면에서만
+   넘친다 — 실제로 그렇게 넘치고 있었다.
+
+   루트 크기 하나만 움직이면 rem으로 적힌 글자와 여백이 같이 따라온다.
+   320px에서 14.5px, 400px 위로는 16px에서 멈춘다. 아래를 14.5px로 막는 건
+   그 아래로 내려가면 본문이 읽기 힘들어지기 때문이고, 위를 16px로 막는 건
+   넓은 화면에서 글자만 커져 봐야 읽기 좋아지지 않기 때문이다.
+   
+   px로 적힌 값(터치 영역 44px 등)은 여기 영향을 안 받는다 — 손가락 크기는
+   화면 폭을 따라 줄어들면 안 된다. */
+html { font-size: clamp(14.5px, 3.6vw + 3px, 16px); }
+
 /* 고무줄 스크롤(끝에서 잡아당길 때 화면이 통째로 밀리는 것)을 끈다 —
    흔들면 타이틀바까지 같이 밀리는 증상이 있었다. 값은 App.jsx가
    스크롤 위치에 따라 동적으로 바꾼다: 맨 위(scrollY 0)에선 당겨서
@@ -424,15 +437,15 @@ h1 {
   height: calc(var(--logo) * .6);
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: #fff;
-  /* 로고와 배지가 같은 색이면 경계가 사라진다. 배너 바탕색으로 한 겹
-     둘러 어느 로고 위에서도 배지가 따로 떨어져 보이게 한다. */
-  box-shadow: 0 0 0 2px var(--banner-bg-c);
+  /* 앱 아이콘은 그 자체로 모양과 색을 가진 그림이다. 판을 깔거나 테두리를
+     두르면 한 겹 덧댄 스티커처럼 보인다 — 그림만 남긴다. */
+  background: none;
+  border: 0;
+  padding: 0;
 }
 .banner__platform img {
-  width: 72%;
-  height: 72%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -590,12 +603,12 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   .banner { animation: none; }
-  /* 하단 플로팅도 본문 폭을 넘지 않는다 — 화면이 넓으면 배너만 끝까지
-   늘어나 목록과 어긋나 보인다. */
-.banner-dock {
-  max-width: 880px;
-  margin-left: auto;
-  margin-right: auto; transition: opacity 200ms ease, visibility 200ms; transform: none; }
+  /* 움직임을 줄이라고 했으면 올라오는 동작만 뺀다 — 보이고 안 보이고는
+     그대로 둔다. 폭·정렬 규칙까지 여기서 다시 적을 이유가 없다. */
+  .banner-dock {
+    transition: opacity 200ms ease, visibility 200ms;
+    transform: none;
+  }
 }
 
 .sub { color: var(--text-muted); font-size: .9rem; margin: 0; text-align: center; }
@@ -1518,10 +1531,10 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   .banner-dock__inner { padding-left: 1rem; padding-right: 1rem; }
 }
 
-/* 좁은 화면(360px)에서 줄이는 건 로고와 배지뿐이다. 금액은 배너의 주인공이라
-   글씨를 줄이지 않고, 자리가 모자라면 부가정보가 말줄임된다. */
+/* 좁은 화면(360px 이하)에서 줄이는 건 로고와 배지뿐이다. 금액은 배너의
+   주인공이라 글씨를 줄이지 않는다. */
 @media (max-width: 400px) {
-  .banner__link { gap: .6rem; padding-left: .75rem; padding-right: .75rem; }
+  .banner__link { gap: .6rem; }
   /* --logo 하나만 줄이면 배지도 같은 비율로 따라온다. */
   .banner__logo { --logo: 48px; padding: 10px; }
   .banner--bottom .banner__logo { --logo: 40px; }
