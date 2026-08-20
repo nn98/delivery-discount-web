@@ -128,7 +128,9 @@ export default function TopBarA({
       if (next.has(key)) next.delete(key); else next.add(key)
       return { ...f, platforms: next }
     })
-    track('platform_toggle', { platform: key, from: 'bar' })
+    // 시트에서 같은 행동을 쏘는 이름을 그대로 쓴다 — 조작 위치만 다르니
+    // from으로 가른다. 이름을 새로 만들면 집계할 때마다 둘을 합쳐야 한다.
+    track('platform_filter_toggle', { platform: key, from: 'bar' })
   }
 
   // 멤버십은 아직 계산 모델이 없다 — 눌러도 상태가 안 바뀌고, 왜 안
