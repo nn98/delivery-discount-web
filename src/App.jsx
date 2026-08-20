@@ -799,9 +799,12 @@ export default function App() {
             <button
               type="button"
               className={`icon-btn${isFiltered ? ' icon-btn--active' : ''}`}
+              // 되돌릴 것이 없으면 누를 수 없다. 늘 눌리는 채로 두면 눌러본
+              // 뒤에야 아무 일도 안 일어난다는 걸 알게 된다.
+              disabled={!isFiltered}
               onClick={resetFilters}
               aria-label="필터 초기화"
-              title="필터 초기화"
+              title={isFiltered ? '필터 초기화' : '되돌릴 필터가 없습니다'}
             >
               <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12a9 9 0 1 1-3-6.7" />
@@ -811,7 +814,9 @@ export default function App() {
 
             <button
               type="button"
-              className={`icon-btn${sheetOpen ? ' icon-btn--on' : ''}`}
+              // 열려 있으면 반전, 닫혀 있어도 조건이 걸려 있으면 드러낸다 —
+              // 시트를 닫고 나면 필터가 걸린 목록인지 알 길이 없었다.
+              className={`icon-btn${sheetOpen ? ' icon-btn--on' : isFiltered ? ' icon-btn--active' : ''}`}
               aria-expanded={sheetOpen}
               aria-label="필터 열기"
               title="필터"
