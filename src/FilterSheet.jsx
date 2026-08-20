@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { track } from './analytics.js'
 import { PlatformBadge, PLATFORMS } from './logos.jsx'
 import { CATEGORIES, MEMBERSHIP_OPTIONS, SORT_KEYS, defaultFilters, isDefaultFilters } from './filters.js'
@@ -15,6 +15,9 @@ import { CATEGORIES, MEMBERSHIP_OPTIONS, SORT_KEYS, defaultFilters, isDefaultFil
 export default function FilterSheet({ open, filters, onApply, onClose }) {
   const [draft, setDraft] = useState(filters)
   const [membershipHint, setMembershipHint] = useState(null)
+  // 배경을 눌러 닫을 때, 누른 자리가 배경이었는지 기억해둔다. 시트 안에서
+  // 끌기 시작해 배경에서 손을 뗀 동작까지 닫기로 세면 고르던 게 날아간다.
+  const downOnScrim = useRef(false)
 
   // 열릴 때만 동기화한다. 열려 있는 동안 바깥 값이 바뀌어도(메뉴바에서
   // 분류를 켜는 등) draft를 덮지 않는다 — 고르던 게 날아간다.
@@ -48,7 +51,20 @@ export default function FilterSheet({ open, filters, onApply, onClose }) {
   })
 
   return (
-    <div className="sheet-scrim" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div
+      className="sheet-scrim"
+      /* pointerdown에서 바로 닫으면 시트가 사라진 뒤 같은 손짓의 click이
+         아래 카드에 떨어져 브랜드 링크가 열렸다. 배경을 누른 것은 취소지
+         뒤 화면을 누른 것이 아니다 — click까지 배경이 받아낸 뒤 닫는다. */
+      onPointerDown={(e) => { downOnScrim.current = e.target === e.currentTarget }}
+      onClick={(e) => {
+        if (!downOnScrim.current || e.target !== e.currentTarget) return
+        downOnScrim.current = false
+        e.preventDefault()
+        e.stopPropagation()
+        onClose()
+      }}
+    >
       <section className="sheet" role="dialog" aria-modal="true" aria-label="필터">
         <div className="sheet__grip" aria-hidden="true" />
 
