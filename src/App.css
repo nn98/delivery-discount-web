@@ -241,10 +241,12 @@ h1 {
 
 /* 앱마다 자기 색을 변수로 들고 있는다 — 선택 테두리와 체크 배지가
    같은 색을 쓰므로 한 곳에서만 정한다. */
-.page-head__apps .platform-badge--baemin { --pc: #2ac1bc; --pc2: #6fe0dc; }
-.page-head__apps .platform-badge--coupangeats { --pc: #d62d34; --pc2: #ff6b70; }
-.page-head__apps .platform-badge--ddangyo { --pc: #f5a623; --pc2: #ffd07a; }
-.page-head__apps .platform-badge--yogiyo { --pc: #fa0050; --pc2: #ff5d90; }
+/* 앱 색 한 개씩. 그라데이션을 걷으면서 두 번째 색(--pc2)은 안 쓰이게
+   됐다 — 정의만 남겨두면 다음에 고치는 사람이 쓰이는 값으로 읽는다. */
+.page-head__apps .platform-badge--baemin { --pc: #2ac1bc; }
+.page-head__apps .platform-badge--coupangeats { --pc: #d62d34; }
+.page-head__apps .platform-badge--ddangyo { --pc: #f5a623; }
+.page-head__apps .platform-badge--yogiyo { --pc: #fa0050; }
 
 /* 로고가 흰색인 앱(쿠팡이츠)은 흰 판 위에서 사라진다 — 로고 뒤에
    옅은 회색을 깔아 어떤 로고든 형태가 남게 한다. */
@@ -258,19 +260,15 @@ h1 {
   border-radius: 10px;
   background: #fff;
 }
+/* 고른 앱 — 글자로 알리는 대신 그 앱 색 테두리를 두른다. 그라데이션은
+   걷었다. 앱 아이콘 자체가 이미 색이 많은 그림이라, 그 둘레에 색이 변하는
+   테두리를 두르면 무엇이 로고고 무엇이 표시인지 흐려진다. 단색이면
+   배경을 두 겹 깔던 트릭도 필요 없다. */
 .page-head__apps .platform-badge {
-  border: 2px solid transparent;
+  border: 2px solid var(--pc, var(--text));
   border-radius: 12px;
-  background-image:
-    linear-gradient(#fff, #fff),
-    linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  background: #fff;
 }
-
-/* 고른 앱 — 글자로 알리는 대신 그 앱 색 테두리를 두른다. 테두리에
-   그라데이션을 쓰려면 배경을 두 겹으로 깔고(안쪽 padding-box, 바깥
-   border-box) 테두리를 투명하게 비워야 한다. */
 /* 안 고른 앱은 흐리게 물러난다 — 판이 없으니 선택은 체크와 선명도로만
    갈린다. */
 .page-head__apps .platform-badge[aria-pressed="false"] {
@@ -289,7 +287,7 @@ h1 {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--pc, var(--text)), var(--pc2, var(--text)));
+  background: var(--pc, var(--text));
   color: #fff;
   font-size: .85rem;
   font-weight: 800;
@@ -2195,7 +2193,9 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-top: .25rem;
+  /* 로고에 바싹 붙인다. 떨어져 있으면 아래 분류 줄과 어느 쪽에 딸린
+     라벨인지 헷갈렸다 — 위치가 곧 소속이다. */
+  margin-top: 2px;
   padding: .05rem .35rem;
   border: 1px solid var(--pc, var(--text));
   border-radius: 999px;
@@ -2214,8 +2214,9 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
    무엇을 누르는지는 보여야 한다. */
 [data-variant="a"] .membership-btn--soon { filter: saturate(.4); }
 /* 라벨이 상자 밖에 떠 있어 레이아웃 높이에 안 잡힌다 — 아래로 오는 줄과
-   반드시 겹친다. 라벨 높이만큼 자리를 비운다. */
-[data-variant="a"] .page-head__apps { padding-bottom: 22px; }
+   반드시 겹친다. 라벨이 차지하는 만큼 자리를 비운다: 간격 2px + 라벨
+   높이 19px = 21px(실측). 18px로 뒀더니 분류 줄을 3px 파고들었다. */
+[data-variant="a"] .page-head__apps { padding-bottom: 21px; }
 
 /* 조작 셋(담기·초기화·검색)은 앱 줄 오른쪽에 붙는다. inner가
    flex-start라 위로 붙어 떠 보여서, 앱 줄 상자 한가운데에 맞춘다 —
