@@ -768,26 +768,29 @@ export default function App() {
               <>
                 {/* 모아보기가 켜지면 다른 조건이 안 먹는다 — 결과가 왜
                     이런지 알려면 그 사실만 보여야 한다. */}
+                {/* 칩 전체가 해제 버튼이다. ×만 눌리게 두면 손가락으로는
+                    너무 작은 과녁이라, 칩을 눌렀는데 아무 일도 안 일어난다.
+                    ×는 무엇이 일어날지 알려주는 표시로만 남긴다. */}
                 {cartOnly && (
-                  <span className="search-chip search-chip--cart">
+                  <button type="button" className="search-chip search-chip--cart"
+                    aria-label="전체 보기" onClick={() => setCartOnly(false)}>
                     담아둔 {cart.size}개
-                    <button type="button" className="search-chip__x" aria-label="전체 보기"
-                      onClick={() => setCartOnly(false)}>×</button>
-                  </span>
+                    <span className="search-chip__x" aria-hidden="true">×</span>
+                  </button>
                 )}
                 {!cartOnly && CATEGORIES.filter((c) => filters.categories.has(c.key)).map((c) => (
-                  <span className="search-chip" key={c.key}>
+                  <button type="button" className="search-chip" key={c.key}
+                    aria-label={`${c.label} 해제`} onClick={() => toggleCategory(c.key)}>
                     {c.label}
-                    <button type="button" className="search-chip__x" aria-label={`${c.label} 해제`}
-                      onClick={() => toggleCategory(c.key)}>×</button>
-                  </span>
+                    <span className="search-chip__x" aria-hidden="true">×</span>
+                  </button>
                 ))}
                 {!cartOnly && filters.platforms.size < PLATFORMS.length && (
-                  <span className="search-chip">
+                  <button type="button" className="search-chip" aria-label="앱 선택 초기화"
+                    onClick={() => setFilters((f) => ({ ...f, platforms: new Set(PLATFORMS.map((x) => x.key)) }))}>
                     앱 {filters.platforms.size}
-                    <button type="button" className="search-chip__x" aria-label="앱 선택 초기화"
-                      onClick={() => setFilters((f) => ({ ...f, platforms: new Set(PLATFORMS.map((x) => x.key)) }))}>×</button>
-                  </span>
+                    <span className="search-chip__x" aria-hidden="true">×</span>
+                  </button>
                 )}
               </>
             )}

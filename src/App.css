@@ -2039,28 +2039,35 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   display: inline-flex;
   align-items: center;
   gap: .15rem;
-  height: 24px;
-  padding: 0 .2rem 0 .5rem;
-  border-radius: 6px;
+  /* 손가락 과녁. 24px일 때는 ×만 겨우 눌렸다 — 이제 칩 전체가 버튼이라
+     높이가 곧 과녁 높이다. 입력칸(36px) 안에 들어가야 해 32px로 잡는다. */
+  height: 32px;
+  padding: 0 .35rem 0 .6rem;
+  border-radius: 8px;
   background: var(--bg);
   border: 1px solid var(--border);
+  font: inherit;
   font-size: .78rem;
   font-weight: 600;
   color: var(--text);
   white-space: nowrap;
-}
-.search-chip--cart { background: var(--text); border-color: var(--text); color: #fff; }
-.search-chip__x {
-  border: 0;
-  background: none;
+  /* 칩 전체가 해제 버튼이다 — 누를 수 있다는 걸 커서로도 알린다. */
   cursor: pointer;
+}
+.search-chip:hover { border-color: var(--text-muted); }
+.search-chip:hover .search-chip__x { opacity: 1; }
+.search-chip:active { transform: scale(.96); }
+.search-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.search-chip--cart { background: var(--text); border-color: var(--text); color: #fff; }
+.search-chip--cart:hover { border-color: var(--text); background: var(--save-hover); }
+/* 누르면 무엇이 일어나는지 알려주는 표시. 이제 버튼이 아니라 그림이다. */
+.search-chip__x {
   color: inherit;
   opacity: .55;
   font-size: 1rem;
   line-height: 1;
   padding: 0 .2rem;
 }
-.search-chip__x:hover { opacity: 1; }
 
 /* 토큰이 늘면 입력칸이 밀리므로 가로로 흐르게 둔다. 입력칸은 최소 폭을
    지켜 토큰이 많아도 글자를 칠 자리가 남는다. */
