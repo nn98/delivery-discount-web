@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { startAnalytics } from './analytics.js'
 import { startGa4 } from './ga4.js'
 import { optedOut } from './privacy.js'
+import { markVariantOnRoot } from './variant.js'
 import './App.css'
 
 function startPostHog() {
@@ -25,6 +26,8 @@ function startPostHog() {
 
 // StrictMode가 컴포넌트를 두 번 마운트하므로 page_view가 두 번 찍히지
 // 않도록 React 밖에서 한 번만 시작한다.
+// 첫 렌더 전에 새긴다 — 뒤에 새기면 A안이 B 스타일로 한 프레임 그려진다.
+markVariantOnRoot()
 startAnalytics()
 startGa4() // 임시 — ADR-002 참고
 startPostHog()
