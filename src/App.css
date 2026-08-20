@@ -1540,20 +1540,29 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   .banner--bottom .banner__logo { --logo: 40px; }
 }
 
-/* 좁은 화면에서는 "카테고리 설정" 글자를 접고 아이콘만 남긴다 —
-   한 줄에 앱 버튼 넷과 조작 셋이 같이 서야 한다. */
 @media (max-width: 560px) {
-
-  .page-head__apps .platform-badge { width: 53px; height: 53px; border-radius: 14px; }
   .brand-card__head .brand-logo { width: 53px; height: 53px; border-radius: 14px; }
 }
-/* 360px대 기기 — 앱 버튼 넷과 조작 셋이 한 줄에 들어가야 하므로
-   버튼 판을 한 단계 더 줄인다(로고는 그대로 49px). */
 @media (max-width: 400px) {
-  .page-head__apps .platform-badge { width: 47px; height: 47px; border-radius: 13px; }
   .brand-card__head .brand-logo { width: 47px; height: 47px; border-radius: 13px; }
-
   .title-bar__inner { gap: .25rem; padding: 0 .35rem; }
+}
+
+/* 앱 버튼은 화면이 좁아질수록 작아진다. 전에는 반대로 45 -> 53 -> 47px로
+   커져서, A안 바에서 앱 넷과 조작 셋이 한 줄에 못 들어가 세 줄로 밀렸다.
+
+   한 줄에 들어갈 수 있는 최대 폭은 이렇게 나온다:
+
+     조작 셋 44*3 + 사이 8 = 140,  inner 좌우 여백 11
+     앱 넷   4w + 사이 18 ≤ 화면폭 - 151
+
+   360px -> w ≤ 45,  320px -> w ≤ 37. 그 아래로 잡는다. */
+@media (max-width: 480px) {
+  .page-head__apps .platform-badge { width: 42px; height: 42px; border-radius: 11px; }
+}
+@media (max-width: 380px) {
+  .page-head__apps .platform-badge { width: 36px; height: 36px; border-radius: 10px; }
+  .page-head__apps { gap: 4px; }
 }
 
 /* 최고 칩 외의 로고는 2배로 키운다 — 어느 앱 것인지 스치듯 봐도
@@ -2177,6 +2186,36 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
    "조건을 어디에 두는가"의 차이뿐이다. */
 
 [data-variant="a"] .platform-badge-wrap { position: relative; }
+
+/* 멤버십 라벨은 앱 버튼 아래에 떠 있다. 흐름 안에 두면 라벨 글자 폭이
+   곧 버튼 폭이 되어("배민클럽" 등) 앱 넷이 269px을 차지했다 — 배지만
+   따지면 156px인데도 조작 셋이 밀려 바가 세 줄로 갈렸다. */
+[data-variant="a"] .membership-btn {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: .25rem;
+  padding: .05rem .35rem;
+  border: 1px solid var(--pc, var(--text));
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--pc, var(--text));
+  font: inherit;
+  font-size: .6rem;
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+  cursor: pointer;
+}
+[data-variant="a"] .membership-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 아직 안 만든 기능이다. 앱 색은 그대로 두고 채도만 낮춘다 — 무채색으로
+   죽이면 어느 앱 것인지가 안 읽히는데, 이 버튼은 수요를 재려고 둔 것이라
+   무엇을 누르는지는 보여야 한다. */
+[data-variant="a"] .membership-btn--soon { filter: saturate(.4); }
+/* 라벨이 상자 밖에 떠 있어 레이아웃 높이에 안 잡힌다 — 아래로 오는 줄과
+   반드시 겹친다. 라벨 높이만큼 자리를 비운다. */
+[data-variant="a"] .page-head__apps { padding-bottom: 22px; }
 
 /* 조작 셋(담기·초기화·검색)은 앱 줄 오른쪽에 붙는다. inner가
    flex-start라 위로 붙어 떠 보여서, 앱 줄 상자 한가운데에 맞춘다 —
