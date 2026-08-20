@@ -124,8 +124,12 @@ function BannerCard({ banner, position, dots, onClose }) {
             눈이 왼쪽 로고에서 오른쪽으로 한 번만 건너간다 — 금액과
             설명이 좌우로 갈라져 있으면 두 번 건너가야 했다. */}
         <span className="banner__text">
-          <span className="banner__amount">{banner.amount}</span>
-          <span className="banner__period">{banner.period}</span>
+          {/* 금액과 기간은 한 줄에 둔다 — "얼마를 언제까지"가 한 문장으로
+              읽힌다. 조건은 길이가 들쭉날쭉해 아래로 내린다. */}
+          <span className="banner__headline">
+            <span className="banner__amount">{banner.amount}</span>
+            <span className="banner__period">{banner.period}</span>
+          </span>
           {banner.extra && <span className="banner__extra">{banner.extra}</span>}
         </span>
       </a>

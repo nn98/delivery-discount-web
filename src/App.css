@@ -390,6 +390,7 @@ h1 {
    .brand-logo는 span이라 감싼 쪽이 flex여야 폭·높이가 먹는다. */
 .banner__logo {
   --logo: 56px;
+  --logo-radius: 14px;
   position: relative;
   display: flex;
   flex: none;
@@ -400,8 +401,13 @@ h1 {
 .banner__logo .brand-logo {
   width: var(--logo);
   height: var(--logo);
-  border-radius: 14px;
+  border-radius: var(--logo-radius);
+  /* 네모난 로고를 둥근 상자에 넣으면 모서리가 깎여 나간다. 깎이는 만큼
+     안쪽으로 들여 그린다(반지름 * 0.3 ≈ 45도 지점의 잘림 깊이). */
+  padding: calc(var(--logo-radius) * .3);
 }
+/* cover는 상자를 채우려고 잘라낸다 — 로고는 잘리면 안 되는 그림이다. */
+.banner__logo .brand-logo img { object-fit: contain; }
 /* 브랜드가 없는 앱 전체 행사 — 로고 자리에 앱 아이콘이 들어간다. */
 .brand-logo--platform { background: var(--surface); }
 .brand-logo--platform img { object-fit: contain; padding: 4px; }
@@ -411,10 +417,11 @@ h1 {
    흔한 배치다. 로고 크기를 따라가므로 어느 자리에서든 비율이 같다. */
 .banner__platform {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  width: calc(var(--logo) * .25);
-  height: calc(var(--logo) * .25);
+  right: 6px;
+  bottom: 6px;
+  /* 25%로는 어느 앱인지 못 알아봤다. 로고 절반을 넘겨 잡는다. */
+  width: calc(var(--logo) * .6);
+  height: calc(var(--logo) * .6);
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -441,6 +448,16 @@ h1 {
 }
 
 /* 금액이 배너의 주인공이다. 좁은 화면에서도 이 글씨는 줄이지 않는다. */
+/* 금액과 기간을 한 줄에. 기간은 baseline에 맞춰 금액 밑변에 나란히
+   서게 한다 — 세로 가운데에 두면 큰 숫자 옆에서 붕 떠 보인다. */
+.banner__headline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .1rem .5rem;
+  min-width: 0;
+}
+
 .banner__amount {
   font-size: 1.45rem;
   font-weight: 800;
