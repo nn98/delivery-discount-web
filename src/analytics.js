@@ -6,37 +6,13 @@
 // 유입 URL 원본(direct/internal/external 구분만), 쿠키(localStorage만 씀).
 // visitorId는 이 브라우저가 만든 난수라 지우면 그대로 끊긴다.
 
+import { getAnalyticsContext } from './analytics-context.js'
+import { optedOut } from './privacy.js'
+import { uiVariant } from './variant.js'
+
+export { optedOut } from './privacy.js'
+
 const API_BASE = ''  // 같은 오리진 — api.js 주석 참고
-const VISITOR_KEY = 'dk_visitor'
-const VISITS_KEY = 'dk_visits'
-const SESSION_KEY = 'dk_session'
-const DEV_KEY = 'dk_dev'
-
-// 추적 거부 신호를 존중한다. 켜져 있으면 아무것도 보내지 않는다.
-// ga4.js도 이 판단을 그대로 재사용한다(export).
-export function optedOut() {
-  return (
-    navigator.globalPrivacyControl === true ||
-    navigator.doNotTrack === '1' ||
-    window.doNotTrack === '1'
-  )
-}
-
-// localStorage가 막힌 환경(사파리 프라이빗 등)에서 통째로 터지면 안 된다.
-function safeStore(store, key, value) {
-  try {
-    if (value === undefined) return store.getItem(key)
-    store.setItem(key, value)
-    return value
-  } catch {
-    return null
-  }
-}
-
-function randomId(prefix) {
-  const bytes = crypto.getRandomValues(new Uint8Array(8))
-  return prefix + Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
-}
 
 // 이벤트마다 한 번만 발급하는 UUID다. 이 객체가 메모리 큐에 남아 있는 동안
 // sendBeacon 실패 뒤 fetch로 폴백해도 같은 eventId가 PostHog $insert_id까지 간다.
@@ -50,23 +26,6 @@ function createEventId() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
-function identity() {
-  let visitorId = safeStore(localStorage, VISITOR_KEY)
-  if (!visitorId) visitorId = safeStore(localStorage, VISITOR_KEY, randomId('v_'))
-
-  let sessionId = safeStore(sessionStorage, SESSION_KEY)
-  const isNewSession = !sessionId
-  if (isNewSession) sessionId = safeStore(sessionStorage, SESSION_KEY, randomId('s_'))
-
-  // 재방문 회차는 세션이 새로 열릴 때만 올린다(새로고침으로 안 오르게).
-  let visits = Number(safeStore(localStorage, VISITS_KEY) || 0)
-  if (isNewSession) {
-    visits += 1
-    safeStore(localStorage, VISITS_KEY, String(visits))
-  }
-  return { visitorId, sessionId, visitCount: visits || 1 }
-}
-
 // 유입 원본 URL은 안 보낸다 — 어디서 왔는지 분류만 필요하다.
 function referrerKind() {
   const ref = document.referrer
@@ -78,37 +37,24 @@ function referrerKind() {
   }
 }
 
-// 본인 테스트 트래픽 표시. `?dev=1`을 한 번 열면 이 브라우저에 계속 남고
-// (`?dev=0`으로 끔), 이후 모든 이벤트에 dev:true가 붙는다. 집계에서는
-// jq 'select(.dev != true)'로 걸러낸다 — 실 트래픽 수치가 테스트 클릭으로
-// 부풀려지는 걸 막기 위함(2026-07-31).
-function isDevSession() {
-  const params = new URLSearchParams(location.search)
-  if (params.has('dev')) {
-    const on = params.get('dev') === '1'
-    safeStore(localStorage, DEV_KEY, on ? '1' : '0')
-    return on
-  }
-  return safeStore(localStorage, DEV_KEY) === '1'
-}
-
-// 어느 화면 안을 보고 있는지. 두 안을 각각 배포해 비교하므로 빌드
-// 시점에 박힌다 — 같은 빌드가 두 안을 오가지 않아 세션 도중 바뀌지
-// 않는다. 값이 이벤트마다 실려야 나중에 데이터를 안별로 가를 수 있다.
-//
-//   a = 기존 한 줄 바(플랫폼/분류/초기화/검색)
-//   b = 두 줄 바 + 필터 바텀시트
-//
-// 안 붙이면 클릭 수만 쌓이고 "어느 화면에서 눌렀나"를 되짚을 수 없다.
-const VARIANT = import.meta.env?.VITE_UI_VARIANT ?? 'a'
-
 const context = {
-  ...identity(),
+  ...getAnalyticsContext(),
   device: window.matchMedia('(hover: hover)').matches ? 'desktop' : 'mobile',
   viewport: `${window.innerWidth}x${window.innerHeight}`,
   referrer: referrerKind(),
-  variant: VARIANT,
-  dev: isDevSession() || undefined,
+  // 어느 화면 안을 보고 있었는지. 안 붙이면 클릭 수만 쌓이고 "어느
+  // 화면에서 눌렀나"를 되짚을 수 없다.
+  variant: uiVariant,
+}
+
+// 지금 걸려 있는 조건. 링크를 누른 순간 어떤 필터 상태였는지가 "분류를
+// 설정한 사람이 실제로 이동까지 하는가"의 답이라, 이벤트마다 실어 보낸다.
+// 화면이 바꿔주고 여기서는 들고만 있는다 — 이벤트를 쏘는 자리마다 상태를
+// prop으로 끌고 다니면 새 필터가 늘 때 빠뜨린다.
+let filterContext = {}
+
+export function setFilterContext(next) {
+  filterContext = next
 }
 
 let queue = []
@@ -146,16 +92,6 @@ function flush(useBeacon = false) {
   clearTimeout(flushTimer)
   flushTimer = null
   post(batch, useBeacon)
-}
-
-// 지금 걸려 있는 조건. 링크를 누른 순간 어떤 필터 상태였는지가
-// "분류를 설정한 사람이 실제로 이동까지 하는가"의 답이라, 이벤트마다
-// 실어 보낸다. 화면이 바꿔주고 여기서는 들고만 있는다 — 이벤트를
-// 쏘는 자리마다 상태를 prop으로 끌고 다니면 새 필터가 늘 때 빠뜨린다.
-let filterContext = {}
-
-export function setFilterContext(next) {
-  filterContext = next
 }
 
 export function track(event, props) {
