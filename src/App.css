@@ -1090,10 +1090,16 @@ h1 {
 }
 .offer-list::-webkit-scrollbar { display: none; }
 
-/* 최고 할인 한 건만 단독으로 놓는 줄. 나머지와 같은 격자에 섞이면
-   "어느 게 제일 센가"를 매번 눈으로 비교해야 한다 — 답을 먼저 크게
-   보여주고, 비교는 아래 줄에서 하게 한다. */
+/* 최고 할인을 단독으로 놓는 줄. 나머지와 같은 격자에 섞이면 "어느 게
+   제일 센가"를 매번 눈으로 비교해야 한다 — 답을 먼저 크게 보여주고,
+   비교는 아래 줄에서 하게 한다.
+
+   동점이 여럿이면 전부 여기 온다. 세로로 쌓아 각자 한 줄을 차지하게
+   한다 — 나란히 놓아 폭을 반씩 나누면 동점인데도 아래 줄 차순위와
+   크기가 비슷해져 "최고"라는 신호가 죽는다. */
 .offer-list--hero {
+  flex-direction: column;
+  gap: .5rem;
   margin-bottom: .5rem;
 }
 .offer-list--hero .offer { flex: 1 1 100%; }
@@ -1102,11 +1108,7 @@ h1 {
    크기 차이로 바로 읽히게 둔다. */
 .offer-list--rest { gap: .4rem; }
 
-.offer { position: relative; display: flex; flex-direction: column; flex: 1 1 0; min-width: 68px;
-  /* 칩 폭에 맞춰 금액 글씨를 줄이려고 컨테이너 기준을 연다 — 화면
-     기준(vw)으로는 칩이 넷이냐 하나냐를 구분 못 한다. */
-  container-type: inline-size;
-}
+.offer { position: relative; display: flex; flex-direction: column; flex: 1 1 0; min-width: 68px; }
 
 .offer__chip {
   position: relative;
@@ -1249,15 +1251,7 @@ h1 {
   border-color: color-mix(in srgb, var(--text) 25%, transparent);
 }
 .offer--capped .offer__amount { color: color-mix(in srgb, var(--text) 62%, transparent); }
-.offer--best/* 칩은 한 줄에 앱 수만큼 나눠 서므로 좁은 화면에서는 칩 하나가 80px
-   근처까지 좁아진다. 금액은 줄바꿈하면 읽기 어려워서 nowrap인데, 그
-   상태로 고정 글씨를 쓰면 "13,900원"이 잘렸다. 제 칩 폭에 맞춰 줄인다 —
-   "13,900원"은 대략 4.8em이라 (폭 - 안쪽 여백) / 4.8 정도가 딱 맞는 글씨
-   크기다. 아래위는 clamp로 막는다: 너무 작으면 못 읽고, 칩이 넓어져도
-   본문보다 커질 이유는 없다. */
-.offer__amount { font-size: clamp(.72rem, calc(20cqi - 4px), 1rem); }
-
-.offer--confirmed .offer__amount { color: #fff; }
+.offer--best.offer--confirmed .offer__amount { color: #fff; }
 .offer--confirmed .offer__amount {
   font-weight: 600;
   font-variant-numeric: tabular-nums;

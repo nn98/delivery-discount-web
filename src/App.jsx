@@ -316,10 +316,19 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
     [brand.offers],
   )
 
-  // 최고 할인 하나를 단독으로 올리고 나머지를 아래로 내린다.
-  // sortedOffers가 이미 "최대 뒤로, 금액 큰 순"으로 정렬돼 있으므로
-  // 맨 앞이 곧 그 브랜드의 대표 할인이다.
-  const [heroOffer, ...restOffers] = sortedOffers
+  const isBest = (o) => bestAmount != null && !o.qualifier && !o.soldOut && o.amount === bestAmount
+
+  // 최고 할인을 위로 올리고 나머지를 아래로 내린다. 동점이면 동점인 만큼
+  // 전부 올린다 — 같은 금액인데 하나만 크게 놓으면 나머지가 열등해 보여
+  // 거짓 우열이 생긴다(bestAmount가 동점을 그대로 두는 이유와 같다).
+  // 최고가 없는 브랜드(전부 조건부거나 품절)는 sortedOffers가 이미
+  // "최대 뒤로, 금액 큰 순"이라 맨 앞이 대표값이다.
+  const [heroOffers, restOffers] = useMemo(() => {
+    const best = sortedOffers.filter(isBest)
+    return best.length > 0
+      ? [best, sortedOffers.filter((o) => !isBest(o))]
+      : [sortedOffers.slice(0, 1), sortedOffers.slice(1)]
+  }, [sortedOffers, bestAmount])
 
   // 상세를 펼친 상태를 기본으로 둔다 — 조건(최소주문금액 등)을 봐야
   // 금액이 실제로 무슨 뜻인지 알 수 있는데, 접어두면 매번 눌러야 했다.
@@ -380,24 +389,25 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
         </svg>
       </button>
 
-      {/* 최고 할인 하나를 단독 줄로 올리고 나머지는 아래 가로 그리드로
-          내린다. 넷을 균등한 격자에 늘어놓으면 "어느 게 제일 센가"를
+      {/* 최고 할인을 단독 줄로 올리고 나머지는 아래 가로 그리드로
+          내린다. 동점이면 그만큼 줄이 늘어난다. 넷을 균등한 격자에 늘어놓으면 "어느 게 제일 센가"를
           매번 눈으로 비교해야 한다 — 답을 먼저 보여주고, 나머지는
           비교하고 싶을 때 보는 부가 정보로 둔다. */}
-      {heroOffer && (
+      {heroOffers.length > 0 && (
         <ul className="offer-list offer-list--hero">
-          <OfferChip
-            key={heroOffer.platform}
-            offer={heroOffer}
-            brandLinks={brand.links}
-            brandName={brand.name}
-            detailId={detailId}
-            open={open}
-            onToggle={toggle}
-            best={bestAmount != null && !heroOffer.qualifier && !heroOffer.soldOut
-                  && heroOffer.amount === bestAmount}
-            hero
-          />
+          {heroOffers.map((o) => (
+            <OfferChip
+              key={o.platform}
+              offer={o}
+              brandLinks={brand.links}
+              brandName={brand.name}
+              detailId={detailId}
+              open={open}
+              onToggle={toggle}
+              best={isBest(o)}
+              hero
+            />
+          ))}
         </ul>
       )}
 
@@ -412,7 +422,7 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
               detailId={detailId}
               open={open}
               onToggle={toggle}
-              best={bestAmount != null && !o.qualifier && !o.soldOut && o.amount === bestAmount}
+              best={isBest(o)}
             />
           ))}
         </ul>
