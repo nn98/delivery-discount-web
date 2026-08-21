@@ -98,19 +98,26 @@ delivery-discount-api 쪽 `EventController.ALLOWED_EVENTS`와 diff할 것.**
 | `page_exit` | `analytics.js` `sendExit()` | `track()`을 거치지 않고 큐에 직접 push — `props` 없이 최상위에 `dwellMs`(보이던 시간, ms) |
 | `offer_link_click` | `App.jsx` `OfferChip` | `{ brand, platform }` |
 | `brand_expand` | `App.jsx` `BrandCard` | `{ brand, category }` |
-| `category_change` | `App.jsx` 필터 선택 | `{ category, mode }` |
-| `classify_change` | `App.jsx` 분류 기준 변경 | `{ mode }` |
-| `membership_open` | `App.jsx` 멤버십 버튼 | 없음 |
+| `category_change` | `App.jsx` 분류 선택 | `{ category }` |
 | `banner_click` | `EventBanner.jsx` 배너 링크 | `{ brand, platform, position }` — `position`은 `top`/`bottom`, 브랜드 없는 앱 전체 행사면 `brand: 'none'` |
-
-API 화이트리스트(`analytics/EventController.ALLOWED_EVENTS`)에는 위 8개
-외에 **`capture_note_seen`**이 더 있다 — 프론트가 보내지 않는 유령 항목이다.
-서버가 모르는 이벤트를 조용히 버리는 방향이라 해는 없지만, 화이트리스트를
-diff할 때 "프론트가 빠뜨린 것"으로 오해하지 말 것(2026-08-06 확인).
+| `platform_filter_toggle` | `FilterSheet.jsx` 배달앱 선택 | `{ platform, from }` |
+| `membership_toggle` | `FilterSheet.jsx` 멤버십 선택 | `{ platform, state, from }` |
+| `filters_apply` | `App.jsx` 필터 시트 적용 | `{ platforms, categories, sort }` |
+| `filters_reset` | `App.jsx` 필터 초기화 | 없음 |
+| `filter_sheet_open` | `App.jsx` 필터 시트 열기 | 없음 |
+| `cart_toggle` | `App.jsx` 브랜드 담기·빼기 | `{ brand, state }` |
+| `cart_view_toggle` | `App.jsx` 담은 브랜드만 보기 | `{ state, count }` |
+| `cart_clear` | `App.jsx` 담은 브랜드 비우기 | `{ count }` |
+| `brands_retry` | `App.jsx` 브랜드 다시 불러오기 | 없음 |
+| `scroll_to_top` | `App.jsx` 맨 위로 이동 | 없음 |
 
 모든 이벤트에는 `track()`이 공통으로 붙이는 컨텍스트(`visitorId`,
 `sessionId`, `visitCount`, `device`, `viewport`, `referrer`, `dev`, `path`,
-`clientTs`)가 같이 실린다 (`src/analytics.js:83-89, 128-136`). `dev=1`
+`clientTs`, `eventId`)가 같이 실린다. `page_exit`도 큐에 직접 넣을 때
+별도 UUID `eventId`를 발급한다. ID는 메모리 큐 이벤트마다 한 번 생성되고,
+서버가 PostHog `$insert_id`로 보존한다. 따라서 sendBeacon 실패 뒤 fetch
+폴백처럼 같은 큐 항목을 다시 전송할 때는 중복 집계하지 않지만, 브라우저
+새로고침 이후 재전송까지 보장하지는 않는다. `dev=1`
 쿼리로 켠 세션은 `dev: true`가 붙는다 (`src/analytics.js:73-81`) — 집계 시
 제외 대상.
 
