@@ -1102,7 +1102,11 @@ h1 {
    크기 차이로 바로 읽히게 둔다. */
 .offer-list--rest { gap: .4rem; }
 
-.offer { position: relative; display: flex; flex-direction: column; flex: 1 1 0; min-width: 68px; }
+.offer { position: relative; display: flex; flex-direction: column; flex: 1 1 0; min-width: 68px;
+  /* 칩 폭에 맞춰 금액 글씨를 줄이려고 컨테이너 기준을 연다 — 화면
+     기준(vw)으로는 칩이 넷이냐 하나냐를 구분 못 한다. */
+  container-type: inline-size;
+}
 
 .offer__chip {
   position: relative;
@@ -1245,7 +1249,15 @@ h1 {
   border-color: color-mix(in srgb, var(--text) 25%, transparent);
 }
 .offer--capped .offer__amount { color: color-mix(in srgb, var(--text) 62%, transparent); }
-.offer--best.offer--confirmed .offer__amount { color: #fff; }
+.offer--best/* 칩은 한 줄에 앱 수만큼 나눠 서므로 좁은 화면에서는 칩 하나가 80px
+   근처까지 좁아진다. 금액은 줄바꿈하면 읽기 어려워서 nowrap인데, 그
+   상태로 고정 글씨를 쓰면 "13,900원"이 잘렸다. 제 칩 폭에 맞춰 줄인다 —
+   "13,900원"은 대략 4.8em이라 (폭 - 안쪽 여백) / 4.8 정도가 딱 맞는 글씨
+   크기다. 아래위는 clamp로 막는다: 너무 작으면 못 읽고, 칩이 넓어져도
+   본문보다 커질 이유는 없다. */
+.offer__amount { font-size: clamp(.72rem, calc(20cqi - 4px), 1rem); }
+
+.offer--confirmed .offer__amount { color: #fff; }
 .offer--confirmed .offer__amount {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -1496,7 +1508,10 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
   max-width: 340px;
 }
 .detail__tier-min { color: var(--text-muted); }
-.detail__tier-percent { color: var(--text-muted); font-size: .85em; margin-left: .25em; }
+/* 금액 뒤에 이어 붙이면 "3,000원(5%, 최대 3,000원)"이 한 줄로 길어져
+   좁은 화면에서 잘렸다. 조건은 금액을 설명하는 딸린 값이라 아래 줄로
+   내린다 — 금액이 먼저 읽히고 조건이 뒤따른다. */
+.detail__tier-percent { display: block; color: var(--text-muted); font-size: .85em; }
 /* 구간마다 끝나는 날이 다를 때만 붙는다(오퍼 만료일과 같으면 생략) —
    조건 문구 옆에 작게 얹어 어느 쿠폰이 먼저 끝나는지 보이게 한다. */
 .detail__tier-expiry {
