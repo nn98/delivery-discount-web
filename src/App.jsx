@@ -70,6 +70,22 @@ function searchFallbackLink(platformKey, brandName) {
 
 const CART_KEY = 'dk_cart'
 
+// 다른 오퍼와 같은 선에서 견줄 수 있는 값인가.
+//
+// "최대"(화면 배지 "불확정")는 최소주문금액을 채워야 나오는 상한액이고
+// "특정메뉴"는 메뉴 하나에만 쓰는 값이라, 액면 그대로 견주면 그 오퍼가
+// 실제보다 세 보인다. "최적"(쿠폰을 다 겹쳤을 때)과 "행사"(당일 배너)는
+// 조건이 붙을 뿐 액수 자체는 확정이라 넣는다.
+//
+// 같은 규칙이 api의 BrandComparisonService.confirmedSortingAmount()에도
+// 있다(카드 정렬용). 한쪽만 고치면 카드 순서와 카드 안 "최고 할인" 표식이
+// 서로 다른 답을 낸다(ADR-016).
+const INCOMPARABLE = new Set(['최대', '특정메뉴'])
+
+function comparable(offer) {
+  return !INCOMPARABLE.has(offer.qualifier)
+}
+
 function won(value) {
   return `${value.toLocaleString()}원`
 }
@@ -301,7 +317,7 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
   // 만큼 전부 표시한다(하나만 고르면 거짓 우열이 생긴다). 하나뿐이어도
   // 그 값이 그 브랜드에서 받을 수 있는 최고다 — 그대로 표시한다.
   const bestAmount = useMemo(() => {
-    const plain = brand.offers.filter((o) => !o.qualifier && o.amount != null && !o.soldOut)
+    const plain = brand.offers.filter((o) => comparable(o) && o.amount != null && !o.soldOut)
     if (plain.length === 0) return null
     return Math.max(...plain.map((o) => o.amount))
   }, [brand.offers])
@@ -316,7 +332,7 @@ function BrandCard({ brand, highlighted, onInteract, checked, onToggleCheck }) {
     [brand.offers],
   )
 
-  const isBest = (o) => bestAmount != null && !o.qualifier && !o.soldOut && o.amount === bestAmount
+  const isBest = (o) => bestAmount != null && comparable(o) && !o.soldOut && o.amount === bestAmount
 
   // 최고 할인을 위로 올리고 나머지를 아래로 내린다. 동점이면 동점인 만큼
   // 전부 올린다 — 같은 금액인데 하나만 크게 놓으면 나머지가 열등해 보여
