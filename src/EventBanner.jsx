@@ -151,6 +151,13 @@ function BannerCard({ banner, position, dots, onClose, onSeen }) {
               읽힌다. 조건은 길이가 들쭉날쭉해 아래로 내린다. */}
           <span className="banner__headline">
             <span className="banner__amount">{banner.amount}</span>
+            {/* 로고만으로는 어느 브랜드인지 안 읽힌다 — 로고 파일이 없으면
+                첫 글자만 남고, 있어도 글자 없는 심볼이면 알아볼 수 없다.
+                기간 왼쪽에 붙여 "누구를 언제까지"가 한 호흡에 읽히게 한다.
+                앱 전체 행사(brand 없음)면 앱 이름을 대신 쓴다. */}
+            <span className="banner__brand">
+              {banner.brand ?? platform?.label ?? banner.platform}
+            </span>
             <span className="banner__period">{banner.period}</span>
           </span>
           {banner.extra && <span className="banner__extra">{banner.extra}</span>}
