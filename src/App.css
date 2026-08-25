@@ -1209,14 +1209,38 @@ h1 {
    먼저 읽혔다. 칩은 눈에 잘 들어오되 읽히는 것은 숫자여야 한다. 같은
    네온을 테두리에만 두르고 안은 본문 바탕을 그대로 둔다.
 
-   그라디언트 테두리는 border-color로 못 만든다 — 배경을 두 겹으로 깔고
-   (padding-box에 본문색, border-box에 네온) 테두리를 투명으로 둔다.
-   1px은 네온이 묻혀 회색으로 보이므로 2px로 세운다. */
-.offer--best .offer__chip {
+   테두리를 border로 그리면 칩이 차지하는 자리가 달라져 최고 할인 칩만
+   다른 칩과 어긋난다(폭이 아니라 안쪽 여백이 줄어 금액이 좁아진다).
+   그래서 border는 다른 칩과 똑같이 두고, 테를 ::after로 얹는다 —
+   position:absolute라 레이아웃에 전혀 안 낀다.
+
+   왼쪽·위 2px, 오른쪽·아래 5px로 두께를 어긋나게 준다. 빛을 왼쪽 위에서
+   받아 오른쪽 아래로 두께가 쌓인 것처럼 보여, 얇은 선 하나보다 칩이
+   떠 보인다.
+
+   그라디언트를 테에만 입히려고 마스크를 쓴다 — 배경을 border-box로
+   깔고 padding-box 쪽을 xor로 도려내면 테 부분만 남는다. 두께가 네 변
+   다르더라도 그대로 따라온다. */
+.offer--best .offer__chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   border: 2px solid transparent;
-  background:
-    linear-gradient(var(--bg), var(--bg)) padding-box,
-    linear-gradient(120deg, #00c8ff 0%, #4d6bff 45%, #ff3ec8 100%) border-box;
+  border-right-width: 5px;
+  border-bottom-width: 5px;
+  /* 칩의 모서리를 그대로 물려받는다 — hero는 12px, 나머지는 8px다. */
+  border-radius: inherit;
+  background: linear-gradient(120deg, #00c8ff 0%, #4d6bff 45%, #ff3ec8 100%) border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* 칩 위에 덮이는 층이라 누르는 것을 가로채면 안 된다. */
+  pointer-events: none;
 }
 /* 최고 할인 라벨 — 금액 위 배지가 아니라 칩 왼쪽에 붙는 표식이다.
    흰 글씨라 네온 배경 위에서 금액과 한 덩어리로 읽힌다. */
