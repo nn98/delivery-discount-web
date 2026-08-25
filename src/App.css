@@ -1228,8 +1228,13 @@ h1 {
   border: 2px solid transparent;
   border-right-width: 5px;
   border-bottom-width: 5px;
-  /* 칩의 모서리를 그대로 물려받는다 — hero는 12px, 나머지는 8px다. */
-  border-radius: inherit;
+  /* 두께가 바뀌는 곳은 오른쪽 위(2->5)와 왼쪽 아래(2->5) 두 코너뿐이다.
+     그 두 곳의 반경을 키우면 같은 변화가 긴 호를 타고 일어나 툭 꺾이지
+     않고 서서히 넓어진다. 두께가 같은 왼쪽 위(2,2)·오른쪽 아래(5,5)는
+     전환할 것이 없으니 칩과 같은 반경으로 둔다.
+
+     시계 방향으로 좌상 / 우상 / 우하 / 좌하다. */
+  border-radius: 8px 22px 8px 22px;
   background: linear-gradient(120deg, #00c8ff 0%, #4d6bff 45%, #ff3ec8 100%) border-box;
   -webkit-mask:
     linear-gradient(#000 0 0) padding-box,
@@ -1343,6 +1348,8 @@ h1 {
   padding: .95rem 1rem;
   border-radius: 12px;
 }
+/* 단독 줄이라 칩이 크다 — 전환 호도 그만큼 길게 잡는다. */
+.offer--hero.offer--best .offer__chip::after { border-radius: 12px 30px 12px 30px; }
 .offer--hero .offer__amount { font-size: 1.5rem; }
 /* 단독 줄이라 배지에도 여유가 있다 — 차순위 칩보다 한 단계 크게. */
 .offer--hero .offer__range-badge { font-size: .84rem; padding: .1rem .45rem; top: -11px; }
