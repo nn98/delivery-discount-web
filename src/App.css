@@ -101,11 +101,12 @@ main { max-width: 880px; margin: 0 auto; padding: 0 1.25rem 4rem; }
      자체(--bg)로 잡는다. 맨 위에선 배경과 완전히 같은 색이라 경계가
      아예 안 보이고, 카드가 밑으로 지나갈 때만 위쪽에서 서서히 가려지며
      아래로 자연스럽게 투명해진다(하단 페이드). */
-  background: linear-gradient(to bottom,
-    var(--bg) 0%,
-    var(--bg) 55%,
-    color-mix(in srgb, var(--bg) 55%, transparent) 80%,
-    transparent 100%);
+  /*background: linear-gradient(to bottom,*/
+  /*  var(--bg) 0%,*/
+  /*  var(--bg) 55%,*/
+  /*  color-mix(in srgb, var(--bg) 55%, transparent) 80%,*/
+  /*  transparent 100%);*/
+  background: #fff;
 }
 /* 배지와 카테고리를 한 줄에 둔다. 안쪽 여백은 0 — 배지가 화면
    왼쪽 위 끝에 그대로 붙는다. */
