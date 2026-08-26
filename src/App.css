@@ -596,9 +596,8 @@ h1 {
   transform: translateX(-50%);
   display: flex;
   gap: .15rem;
-  /* 글자 위에 겹치므로 뒤를 살짝 눌러 점이 묻히지 않게 한다. */
+  /* 판이 진한 한 색이라 뒤판 없이도 흰 점이 그대로 보인다. */
   border-radius: 999px;
-  background: rgba(0, 0, 0, .18);
 }
 .banner__dot {
   position: relative;
@@ -618,12 +617,15 @@ h1 {
   height: 6px;
   margin: -3px 0 0 -3px;
   border-radius: 50%;
-  background: var(--banner-ink-c);
-  opacity: .3;
+  /* 카드 밖 층이라 --banner-* 변수를 못 받는다. 판이 한 색(#17171a)으로
+     고정됐으므로 흰색으로 못박는다 — 변수를 다시 끌어오면 카드가 흐르는
+     동안 색이 따라 바뀐다. */
+  background: #fff;
+  opacity: .35;
   transition: opacity 150ms ease;
 }
-.banner__dot--on::after { opacity: .85; }
-.banner__dot:focus-visible { outline: 2px solid var(--banner-ink-c); outline-offset: -2px; border-radius: 50%; }
+.banner__dot--on::after { opacity: 1; }
+.banner__dot:focus-visible { outline: 2px solid rgba(255, 255, 255, .8); outline-offset: -2px; border-radius: 50%; }
 
 /* 상단 배너가 화면 밖으로 나가면 올라오는 층. 불투명하고, 떠 있는 층은
    뷰포트가 아니라 본문 폭을 따라간다는 이 레포 규칙을 그대로 따른다 —
