@@ -662,10 +662,15 @@ h1 {
               visibility 200ms;
 }
 .banner-dock--shown { visibility: visible; opacity: 1; transform: none; }
+.banner-dock__inner .banner__dots { bottom: calc(var(--dock-pad-bottom) + 7px); }
+
 .banner-dock__inner {
   /* 점은 absolute다 — 여기가 기준이 아니면 fixed인 .banner-dock을 잡아
      배너 바깥(도크 바닥)으로 떨어진다. */
   position: relative;
+  /* 아래 패딩만큼 기준선이 배너 바닥보다 내려가 있다. 점은 그 몫을
+     되돌려 배너 안에 앉는다(상단 슬롯은 패딩이 없어 그대로 맞는다). */
+  --dock-pad-bottom: .85rem;
   max-width: 880px;
   margin: 0 auto;
   /* 위쪽 여유는 걸쳐 나온 배지 몫이다. */
