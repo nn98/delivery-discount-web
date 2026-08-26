@@ -431,6 +431,10 @@ h1 {
   width: var(--logo);
   height: var(--logo);
   border-radius: var(--logo-radius);
+  /* 판이 진한 한 색이라 검은 로고는 그대로 두면 사라진다. 흰 받침을
+     깔아 어떤 로고든 형태가 남게 한다 — 로고 파일마다 배경이 있고 없고가
+     제각각이라 이쪽에서 바닥을 만들어 주는 편이 확실하다. */
+  background: #fff;
   /* 네모난 로고를 둥근 상자에 넣으면 모서리가 깎여 나간다. 깎이는 만큼
      안쪽으로 들여 그린다(반지름 * 0.3 ≈ 45도 지점의 잘림 깊이). */
   padding: calc(var(--logo-radius) * .3);
@@ -576,7 +580,14 @@ h1 {
   height: 3px;
   width: 0;
   border-bottom-left-radius: 14px;
-  background: rgba(255, 255, 255, .55);
+  /* 지금 장의 로고에서 뽑은 색. 밝은 쪽에서 진한 쪽으로 흘러 어디까지
+     찼는지가 길이뿐 아니라 색으로도 읽힌다. 값을 못 뽑으면 흰색으로
+     떨어진다(로고가 없거나 무채색인 브랜드). */
+  background: linear-gradient(
+    90deg,
+    var(--banner-deep-accent, rgba(255, 255, 255, .9)) 0%,
+    var(--banner-accent, rgba(255, 255, 255, .55)) 100%
+  );
   animation: banner-progress var(--rotate, 5s) linear forwards;
   pointer-events: none;
   z-index: 2;
@@ -1279,7 +1290,9 @@ h1 {
   width: 49px;
   height: 49px;
   margin-right: .55rem;
-  border: 3px solid rgba(255, 255, 255, .75);
+  /* 테두리는 두지 않는다. 표식 자체가 이미 진한 면이라 선을 더하면
+     그 선이 먼저 읽힌다. */
+  border: 0;
   border-radius: 10px;
   background: rgba(255, 255, 255, .24);
   color: #fff;
