@@ -1598,7 +1598,10 @@ h1 {
    리본으로 빼서 칩 안쪽 레이아웃과 완전히 분리한다. */
 .offer__range-badge {
   position: absolute;
-  top: -9px;
+  /* 위 줄 칩의 멤버십 배지(bottom)와 이 줄 칩의 qualifier 배지(top)가 겹쳤다
+     (도미노피자: 배민클럽 ↔ 3%할인, 2026-09-17). 크기는 그대로, 위치만 서로
+     반대로 2px 물러선다 — 이쪽은 아래로. */
+  top: -7px;
   left: 50%;
   transform: translateX(-50%);
   font-size: .72rem;
@@ -1678,8 +1681,8 @@ h1 {
 .offer--hero.offer--best .offer__chip::after { border-radius: 12px 22px 12px 22px; }
 .offer--hero .offer__amount { font-size: 1.5rem; }
 /* 단독 줄이라 배지에도 여유가 있다 — 차순위 칩보다 한 단계 크게. */
-.offer--hero .offer__range-badge { font-size: .84rem; padding: .1rem .45rem; top: -11px; }
-.offer--hero .offer__status-badge { font-size: .78rem; padding: .1rem .45rem; bottom: -11px; }
+.offer--hero .offer__range-badge { font-size: .84rem; padding: .1rem .45rem; top: -9px; }
+.offer--hero .offer__status-badge { font-size: .78rem; padding: .1rem .45rem; bottom: -9px; }
 /* 플랫폼 로고를 링크 버튼 옆에 붙여 키운다 — 어느 앱으로 가는
    링크인지가 누르기 전에 보이게. 모서리에 겹쳐 얹던 작은 배지와
    달리 흐름 안에 자리를 차지한다. */
@@ -1727,7 +1730,7 @@ h1 {
 
 .offer__status-badge {
   position: absolute;
-  bottom: -9px;
+  bottom: -7px;                 /* 2px 위로 — offer__range-badge 주석 참고 */
   left: 50%;
   transform: translateX(-50%);
   font-size: .7rem;
