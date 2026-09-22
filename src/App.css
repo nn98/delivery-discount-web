@@ -3392,7 +3392,14 @@ html.has-bottom-banner .survey-dock {
    올라가 다시 계단이 된다. 사이 간격은 5px에서 7px로 넓힌다 — 24px 탭을
    4도 돌리면 좌우 모서리가 각각 1.7px씩 밖으로 나온다. */
 .offer--hero .chip-tags { transform: none; gap: 7px; }
-.offer--hero .chip-tags > * {
+/* 선택자를 A의 규칙과 같은 모양으로 쓴다. `> *`로 적으면 클래스가 둘뿐이라
+   위쪽의 `.offer--hero .chip-tags > .offer__range-badge { transform: none }`
+   (클래스 셋)에 진다. 실제로 져서 탭이 하나도 안 기울었다(2026-09-22 실측:
+   계산된 transform이 세 탭 모두 none). */
+.offer--hero .chip-tags > .offer__range-badge,
+.offer--hero .chip-tags > .offer__status-badge,
+.offer--hero .chip-tags > .offer__range-badge--best-tab,
+.offer--hero .chip-tags > .offer__status-badge--membership {
   transform: rotate(-4deg);
   transform-origin: center;
 }
