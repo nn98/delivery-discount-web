@@ -3366,7 +3366,7 @@ html.has-bottom-banner .survey-dock {
    길어 두 줄이 되면 위로 쌓이므로 금액을 덮을 수가 없다. */
 .offer--hero .chip-tags {
   top: auto;
-  bottom: calc(100% - 10px);
+  bottom: calc(100% - 17px);
   flex-wrap: wrap;
   max-width: calc(100% + 14px);
 }
@@ -3377,3 +3377,8 @@ html.has-bottom-banner .survey-dock {
    display:contents로 묶음이 자리를 안 잡게 하면 탭들이 각자 옛 규칙
    (왼쪽 위 최고, 오른쪽 위 멤버십, 왼쪽 아래 조건)으로 돌아간다. */
 .offer:not(.offer--hero) .chip-tags { display: contents; }
+
+/* 탭 줄이 브랜드 로고를 덮는다 — 헤더와 오퍼 줄 사이를 넓힌다 (2026-09-22 실측).
+   탭 줄 윗변이 카드 헤더 아래끝을 1.2px 넘어섰다. 줄을 7px 내린 것만으로도
+   안 겹치지만, 로고와 탭이 맞닿아 보이지 않게 여유를 더 둔다. */
+.brand-card__head { margin-bottom: 8px; }
