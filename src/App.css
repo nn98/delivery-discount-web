@@ -3244,8 +3244,8 @@ html.has-bottom-banner .survey-dock {
   gap: 4px;
   z-index: 3;
 }
-.chip-tags .offer__range-badge,
-.chip-tags .offer__status-badge--membership {
+.offer--hero .chip-tags .offer__range-badge,
+.offer--hero .chip-tags .offer__status-badge--membership {
   position: static;
   top: auto; right: auto; left: auto; bottom: auto;
 }
@@ -3292,8 +3292,8 @@ html.has-bottom-banner .survey-dock {
 
 /* 탭 높이 통일(2026-09-21 실측: 배너 24.4 / 큰 칩 24.2 / 작은 칩 25.3 / 조건 28.9). 크기·자리별
    규칙(.offer--hero .offer__range-badge 등)이 글자 크기를 제각각 덮어써서 생긴 차이 — 한 값으로 못박는다. */
-.chip-tags > .offer__range-badge,
-.chip-tags > .offer__status-badge--membership,
+.offer--hero .chip-tags > .offer__range-badge,
+.offer--hero .chip-tags > .offer__status-badge--membership,
 .offer__amount > .offer__status-badge,
 .offer__range-badge--best-tab,
 .banner__tag {
@@ -3335,7 +3335,7 @@ html.has-bottom-banner .survey-dock {
    칩 하나를 읽으려면 눈이 세 번 움직였고, 같은 칩의 아래쪽 탭이 다음 줄 칩의
    위쪽 탭과 붙어 어느 칩 것인지 헷갈렸다(도미노피자 사례, 2026-09-17 주석).
    전부 왼쪽 위 한 줄로 모아 왼쪽부터 순서대로 읽게 한다. */
-.chip-tags {
+.offer--hero .chip-tags {
   left: -7px;
   right: auto;
   gap: 5px;
@@ -3349,9 +3349,9 @@ html.has-bottom-banner .survey-dock {
   flex-wrap: nowrap;
 }
 /* 줄 안에서는 전부 흐름 배치다 — 각자의 절대 위치와 기울기를 푼다. */
-.chip-tags > .offer__range-badge,
-.chip-tags > .offer__status-badge,
-.chip-tags > .offer__range-badge--best-tab {
+.offer--hero .chip-tags > .offer__range-badge,
+.offer--hero .chip-tags > .offer__status-badge,
+.offer--hero .chip-tags > .offer__range-badge--best-tab {
   position: static;
   top: auto; right: auto; bottom: auto; left: auto;
   transform: none;
@@ -3364,15 +3364,16 @@ html.has-bottom-banner .survey-dock {
 
    위쪽 모서리에 top으로 매다는 대신 줄의 아래 끝을 칩 윗변에 맞춘다. 줄이
    길어 두 줄이 되면 위로 쌓이므로 금액을 덮을 수가 없다. */
-.chip-tags {
+.offer--hero .chip-tags {
   top: auto;
   bottom: calc(100% - 10px);
   flex-wrap: wrap;
   max-width: calc(100% + 14px);
 }
-/* 작은 칩은 탭도 한 단계 줄인다 — 폭이 92px라 같은 크기로는 두 장이 안 들어간다. */
-.offer:not(.offer--hero) .chip-tags > * {
-  height: 20px;
-  font-size: .68rem;
-  padding: 0 .38rem;
-}
+/* 작은 칩(차순위 격자)은 한 줄 배치에서 뺀다(사용자 2026-09-22). 폭이 92px라
+   탭을 줄여도 줄이 100px이다 — 칩보다 넓어서 줄 전체가 칩 위에 떠 카드 사이
+   빈자리에 뜬다. 큰 칩(141~330px)에서만 줄로 읽힌다.
+
+   display:contents로 묶음이 자리를 안 잡게 하면 탭들이 각자 옛 규칙
+   (왼쪽 위 최고, 오른쪽 위 멤버십, 왼쪽 아래 조건)으로 돌아간다. */
+.offer:not(.offer--hero) .chip-tags { display: contents; }
