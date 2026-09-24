@@ -793,14 +793,15 @@ h1 {
   position: absolute;
   top: 50%;
   z-index: 2;
-  width: 32px;
-  height: 32px;
-  margin-top: -16px;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
   padding: 0;
-  border: 0;
   border-radius: 50%;
-  background: var(--banner-plate, #17171a);
-  border: 1px solid rgba(255, 255, 255, .18);
+  /* 판을 덮지 않는다. 배경을 비우고 흰 화살표에 검은 테두리를 둘러, 밝은 배너
+     위에서도 윤곽이 남게 한다(2026-09-24 사용자). */
+  background: none;
+  border: 1px solid rgba(0, 0, 0, .55);
   color: #fff;
   cursor: pointer;
   display: none;
@@ -808,11 +809,14 @@ h1 {
   justify-content: center;
   transition: background .15s ease, transform .12s ease;
 }
-/* 슬롯의 좌우 여백(--arrow-gutter) 안에 선다 — 판 안쪽에 두면 왼쪽은 로고를,
-   오른쪽은 조작 묶음을 덮는다(2026-09-16 900px 실측). */
-.banner__arrow--prev { left: 4px; }
-.banner__arrow--next { right: 4px; }
-@media (hover: hover) { .banner__arrow:hover { background: #2a2a2e; } }
+/* 배너 위에 얹는다. 좌우에 빈 칸을 두면 배너만 안쪽으로 들어가 정렬바, 카드와
+   왼쪽 선이 어긋난다(2026-09-24 사용자). 로고는 왼쪽 끝에서 조금 들어와 있고
+   조작 묶음은 오른쪽 아래라, 세로 가운데의 이 자리는 비어 있다. */
+/* 슬롯이 아니라 판 안쪽을 기준으로 선다. 슬롯 좌우 여백(1.25rem)만큼 더 들어와야
+   판 위에 얹힌다 - 안 그러면 판 바깥 빈 자리에 떠서 왼쪽 선을 다시 깨뜨린다. */
+.banner__arrow--prev { left: calc(1.25rem + 8px); }
+.banner__arrow--next { right: calc(1.25rem + 8px); }
+@media (hover: hover) { .banner__arrow:hover { background: rgba(0, 0, 0, .55); } }
 .banner__arrow:active { transform: scale(.94); }
 .banner__arrow:focus-visible { outline: 2px solid rgba(255, 255, 255, .8); outline-offset: 2px; }
 /* 넓은 화면에서만 화살표. hover/pointer 미디어쿼리는 안 쓴다 — 일부
@@ -820,8 +824,9 @@ h1 {
    사고와 같은 뿌리). 폭으로 가른다. */
 /* 폰(≤ 600px)만 숨긴다. 작은 데스크톱 창에서도 화살표는 있어야 한다. */
 @media (min-width: 601px) {
-  .banner-slot { --arrow-gutter: 40px; }
   .banner__arrow { display: inline-flex; }
+
+  .banner-slot { padding: 0 1.25rem; }
 }
 
 /* 상단 배너가 화면 밖으로 나가면 올라오는 층. 불투명하고, 떠 있는 층은
@@ -1240,6 +1245,8 @@ h1 {
      읽혀 무엇이 바뀐 건지 안 보인다 — 카드가 아래에서 올라오면 새
      목록이라는 사실 자체가 눈에 들어온다. */
   animation: brand-grid-in 500ms cubic-bezier(.16, 1, .3, 1);
+  /* 빠지는 카드가 흐름 밖에서 제자리에 머무는 동안의 기준(2026-09-24). */
+  position: relative;
 }
 @keyframes brand-grid-in {
   from { opacity: 0; transform: translateY(10px); }
@@ -3385,30 +3392,34 @@ html.has-bottom-banner .survey-dock {
   margin: 0 -.65rem;
   padding: 6px 0 2px;
 }
+/* 정렬 둘은 "하나 고르기"다. 홈 하나에 넣어 그 뜻을 형태로 보여 준다(B안). */
 .quick-bar__sorts {
   display: flex;
-  gap: 6px;
+  gap: 0;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  padding: 3px;
+  background: var(--border, #eceef1);
+  border-radius: 999px;
 }
-.quick-bar__sorts::-webkit-scrollbar { display: none; }
 .quick-bar__chip {
   flex: 0 0 auto;
   font: inherit;
-  font-size: .82rem;
-  padding: .35rem .7rem;
+  font-size: .78rem;
+  padding: .34rem .68rem;
+  border: 0;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
+  background: transparent;
+  color: var(--text-muted, #6f767f);
   cursor: pointer;
   white-space: nowrap;
+  transition: background .2s cubic-bezier(.2, .8, .2, 1), color .2s ease, box-shadow .2s ease;
 }
+/* 고른 쪽만 홈 위로 떠오른다. 색을 통째로 뒤집지 않아 카드의 배지와 안 싸운다. */
 .quick-bar__chip--on {
-  background: var(--text);
-  color: var(--bg);
-  border-color: var(--text);
+  background: var(--bg, #fff);
+  color: var(--text, #111);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
 }
 .quick-bar__chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -3639,28 +3650,35 @@ html.has-bottom-banner .survey-dock {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: .3rem;
-  padding: .35rem .6rem;
+  gap: .32rem;
+  padding: .36rem .6rem;
   font: inherit;
-  font-size: .78rem;
-  color: var(--dim, #6b7280);
-  background: none;
-  border: 0;
-  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #fff;
+  background: #111;
+  border: 1px solid #111;
+  border-radius: 10px;
   cursor: pointer;
+  transition: background .18s ease, color .18s ease;
 }
+/* 열면 색을 뒤집는다 - 눌린 상태가 배경색으로 보여야 한다. */
 .quick-bar__hidden[aria-expanded="true"] {
-  color: var(--text, #111);
-  background: var(--border, #eceef1);
+  color: #111;
+  background: var(--bg, #fff);
 }
 .quick-bar__hidden-count {
   min-width: 1.05rem;
   padding: 0 .28rem;
   font-size: .72rem;
   line-height: 1.35;
+  color: #111;
+  background: #fff;
+  border-radius: 999px;
+}
+.quick-bar__hidden[aria-expanded="true"] .quick-bar__hidden-count {
   color: #fff;
   background: #111;
-  border-radius: 999px;
 }
 /* 되살아난 브랜드가 있다는 표시. 숫자를 늘리는 대신 점 하나로 둔다 -
    "몇 곳이 숨겨져 있나"와 "새 소식이 있나"는 다른 질문이다. */
@@ -3672,16 +3690,40 @@ html.has-bottom-banner .survey-dock {
 }
 
 /* 목록은 정렬바 바로 아래, 흐름 안에서 열린다. 화면 아래에 띄우면 하단 배너와
-   겹치고, 카드 위를 덮어 무엇이 사라졌는지 안 보인다. */
+   겹치고 카드 위를 덮어 무엇이 사라졌는지 안 보인다.
+
+   여닫기는 grid-template-rows를 0fr에서 1fr로 옮겨 높이를 전환한다. max-height에
+   큰 값을 박으면 항목 수에 따라 속도가 제멋대로 바뀐다. 내용 높이를 모르고도
+   시작과 끝이 있는 전환이 된다. */
+/* 닫혔을 때 자리를 안 먹는다. 시트에 위아래 마진을 주면 그 마진이 잘리는 영역
+   밖이라 접어 놓아도 35px가 남았다(2026-09-24 실측). 간격은 열렸을 때만 준다. */
+.hidden-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin: 0 -.65rem;
+  opacity: 0;
+  transition:
+    grid-template-rows .32s cubic-bezier(.2, .8, .2, 1),
+    padding-bottom .32s cubic-bezier(.2, .8, .2, 1),
+    opacity .22s ease;
+}
+/* 정렬바가 카드 위에 두는 간격(2px)과 같게 맞춘다. */
+.hidden-wrap--open { grid-template-rows: 1fr; opacity: 1; padding-bottom: 2px; }
+.hidden-clip { overflow: hidden; min-height: 0; }
+
 .hidden-sheet {
-  margin: .4rem -.65rem .2rem;
-  max-height: min(50vh, 22rem);
-  overflow-y: auto;
+  /* 위를 띄워 정렬바와 갈라 놓는다. 테두리는 없앤다 - 배경만으로도 판이 갈리고,
+     선을 두면 아래 카드들의 테두리와 겹쳐 줄이 두 겹으로 보인다(2026-09-24 사용자). */
+  margin: .6rem 0 0;
   padding: .75rem .85rem;
   background: var(--bg, #fff);
-  border: 1px solid var(--border, #e6e8eb);
+  border: 0;
   border-radius: 14px;
+  /* 펼칠 때 내용이 살짝 따라 올라온다. 높이만 늘면 종이가 늘어나는 것처럼 보인다. */
+  transform: translateY(-6px);
+  transition: transform .32s cubic-bezier(.2, .8, .2, 1);
 }
+.hidden-wrap--open .hidden-sheet { transform: none; }
 
 .hidden-sheet__head {
   display: flex;
@@ -3712,60 +3754,215 @@ html.has-bottom-banner .survey-dock {
 
 .hidden-sheet__list { margin: 0; padding: 0; list-style: none; }
 
+/* 한 줄에 브랜드와 금액, 그 아래 고르는 줄. 이름과 금액을 세로로 쌓으면
+   목록이 두 배로 길어지고 훑을 수가 없다. */
 .hidden-sheet__row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: .15rem .5rem;
-  padding: .55rem 0;
+  align-items: stretch;
+  gap: .45rem .4rem;
+  padding: .6rem 0;
   border-top: 1px solid rgba(0, 0, 0, .07);
 }
 .hidden-sheet__row:first-child { border-top: 0; }
 
-.hidden-sheet__name { font-size: .88rem; font-weight: 700; }
-.hidden-sheet__when { grid-column: 1; font-size: .74rem; color: var(--dim, #777); }
-.hidden-sheet__acts {
-  grid-column: 2;
-  grid-row: 1 / span 2;
+/* 로고, 이름, 금액이 한 줄이다. 금액을 오른쪽 끝에 밀어 두면 이름과 금액 사이가
+   비어 둘을 같이 못 읽는다 - 이름 바로 옆에 붙이고 남는 자리는 뒤로 흘린다. */
+.hidden-sheet__line {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: .35rem;
+  gap: .45rem;
+  margin: 0;
+}
+.hidden-sheet__line .brand-logo { width: 26px; height: 26px; flex: 0 0 auto; }
+.hidden-sheet__name { font-size: .88rem; font-weight: 700; }
+.hidden-sheet__amount {
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--text, #14161a);
+  font-variant-numeric: tabular-nums;
 }
 
-.hidden-sheet__rule,
-.hidden-sheet__show {
-  padding: .34rem .55rem;
+/* 행의 세그먼트. 홈 안에서 알약이 미끄러져 옮겨 간다 - 색만 바뀌면
+   "다른 것이 켜졌다"로 읽히고, 미끄러지면 "옮겼다"로 읽힌다. */
+/* 홈이 줄 끝까지 늘어나면 두 선택지가 멀어져 하나를 고르는 느낌이 없어진다.
+   글자 폭에 맞추고 좌우로 10px만 띄운다. */
+.seg {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-self: start;
+  margin: 0 10px;
+  padding: 3px;
+  background: var(--border, #eceef1);
+  border-radius: 999px;
+}
+.seg__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  background: var(--bg, #fff);
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
+  transition: transform .26s cubic-bezier(.2, .8, .2, 1);
+}
+.seg[data-on="bigger"] .seg__thumb { transform: translateX(100%); }
+.seg__opt {
+  position: relative;
+  z-index: 1;
+  padding: .32rem .5rem;
   font: inherit;
   font-size: .74rem;
   white-space: nowrap;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.hidden-sheet__rule {
-  color: var(--dim, #666);
-  background: #f2f3f5;
-  border: 1px solid transparent;
-}
-.hidden-sheet__rule--on {
-  color: #0f5132;
-  background: #e6f7ed;
-  border-color: #b7e4c7;
-}
-.hidden-sheet__show {
-  color: #fff;
-  background: #111;
-  border: 0;
-}
-
-/* 카드 발의 "안 보기". 담기·자세히 옆에 조용히 선다 — 누르면 목록에서
-   사라지는 동작이라 눈에 먼저 띄면 잘못 누른다. */
-.brand-card__hide {
-  margin-left: auto;
-  padding: .3rem .5rem;
-  font: inherit;
-  font-size: .76rem;
-  color: var(--dim, #8a8f98);
+  color: var(--dim, #6f767f);
   background: none;
   border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .2s ease, font-weight .2s ease;
+}
+.seg__opt[aria-pressed="true"] { color: var(--text, #111); font-weight: 700; }
+
+/* 세그먼트와 같은 높이로 선다. 나란한 두 컨트롤의 높이가 다르면 줄이 어긋나 보인다. */
+.hidden-sheet__undo {
+  display: flex;
+  align-items: center;
+  padding: 3px .6rem;
+  font: inherit;
+  font-size: .74rem;
+  white-space: nowrap;
+  color: var(--dim, #7c838d);
+  background: none;
+  border: 1px solid var(--border, #e6e8eb);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .16s ease, border-color .16s ease;
+}
+.hidden-sheet__undo:hover { color: var(--text, #111); border-color: var(--dim, #b6bbc2); }
+
+/* 움직임을 줄이라고 한 사람에게는 자리만 바뀐다. */
+@media (prefers-reduced-motion: reduce) {
+  .hidden-wrap, .hidden-sheet, .seg__thumb, .quick-bar__chip { transition: none; }
+}
+
+/* 카드 오른쪽 위 숨기기. 옛 담기 버튼(.brand-card__add)이 쓰던 자리와 모양을
+   그대로 쓴다 - 카드에서 이미 자리를 비워 둔 곳이고, 새 자리를 만들면 카드
+   머리가 또 복잡해진다. 색은 조용하게 둔다. 누르면 카드가 사라지는 동작이라
+   눈에 먼저 띄면 잘못 누른다. */
+.brand-card__hide {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  width: 52px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 0 13px 0 14px;
+  background: none;
+  color: var(--dim, #b6bbc2);
+  cursor: pointer;
+  transition: color .16s ease, background .16s ease;
+}
+.brand-card__hide:hover {
+  color: var(--text, #111);
+  background: var(--border, #f1f3f5);
+}
+.brand-card__hide:active { transform: scale(.94); }
+.brand-card__hide:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* ── 숨기기 확인 ───────────────────────────────────────────────────
+   바로 숨기지 않는다. 싫어서 다시 안 볼 브랜드와 지금 할인이 시원찮아 잠깐
+   치워 둘 브랜드는 다르다. 기본값을 주지 않고 매번 고르게 한다. */
+.hide-ask {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: end center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, .38);
+  animation: hide-ask-veil .2s ease both;
+}
+@keyframes hide-ask-veil { from { background: rgba(0, 0, 0, 0); } }
+.hide-ask__box {
+  animation: hide-ask-rise .3s cubic-bezier(.2, .8, .2, 1) both;
+  width: min(22rem, 100%);
+  padding: 1.1rem 1.1rem .9rem;
+  background: var(--bg, #fff);
+  border-radius: 18px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .28);
+}
+@keyframes hide-ask-rise { from { opacity: 0; transform: translateY(14px); } }
+@media (prefers-reduced-motion: reduce) {
+  .hide-ask, .hide-ask__box { animation: none; }
+}
+.hide-ask__title { margin: 0 0 .3rem; font-size: 1rem; font-weight: 800; }
+.hide-ask__desc { margin: 0 0 .9rem; font-size: .84rem; line-height: 1.5; color: var(--dim, #6b7280); }
+.hide-ask__acts { display: grid; gap: .45rem; }
+
+.hide-ask__keep,
+.hide-ask__drop,
+.hide-ask__cancel {
+  display: grid;
+  gap: .12rem;
+  padding: .7rem .8rem;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 700;
+  text-align: left;
+  border-radius: 12px;
   cursor: pointer;
 }
-.brand-card__hide:hover { color: var(--fg, #111); }
+/* 권하는 쪽을 채운 색으로 둔다 - 둘 다 같은 무게면 "아예 제거"를 습관처럼 누른다. */
+.hide-ask__keep { color: #fff; background: #111; border: 0; }
+.hide-ask__hint { font-size: .74rem; font-weight: 500; opacity: .72; }
+.hide-ask__drop {
+  color: var(--text, #111);
+  background: none;
+  border: 1px solid var(--border, #e6e8eb);
+}
+.hide-ask__cancel {
+  justify-items: center;
+  color: var(--dim, #6b7280);
+  background: none;
+  border: 0;
+  font-weight: 600;
+}
+
+
+/* 숨긴 카드는 오른쪽 위로 쪼그라들며 사라진다. 방금 누른 버튼이 거기 있어서
+   "저기로 들어갔다"로 읽힌다. 그냥 사라지면 무엇이 없어졌는지 안 남는다.
+   높이도 같이 접어야 아래 카드가 뛰어오르지 않고 따라 올라온다. */
+.brand-card--leaving {
+  pointer-events: none;
+  transform-origin: 100% 0;
+  animation: brand-card-leave .22s cubic-bezier(.4, 0, 1, .6) both;
+}
+/* 앞 220ms는 카드 자신이(.brand-card--leaving), 남은 200ms는 흐름에서 빠진 뒤
+   격자 위에 얹힌 복제본이 이어 받는다. 그래서 두 구간의 크기가 이어지도록
+   시작값을 나눠 둔다. */
+@keyframes brand-card-leave {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(.06); }
+}
+@keyframes brand-card-leave-tail {
+  from { opacity: .55; transform: scale(.55); }
+  to { opacity: 0; transform: scale(.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-card--leaving { animation: none; opacity: 0; }
+}
+
+/* 배너, 정렬바, 카드 격자의 좌우 선을 하나로 맞춘다. 셋이 110, 120, 130으로 갈려
+   있었다(2026-09-24 실측). 카드 선(main의 1.25rem 여백)에 모은다 - 제일 안쪽 선이라
+   나머지를 당겨 오면 되고, 반대로 하면 카드를 넓혀야 한다.
+   폰은 그대로 둔다 - 정렬 칩이 카드보다 작아 카드 선에 맞추면 그 위가 휑하다. */
+@media (min-width: 601px) {
+  .quick-bar { margin-inline: 0; }
+  .hidden-wrap { margin-inline: 0; }
+}
