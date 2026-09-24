@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { API_BASE, fetchBanners, fetchBrands, fetchSurveyStatus } from './api.js'
 import { setFilterContext, track } from './analytics.js'
 import EventBanner from './EventBanner.jsx'
@@ -11,6 +11,9 @@ import FilterSheet from './FilterSheet.jsx'
 import { useBrandAutocomplete } from './useBrandAutocomplete.js'
 import { CATEGORIES, MEMBERSHIP_LABEL, applyFilters, comparable, defaultFilters, includesFrom, isDefaultFilters, primarySort, sortSignature, offerKey, displayBestAmount } from './filters.js'
 import SurveyDock from './SurveyDock.jsx'
+import HiddenBrandsSheet from './HiddenBrandsSheet.jsx'
+import { NEVER, WHEN_BIGGER, applyHidden, hideBrand, readHidden, revivedNames, setRule, showBrand }
+  from './hiddenBrands.js'
 import SurveyCard from './SurveyCard.jsx'
 import { getStoredCode, markAnswered, shouldShow as surveyShouldShow } from './surveyDismiss.js'
 import { getAnalyticsContext } from './analytics-context.js'
@@ -475,7 +478,7 @@ function routeFilters() {
   return brand ? { ...defaultFilters(), search: brand } : defaultFilters()
 }
 
-function BrandCard({ brand, position, highlighted, onInteract, checked, onToggleCheck, include = null }) {
+function BrandCard({ brand, position, highlighted, onInteract, checked, onToggleCheck, include = null, onHide }) {
   // qualifier="최대"인 오퍼는 금액과 무관하게 항상 맨 뒤로 민다 —
   // confirmed든 held든, "최대"는 실제 최소주문금액을 채워야 진짜 값이
   // 나오는 상한액이라 액면 그대로 다른 확정값과 비교하면 왜곡된다.
@@ -664,6 +667,16 @@ function BrandCard({ brand, position, highlighted, onInteract, checked, onToggle
           {open ? '접기' : '자세히'}
           <span className="brand-card__chevron" aria-hidden="true" />
         </button>
+        {onHide && (
+          <button
+            type="button"
+            className="brand-card__hide"
+            onClick={() => onHide(brand.name, bestAmount)}
+            aria-label={`${brand.name} 안 보기`}
+          >
+            안 보기
+          </button>
+        )}
       </div>
     </article>
   )
@@ -1023,9 +1036,25 @@ export default function App() {
   }, [gridKey])
 
   // 필터·정렬 규칙은 filters.js가 단일 출처다(시트·메뉴바와 같은 규칙).
+  // 싫은 브랜드는 목록에서 걷어낸다. 브라우저에만 남는다(hiddenBrands.js).
+  const [hidden, setHidden] = useState(() => readHidden())
+  const [hiddenOpen, setHiddenOpen] = useState(false)
+  const bestOf = useCallback(
+    (b) => displayBestAmount(b.offers, includesFrom(filters)), [filters])
+  const onHide = useCallback((name, amount) => {
+    setHidden((prev) => hideBrand(prev, name, { amount, rule: WHEN_BIGGER }))
+    track('brand_hide', { brand: name })
+  }, [])
+
   const visibleBrands = useMemo(
-    () => (brands ? applyFilters(brands, filters, { cart, cartOnly }) : brands),
-    [brands, filters, cart, cartOnly],
+    () => (brands ? applyHidden(applyFilters(brands, filters, { cart, cartOnly }), hidden, bestOf) : brands),
+    [brands, filters, cart, cartOnly, hidden, bestOf],
+  )
+
+  // 숨겼는데 할인이 그때보다 커져서 다시 보이게 된 브랜드. 화면이 그 사실을 알린다.
+  const revived = useMemo(
+    () => (brands ? revivedNames(brands, hidden, bestOf) : []),
+    [brands, hidden, bestOf],
   )
 
   // 카드를 나눠 그린다.
@@ -1126,7 +1155,8 @@ export default function App() {
           값은 사람마다 달라 자주 켤 것이 아니다. 시트에는 그대로 있다. 시트의 같은 값과 한
           상태(filters)를 공유하므로 어느 쪽에서 바꿔도 같다. */}
       {brands && (
-        <div className="quick-bar" role="group" aria-label="빠른 필터">
+        <div className="quick-bar">
+        <div className="quick-bar__sorts" role="group" aria-label="빠른 필터">
           {[['amount', 'desc', '할인금액 높은순'], ['minOrder', 'asc', '최소주문 낮은순']].map(([key, dir, label]) => {
             const first = primarySort(filters)
             const on = first.key === key && first.dir === dir
@@ -1148,6 +1178,33 @@ export default function App() {
             )
           })}
         </div>
+        {/* 숨긴 목록은 정렬과 다른 일이라 오른쪽에 따로 선다. 떠 있는 알약으로 두었더니
+            하단 배너와 겹쳤다(2026-09-24 사용자). 숨긴 것이 없으면 안 그린다. */}
+        {Object.keys(hidden).length > 0 && (
+          <button
+            type="button"
+            className="quick-bar__hidden"
+            aria-expanded={hiddenOpen}
+            onClick={() => { setHiddenOpen((v) => !v); if (!hiddenOpen) track('hidden_open') }}
+          >
+            숨긴 목록
+            <span className="quick-bar__hidden-count">{Object.keys(hidden).length}</span>
+            {revived.length > 0 && <span className="quick-bar__hidden-dot" aria-hidden="true" />}
+          </button>
+        )}
+        </div>
+      )}
+
+      {/* 목록은 정렬바 바로 아래, 흐름 안에서 열린다. 화면 아래에 띄우면 하단 배너와
+          겹치고 카드 위를 덮어 무엇이 사라졌는지 안 보인다(2026-09-24 사용자). */}
+      {hiddenOpen && Object.keys(hidden).length > 0 && (
+        <HiddenBrandsSheet
+          hidden={hidden}
+          revived={revived}
+          onClose={() => setHiddenOpen(false)}
+          onShow={(name) => setHidden((prev) => showBrand(prev, name))}
+          onRule={(name, rule) => setHidden((prev) => setRule(prev, name, rule))}
+        />
       )}
 
       {error && (
@@ -1254,6 +1311,7 @@ export default function App() {
           {visibleBrands.slice(0, shown).map((b, index) => (
             <BrandCard
               key={b.name}
+              onHide={onHide}
               include={includesFrom(filters)}
               brand={b}
               position={index + 1}
