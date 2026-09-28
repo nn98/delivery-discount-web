@@ -1,0 +1,41 @@
+name: Check Web
+
+# 읽기 전용 검증만 한다. 배포는 Vercel이 이 저장소를 보고 한다.
+#
+# 2026-09-29까지 mono `check-web.yml`이 하던 일이다. 이 저장소가 정본이 되면서 옮겼다.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      # 자체 analytics eventId와 PostHog adapter 모두 중복 집계 방지의 근거다.
+      # 손으로만 돌리면 회귀를 못 잡는다.
+      - run: npm test
+      - run: npm run build
+      - name: 실패를 슬랙 채널로 (오너 메일만으로는 팀이 못 본다)
+        if: failure()
+        env:
+          SLACK_OPS_TOKEN: ${{ secrets.SLACK_OPS_TOKEN }}
+          SLACK_OPS_CHANNEL: ${{ secrets.SLACK_OPS_CHANNEL }}
+        run: |
+          [ -n "$SLACK_OPS_TOKEN" ] || { echo "SLACK_OPS_TOKEN 없음 - 알림 생략"; exit 0; }
+          TEXT="❌ GitHub Actions 실패: ${{ github.workflow }} (${{ github.repository }}, ${GITHUB_SHA::7})"$'\n'"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BODY=$(TEXT="$TEXT" python3 -c 'import json,os;print(json.dumps({"channel":os.environ["SLACK_OPS_CHANNEL"],"text":os.environ["TEXT"]}))')
+          curl -s -X POST https://slack.com/api/chat.postMessage -H "Authorization: Bearer $SLACK_OPS_TOKEN" -H "Content-type: application/json; charset=utf-8" --data "$BODY"
