@@ -1,22 +1,22 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { dDay, discountRate, SHOW_RATE } from './ticket.js'
+import { dDay, minOrderText } from './ticket.js'
 
-test('할인율은 확정값에만, 정수 %로', { skip: !SHOW_RATE }, () => {
-  assert.equal(discountRate({ amount: 7000, minOrderAmount: 18900 }), 37)
-  assert.equal(discountRate({ amount: 7000 }), null)
-  assert.equal(discountRate({ amount: 10000, minOrderAmount: 5000, qualifier: '최대' }), null)
-  assert.equal(discountRate({ amount: 6000, minOrderAmount: 18000, qualifier: '랜덤' }), null)
-  assert.equal(discountRate({ amount: 6000, minOrderAmount: 18000, qualifier: '랜덤' }, { random: true }), 33)
-  assert.equal(discountRate({ amount: 4000, minOrderAmount: 18000, soldOut: true }), null)
+test('최소주문 줄: 금액 / 0은 없음 / null은 미확인', () => {
+  assert.equal(minOrderText({ minOrderAmount: 18900 }), '최소주문 18,900원')
+  assert.equal(minOrderText({ minOrderAmount: 0 }), '최소주문 없음')
+  assert.equal(minOrderText({ minOrderAmount: null }), '최소주문 미확인')
+  assert.equal(minOrderText({}), '최소주문 미확인')
 })
 
-test('D-day는 오늘부터 7일 안에만', () => {
-  const today = new Date(2026, 9, 1, 23, 30)
-  assert.equal(dDay({ expiresAt: '2026-10-04' }, today), 'D-3')
-  assert.equal(dDay({ expiresAt: '2026-10-01' }, today), '오늘까지')
-  assert.equal(dDay({ expiresAt: '2026-10-08' }, today), 'D-7')
-  assert.equal(dDay({ expiresAt: '2026-10-09' }, today), null)
-  assert.equal(dDay({ expiresAt: '2026-09-30' }, today), null)
-  assert.equal(dDay({}, today), null)
+test('D-day는 KST 오늘부터 7일 안에만', () => {
+  const now = new Date('2026-10-01T14:30:00Z') // KST 10-01 23:30
+  assert.equal(dDay({ expiresAt: '2026-10-04' }, now), 'D-3')
+  assert.equal(dDay({ expiresAt: '2026-10-01' }, now), '오늘까지')
+  assert.equal(dDay({ expiresAt: '2026-10-08' }, now), 'D-7')
+  assert.equal(dDay({ expiresAt: '2026-10-09' }, now), null)
+  assert.equal(dDay({ expiresAt: '2026-09-30' }, now), null)
+  assert.equal(dDay({}, now), null)
+  // UTC로는 아직 9월 30일이지만 KST로는 10월 1일이다.
+  assert.equal(dDay({ expiresAt: '2026-10-01' }, new Date('2026-09-30T15:30:00Z')), '오늘까지')
 })

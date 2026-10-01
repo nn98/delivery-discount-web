@@ -160,8 +160,8 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
         </ul>
       )}
 
-      {/* 차순위가 없어도 줄 자리는 남긴다 — 접힌 카드 높이가 오퍼 수와 무관하게 같다(2026-10-01). */}
-      <ul className="offer-list offer-list--rest" aria-hidden={restOffers.length === 0 || undefined}>
+      {restOffers.length > 0 && (
+      <ul className="offer-list offer-list--rest">
           {restOffers.map((o) => (
             <OfferChip
               include={include}
@@ -177,6 +177,15 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
             />
           ))}
       </ul>
+      )}
+
+      {/* 접힌 동안 대표 오퍼 조건 앞 2줄만 미리 보인다(2026-10-01). 높이를 고정해 카드 높이를 맞추고,
+          전체 상세는 여전히 펼칠 때만 그린다. */}
+      {!open && (
+        <p className="brand-card__preview">
+          {heroOffers[0]?.conditions ?? sortedOffers.find((o) => o.conditions)?.conditions ?? ''}
+        </p>
+      )}
 
       {/* 상세는 펼쳤을 때만 그린다. 캡처 원본이 스크린샷 한 장에 1MB가 넘어,
           브랜드 73개 × 앱 4개어치를 미리 심어두면 첫 화면이 통째로 멎는다.
