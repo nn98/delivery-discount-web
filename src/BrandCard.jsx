@@ -69,7 +69,9 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
   // 상세를 펼친 상태를 기본으로 둔다 — 조건(최소주문금액 등)을 봐야
   // 금액이 실제로 무슨 뜻인지 알 수 있는데, 접어두면 매번 눌러야 했다.
   // 접기는 여전히 가능하다.
-  const [pinned, setPinned] = useState(true)
+  // 2026-10-01부터 기본 접힘 — 최소주문이 대표 칩 안에 들어가 접어도 조건이 보인다.
+  // 공유 링크(#brand-…)로 들어오면 아래 effect가 그 카드만 편다.
+  const [pinned, setPinned] = useState(false)
   const open = pinned
   const detailId = `${useId()}-detail`
   const cardRef = useRef(null)
@@ -158,8 +160,8 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
         </ul>
       )}
 
-      {restOffers.length > 0 && (
-        <ul className="offer-list offer-list--rest">
+      {/* 차순위가 없어도 줄 자리는 남긴다 — 접힌 카드 높이가 오퍼 수와 무관하게 같다(2026-10-01). */}
+      <ul className="offer-list offer-list--rest" aria-hidden={restOffers.length === 0 || undefined}>
           {restOffers.map((o) => (
             <OfferChip
               include={include}
@@ -174,8 +176,7 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
               best={isBest(o)}
             />
           ))}
-        </ul>
-      )}
+      </ul>
 
       {/* 상세는 펼쳤을 때만 그린다. 캡처 원본이 스크린샷 한 장에 1MB가 넘어,
           브랜드 73개 × 앱 4개어치를 미리 심어두면 첫 화면이 통째로 멎는다.

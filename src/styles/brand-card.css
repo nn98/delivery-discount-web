@@ -227,42 +227,8 @@
    칩에서 봐도 같은 색이 같은 뜻(가장 셈)으로 읽힌다. 클래스를 두 번
    겹쳐 쓴다 — 원본 .offer__range-badge 규칙이 이 파일에서 더 아래에
    있어서, 같은 무게로는 그쪽이 이긴다. */
-.offer__range-badge.offer__range-badge--best {
-  color: #0a72c4;
-  background: #e3f2fd;
-  max-width: 100%;
-  white-space: nowrap;
-  /* 원래 테두리가 없던 배지라 border-color 애니메이션은 안 먹는다 —
-     대신 회전하는 conic-gradient를 얇은 링 모양으로 마스킹해 밑에
-     깐다. 배경(#e3f2fd)은 그대로 두고 가장자리에만 빛이 돈다.
-     ::before 자체를 rotate하면 마스크(사각형 링)까지 같이 돌아서
-     모서리가 배지 밖으로 튀어나온다 — 대신 그라데이션의 각도만
-     돌린다(--best-angle, @property로 보간). */
-  border: 1px solid transparent;
-}
-.offer__range-badge.offer__range-badge--best::before {
-  content: '';
-  position: absolute;
-  inset: -1.5px;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: conic-gradient(from var(--best-angle, 0deg), #00c8ff, #4d6bff, #ff3ec8, #00c8ff);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: best-badge-spin 2.4s linear infinite;
-}
-@property --best-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-@keyframes best-badge-spin {
-  to { --best-angle: 360deg; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .offer__range-badge.offer__range-badge--best::before { animation: none; }
-}
+/* 최고 배지 회전 테(--best, best-badge-spin)는 지웠다(2026-10-01). 무한 애니메이션 금지 방침이고
+   클래스도 이미 --best-tab으로 바뀌어 아무 데서도 안 쓰였다. */
 
 /* 배지만으론 목록을 훑을 때 눈에 안 걸린다 — 칩 테두리도 같은 파랑으로
    깔아 그 칩 자체가 최고임을 한 번 더 드러낸다(배경은 그대로 둔다). */
@@ -465,6 +431,23 @@
 /* 오른쪽은 로고 폭(42) + 여백만큼 비워 둔다 — 가운데 정렬된 금액이
    로고에 닿지 않게. */
 .offer--hero .offer__chip { justify-content: center; gap: 0; padding-right: 66px; padding-left: 66px; }
+
+/* 대표 칩 금액 아래 조건 한 줄(최소주문 · 할인율, 2026-10-01). 칩을 세로로 쌓되 위아래 여백을
+   줄여 칩 높이가 한 줄(약 17px)만큼만 는다. */
+.offer--hero .offer__chip { flex-direction: column; padding-top: .7rem; padding-bottom: .7rem; }
+.offer__minorder {
+  font-size: .75rem;
+  line-height: 1.3;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.offer__minorder b { color: #0a72c4; font-weight: 700; }
+/* D-day·오늘까지 탭 — 기간 탭 줄(.chip-tags)에 같은 포스트잇으로 선다. 마감이라 빨강. */
+.offer__status-badge.offer__status-badge--dday { color: #fff; background: #e5322d; }
+
+/* 차순위가 없는 카드도 그 줄 자리를 비워 둔다 — 접힌 카드 높이를 오퍼 수와 무관하게 맞춘다.
+   68px = 차순위 줄 실측(360px, 2026-10-01). */
+.offer-list--rest:empty { min-height: 68px; }
 
 /* 목록 액면 금액이 실제론 못 받는 상태(재고 소진)거나 매일 바뀌는
    상태(랜덤박스)일 때 붙는 상태 라벨(schema `badge`). offer__range-badge
@@ -689,5 +672,6 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
    (브랜드 페이지 푸터 CLS 0.45, 2026-09-30 운영 실측). */
 .brand-grid > .brand-card:nth-child(n+7) {
   content-visibility: auto;
-  contain-intrinsic-size: auto 260px;
+  /* 접힌 카드 실측 310~311px(360px, 대표 칩 하나, 2026-10-01). 동점 둘이면 ~407. */
+  contain-intrinsic-size: auto 310px;
 }
