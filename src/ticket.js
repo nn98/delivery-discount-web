@@ -9,7 +9,7 @@ export function isCapped(offer, include) {
 
 // 아직 승인 안 된 새 화면 문구 둘(COPY-STYLE 3절). false로 두면 카드에서 사라진다.
 // 할인율 = 금액 ÷ 최소주문(정수 %), D-day = 만료 7일 이내 "D-n", 당일은 "오늘까지"(사용자 승인 2026-10-01).
-export const SHOW_RATE = true
+export const SHOW_RATE = false
 export const SHOW_DDAY = true
 
 // 확정·최소주문이 있는 값만. 상한·뽑기·특정메뉴·품절은 나눠 봐야 뜻이 없다.

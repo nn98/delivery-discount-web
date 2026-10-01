@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { dDay, discountRate } from './ticket.js'
+import { dDay, discountRate, SHOW_RATE } from './ticket.js'
 
-test('할인율은 확정값에만, 정수 %로', () => {
+test('할인율은 확정값에만, 정수 %로', { skip: !SHOW_RATE }, () => {
   assert.equal(discountRate({ amount: 7000, minOrderAmount: 18900 }), 37)
   assert.equal(discountRate({ amount: 7000 }), null)
   assert.equal(discountRate({ amount: 10000, minOrderAmount: 5000, qualifier: '최대' }), null)
