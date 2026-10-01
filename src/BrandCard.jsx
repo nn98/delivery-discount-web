@@ -3,20 +3,13 @@ import { track } from './analytics.js'
 import { brandImpressionProps, observeBrandImpression } from './brandImpression.js'
 import { comparable, displayBestAmount, offerKey } from './filters.js'
 import { BrandLogo } from './logos.jsx'
-import OfferChip, { won } from './OfferChip.jsx'
+import OfferChip from './OfferChip.jsx'
 import OfferDetail from './OfferDetail.jsx'
 
 // 브랜드 카드 딥링크용 id. 브랜드명 자체가 이미 유니크한 키라 그대로
 // 쓰되, 공백만 앵커에서 다루기 까다로우니 치환한다.
 export function brandCardId(name) {
   return `brand-${name.trim().replace(/\s+/g, '_')}`
-}
-
-// 접힌 카드 미리보기 문구. 조건 원문이 없으면 대표 오퍼 최소주문을 상세(OfferDetail)와 같은 형식으로 쓴다.
-function previewText(hero, offers) {
-  const cond = hero?.conditions ?? offers.find((o) => o.conditions)?.conditions
-  if (cond) return cond
-  return hero?.minOrderAmount > 0 ? `${won(hero.minOrderAmount)} 이상 주문 시` : ''
 }
 
 function captureBrandImpression(props) {
@@ -58,6 +51,12 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
     }),
     [brand.offers],
   )
+
+  // 접힌 상세에 보일 앱별 첫 오퍼. sortedOffers가 이미 "최대 뒤로, 금액 큰 순"이라 첫 것이 가장 크다.
+  const firstPerPlatform = useMemo(() => {
+    const seen = new Set()
+    return sortedOffers.filter((o) => !seen.has(o.platform) && seen.add(o.platform))
+  }, [sortedOffers])
 
   const isBest = (o) => bestAmount != null && comparable(o, include) && !o.soldOut && o.amount === bestAmount
 
@@ -186,19 +185,12 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
       </ul>
       )}
 
-      {/* 접힌 동안 대표 오퍼 조건 앞 2줄만 미리 보인다(2026-10-01). 높이를 고정해 카드 높이를 맞추고,
-          전체 상세는 여전히 펼칠 때만 그린다. */}
-      {!open && (
-        <p className="brand-card__preview">
-          {previewText(heroOffers[0], sortedOffers)}
-        </p>
-      )}
-
-      {/* 상세는 펼쳤을 때만 그린다. 캡처 원본이 스크린샷 한 장에 1MB가 넘어,
-          브랜드 73개 × 앱 4개어치를 미리 심어두면 첫 화면이 통째로 멎는다.
-          컨테이너는 aria-controls 대상이라 접혀 있어도 남겨둔다. */}
-      <div id={detailId} className="brand-detail" hidden={!open}>
-        {open && sortedOffers.map((o) => <OfferDetail key={offerKey(o)} offer={o} brandName={brand.name} />)}
+      {/* 접힌 동안은 앱마다 가장 큰 오퍼 하나씩만 상세 행으로 그린다(2026-10-01). 나머지는
+          펼칠 때 처음 그린다 — 캡처 원본이 스크린샷 한 장에 1MB가 넘어, 전부 미리 심으면
+          첫 화면이 멎는다. */}
+      <div id={detailId} className="brand-detail">
+        {(open ? sortedOffers : firstPerPlatform)
+          .map((o) => <OfferDetail key={offerKey(o)} offer={o} brandName={brand.name} />)}
       </div>
 
       {/* 카드 맨 아래 줄 — 담기와 펼치기. 펼치기를 헤더에서 내린 건

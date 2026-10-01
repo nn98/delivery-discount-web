@@ -432,21 +432,6 @@
    로고에 닿지 않게. */
 .offer--hero .offer__chip { justify-content: center; gap: 0; padding-right: 66px; padding-left: 66px; }
 
-/* 접힌 카드의 조건 미리보기 — 두 줄 고정 높이. 비어 있어도 자리를 잡아 카드 높이를 맞춘다. */
-.brand-card__preview {
-  margin: 0;
-  font-size: .82rem;
-  line-height: 1.4;
-  height: 2.8em;
-  color: var(--text-muted);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  word-break: keep-all;
-}
-
 /* 목록 액면 금액이 실제론 못 받는 상태(재고 소진)거나 매일 바뀌는
    상태(랜덤박스)일 때 붙는 상태 라벨(schema `badge`). offer__range-badge
    (최대, 칩 위쪽 가운데)와 동시에 뜰 수 있어 자리를 겹치지 않게
@@ -670,6 +655,6 @@ button.platform-badge:focus-visible { outline: 2px solid var(--accent); outline-
    (브랜드 페이지 푸터 CLS 0.45, 2026-09-30 운영 실측). */
 .brand-grid > .brand-card:nth-child(n+7) {
   content-visibility: auto;
-  /* 접힌 카드 실측(360px, 2026-10-01): 대표 칩만 269, 차순위 줄 있으면 349, 동점 둘이면 ~410. 가운데 값. */
-  contain-intrinsic-size: auto 300px;
+  /* 접힌 카드(앱별 상세 1행씩) 실측 중앙값 357px(360px, 86장, 사분위 357~573, 2026-10-01). */
+  contain-intrinsic-size: auto 357px;
 }
