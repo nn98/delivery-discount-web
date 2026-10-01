@@ -432,19 +432,6 @@
    로고에 닿지 않게. */
 .offer--hero .offer__chip { justify-content: center; gap: 0; padding-right: 66px; padding-left: 66px; }
 
-/* 대표 칩 금액 아래 최소주문 한 줄(2026-10-01). 금액 줄 높이를 1.15로 조이고 위아래 여백도 줄여
-   칩이 예전 높이에서 거의 안 커지게 한다. */
-.offer--hero .offer__chip { flex-direction: column; padding-top: .95rem; padding-bottom: .5rem; }
-/* 위 여백은 줄이지 않는다 — 탭 줄(.chip-tags)이 칩 윗변에서 17px 내려와 금액을 덮는다(2026-10-01 실측). */
-.offer--hero .offer__amount { line-height: 1.15; }
-.offer__minorder {
-  margin-top: 1px;
-  font-size: .72rem;
-  line-height: 1.2;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
 /* 접힌 카드의 조건 미리보기 — 두 줄 고정 높이. 비어 있어도 자리를 잡아 카드 높이를 맞춘다. */
 .brand-card__preview {
   margin: 0;
@@ -459,8 +446,6 @@
   overflow: hidden;
   word-break: keep-all;
 }
-/* D-day·오늘까지 탭 — 기간 탭 줄(.chip-tags)에 같은 포스트잇으로 선다. 마감이라 빨강. */
-.offer__status-badge.offer__status-badge--dday { color: #fff; background: #e5322d; }
 
 /* 목록 액면 금액이 실제론 못 받는 상태(재고 소진)거나 매일 바뀌는
    상태(랜덤박스)일 때 붙는 상태 라벨(schema `badge`). offer__range-badge

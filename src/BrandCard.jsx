@@ -3,13 +3,20 @@ import { track } from './analytics.js'
 import { brandImpressionProps, observeBrandImpression } from './brandImpression.js'
 import { comparable, displayBestAmount, offerKey } from './filters.js'
 import { BrandLogo } from './logos.jsx'
-import OfferChip from './OfferChip.jsx'
+import OfferChip, { won } from './OfferChip.jsx'
 import OfferDetail from './OfferDetail.jsx'
 
 // 브랜드 카드 딥링크용 id. 브랜드명 자체가 이미 유니크한 키라 그대로
 // 쓰되, 공백만 앵커에서 다루기 까다로우니 치환한다.
 export function brandCardId(name) {
   return `brand-${name.trim().replace(/\s+/g, '_')}`
+}
+
+// 접힌 카드 미리보기 문구. 조건 원문이 없으면 대표 오퍼 최소주문을 상세(OfferDetail)와 같은 형식으로 쓴다.
+function previewText(hero, offers) {
+  const cond = hero?.conditions ?? offers.find((o) => o.conditions)?.conditions
+  if (cond) return cond
+  return hero?.minOrderAmount > 0 ? `${won(hero.minOrderAmount)} 이상 주문 시` : ''
 }
 
 function captureBrandImpression(props) {
@@ -183,7 +190,7 @@ function BrandCard({ brand, position, highlighted, onInteract, include = null, o
           전체 상세는 여전히 펼칠 때만 그린다. */}
       {!open && (
         <p className="brand-card__preview">
-          {heroOffers[0]?.conditions ?? sortedOffers.find((o) => o.conditions)?.conditions ?? ''}
+          {previewText(heroOffers[0], sortedOffers)}
         </p>
       )}
 

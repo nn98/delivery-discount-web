@@ -1,8 +1,6 @@
 import { track } from './analytics.js'
 import { MEMBERSHIP_LABEL } from './filters.js'
 import { PlatformBadge } from './logos.jsx'
-import { useEffect, useState } from 'react'
-import { dDay, isCapped, minOrderText } from './ticket.js'
 
 // brands.yml에 브랜드별 링크가 없는 앱은 여기 링크로 앱만 연다.
 // 전부 실기 ADB로 착지 화면까지 확인한 값이다(2026-08-05).
@@ -127,12 +125,9 @@ export default function OfferChip({ offer, brandLinks, brandName, detailId, open
   // 않도록 칩 전체를 같은 회색으로 깔아 다른 확정값과 구분한다(특정메뉴는 2026-09-19).
   // 랜덤(뽑기)도 같다 — 정렬에서 빠지는 값은 셋 다 같은 회색 칩(2026-09-19). "넣기"를 켜서
   // 정렬에 들어가면 회색을 벗는다(사용자, 2026-09-19).
-  const capped = isCapped(offer, include)
-  // 할인율은 넣기 설정과 무관하게 상한·랜덤·특정메뉴면 뺀다(include 없이 부름).
-  // 날짜는 마운트 뒤에만 본다 — 첫 렌더가 SSR(UTC 서버, 캐시된 HTML)과 같아야 하이드레이션이 안 어긋난다.
-  const [now, setNow] = useState(null)
-  useEffect(() => { if (hero) setNow(new Date()) }, [hero])
-  const dday = hero && now ? dDay(offer, now) : null
+  const capped = offer.qualifier === '최대'
+    || (offer.qualifier === '특정메뉴' && !include?.menu)
+    || (offer.qualifier === '랜덤' && !include?.random)
   // 유료 멤버십이 있어야 받는 쿠폰인지는 구조화된 membership이 말한다.
   // 예전엔 badge 문자열이 "…전용쿠폰"으로 끝나는지로 갈랐는데, 쿠폰함
   // 순회에서 온 행은 badge가 그냥 "배민클럽"이라 그 검사에 안 걸려
@@ -202,7 +197,6 @@ export default function OfferChip({ offer, brandLinks, brandName, detailId, open
         {offer.badge && !/^\d+%할인$/.test(offer.badge) && !/전용|클럽|패스/.test(offer.badge) && (
           <span className="offer__status-badge">{offer.badge}</span>
         )}
-        {hero && dday && <span className="offer__status-badge offer__status-badge--dday">{dday}</span>}
         </span>
         {offer.soldOut ? (
           <>
@@ -211,8 +205,6 @@ export default function OfferChip({ offer, brandLinks, brandName, detailId, open
           </>
         ) : offerAmountText(offer)}
       </span>
-      {/* 대표 칩만 최소주문 한 줄(2026-10-01). */}
-      {hero && <span className="offer__minorder">{minOrderText(offer)}</span>}
       <span className="offer__icon-badge">
         <PlatformBadge platformKey={offer.platform} brand={brandName} />
       </span>
