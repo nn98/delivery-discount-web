@@ -567,7 +567,8 @@ export default function App({ initial = null }) {
           그 자리를 덮어 스크롤하기 전에는 안 보였다. */}
       {/* 배너를 받기 전에는 그 높이만큼 자리를 잡아 둔다. 늦게 끼어들면 아래 목록이 통째로 밀린다
           (2026-09-30 브랜드 페이지 CLS 0.9). 받았는데 0건이면 자리를 거둔다. */}
-      {banners == null ? <div className="banner-slot banner-slot--pending" aria-hidden="true" /> : <EventBanner banners={banners} />}
+      {/* 쿠폰 카드 쪽은 위 배너 캐러셀 없이 처음부터 하단 도크로만(2026-10-05 사용자: 목록 안 한 줄은 별로) */}
+      {homeA ? (banners ? <EventBanner banners={banners} dockOnly /> : null) : banners == null ? <div className="banner-slot banner-slot--pending" aria-hidden="true" /> : <EventBanner banners={banners} />}
       <PushNotificationSetting />
     <main>
       {/* 빠른 필터. 시트를 열지 않고 자주 쓰는 정렬 둘만 배너와 카드 사이에 둔다: 할인금액
@@ -628,6 +629,23 @@ export default function App({ initial = null }) {
         )}
         </div>
       )}
+
+      {/* 메인 화면 A/B 쿠폰 카드 쪽: 전체 / 업데이트 N곳(오늘 처음 본 오퍼가 있는 브랜드). 설계의 "전체 / New N" 자리.
+          N은 지금 조건에서 업데이트만 켰을 때 남는 브랜드 수다. 없으면 칸을 그리지 않는다. */}
+      {brands && homeA && (() => {
+        const n = applyFilters(brands, { ...filters, updatedOnly: true }).length
+        if (n === 0 && !filters.updatedOnly) return null
+        const pick = (on) => {
+          setFilters((f) => ({ ...f, updatedOnly: on }))
+          track('quick_filter', { key: 'updated', on })
+        }
+        return (
+          <div className="update-tabs" role="group" aria-label="업데이트만 보기">
+            <button type="button" className={`update-tabs__tab${!filters.updatedOnly ? ' update-tabs__tab--on' : ''}`} aria-pressed={!filters.updatedOnly} onClick={() => pick(false)}>전체</button>
+            <button type="button" className={`update-tabs__tab${filters.updatedOnly ? ' update-tabs__tab--on' : ''}`} aria-pressed={!!filters.updatedOnly} onClick={() => pick(true)}>업데이트 {n}곳</button>
+          </div>
+        )
+      })()}
 
       {asking && (
         <Suspense fallback={null}>
