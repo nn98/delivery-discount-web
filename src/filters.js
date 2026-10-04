@@ -30,6 +30,18 @@ export const MEMBERSHIP_OPTIONS = [
   { key: 'yogiyo', label: '요기패스' },
   // 지역화폐(땡겨요)는 일단 뺀다(2026-09-19). 멤버십과 결이 달라 자리를 따로 정한 뒤 넣는다.
 ]
+// 멤버십 필터가 실제로 거르는 것(2026-10-04): 오퍼 단위 membership을 식별하는 둘만. 요기패스는 원장에서 식별 못 해 구현 예정.
+// 켜짐 = 그 멤버십이 있다 = 전용 오퍼를 보인다. 기본은 둘 다 켜짐(지금까지 화면과 같다). 끄면 그 멤버십 전용 오퍼를 뺀다.
+// 업데이트: 이 오퍼(앱, 브랜드, 금액)를 오늘(한국 시각) 처음 봤다 = 어제와 다르다(새로 생겼거나 금액이 바뀌었다).
+// 방문자별 판정은 하지 않는다(2026-10-04 사용자). firstSeenAt은 tracker export_data.first_seen이 채운다.
+const kstDay = (t) => new Date(t + 9 * 3600e3).toISOString().slice(0, 10)
+export function isUpdated(offer, now = Date.now()) {
+  const t = offer?.firstSeenAt ? Date.parse(offer.firstSeenAt) : NaN
+  return Number.isFinite(t) && kstDay(t) === kstDay(now)
+}
+
+export const MEMBERSHIP_FILTERABLE = { baeminClub: 'baemin', coupangEats: 'coupangeats' }
+const ALL_MEMBERSHIPS = () => new Set(Object.values(MEMBERSHIP_FILTERABLE))
 export const MEMBERSHIP_LABEL = Object.fromEntries(MEMBERSHIP_OPTIONS.map((m) => [m.key, m.label]))
 
 // 정렬 기준(2026-09-19 개편). 방향이 있는 둘은 라벨 아래 높은순/낮은순 버튼, 나머지 둘은 칩 하나.
@@ -54,7 +66,7 @@ export function primarySort(f) {
 // Set이 들어 있어 상수 하나를 돌려쓰면 한쪽에서 고친 게 다른 쪽에
 // 새어 나간다. 부를 때마다 새로 만든다.
 export function defaultFilters() {
-  return { ...DEFAULT_SCALARS, platforms: new Set(PLATFORMS.map((p) => p.key)), categories: new Set() }
+  return { ...DEFAULT_SCALARS, platforms: new Set(PLATFORMS.map((p) => p.key)), categories: new Set(), memberships: ALL_MEMBERSHIPS() }
 }
 
 const DEFAULT_SCALARS = {
@@ -76,6 +88,7 @@ const DEFAULT_SCALARS = {
 export function isDefaultFilters(f) {
   return f.platforms.size === PLATFORMS.length
     && f.categories.size === 0
+    && (f.memberships?.size ?? ALL_MEMBERSHIPS().size) === ALL_MEMBERSHIPS().size
     && f.includeRandom === DEFAULT_SCALARS.includeRandom
     && f.includeMenu === DEFAULT_SCALARS.includeMenu
     && f.minAmount5k === DEFAULT_SCALARS.minAmount5k
@@ -284,11 +297,15 @@ export function applyFilters(brands, filters) {
     .map((b) => {
       const offers = b.offers.filter((o) => (o.platform === OWN || filters.platforms.has(o.platform))
         // 검색 중에는 금액으로 거르지 않는다. 브랜드를 이름으로 찾았는데 5천원 미만이라 안 보이면 없는 줄 안다.
-        && (!filters.minAmount5k || q !== '' || (o.amount ?? 0) >= 5000))
+        && (!filters.minAmount5k || q !== '' || (o.amount ?? 0) >= 5000)
+        // 없는 멤버십의 전용 오퍼는 뺀다(MEMBERSHIP_FILTERABLE).
+        && !(MEMBERSHIP_FILTERABLE[o.membership] && filters.memberships && !filters.memberships.has(MEMBERSHIP_FILTERABLE[o.membership])))
       return offers.length === b.offers.length ? b : { ...b, offers }
     })
     .filter((b) => {
       if (b.offers.length === 0) return false
+      // 업데이트만(메인 화면 쿠폰 카드 쪽 "업데이트 N곳" 칸): 오늘 처음 본 오퍼가 하나라도 있는 브랜드만.
+      if (filters.updatedOnly && !b.offers.some((o) => isUpdated(o))) return false
       if (q !== '' && !b.name.includes(q)) return false
       // 아무 분류도 안 고르면 전체다.
       if (filters.categories.size === 0) return true
