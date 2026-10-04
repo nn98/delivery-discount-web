@@ -12,6 +12,7 @@ import { CATEGORIES, applyFilters, defaultFilters, includesFrom, isDefaultFilter
 const SurveyDock = lazy(() => import('./SurveyDock.jsx'))
 const HiddenBrandsSheet = lazy(() => import('./HiddenBrandsSheet.jsx'))
 const HideBrandAsk = lazy(() => import('./HideBrandAsk.jsx'))
+const CouponCard = lazy(() => import('./CouponCard.jsx'))
 import { applyHidden, hideBrand, readHidden, revivedNames, setRule, showBrand } from './hiddenBrands.js'
 import { captureRects, playShift, readCards } from './cardShift.js'
 
@@ -23,10 +24,11 @@ const SHIFT_PAUSE_MS = 400
 import SurveyCard from './SurveyCard.jsx'
 import { getStoredCode, markAnswered, shouldShow as surveyShouldShow } from './surveyDismiss.js'
 import { getAnalyticsContext } from './analytics-context.js'
+import { currentHomeArm } from './homeExperiment.js'
 import PushNotificationSetting from './PushNotificationSetting.jsx'
 import BrandCard, { brandCardId } from './BrandCard.jsx'
 import BrandGridSkeleton from './BrandGridSkeleton.jsx'
-import { setHubLinks } from './OfferChip.jsx'
+import { setHubLinks } from './offerLink.js'
 import SiteFooter from './SiteFooter.jsx'
 
 // 서버 렌더에서는 layout effect가 돌지 않고 경고만 남긴다. 서버에선 그냥 effect로 둔다.
@@ -184,6 +186,17 @@ export default function App({ initial = null }) {
 
   const { search } = filters
   const [dev, setDev] = useState(false)
+  // 서버 렌더링 첫 화면은 늘 운영 카드다(하이드레이션 일치). 마운트 뒤 A/B 배정이 쿠폰 카드면 바꾼다.
+  const [homeA, setHomeA] = useState(false)
+  const [homePhoto, setHomePhoto] = useState(false) // 시안 비교용 ?photo=1
+  const [homeCompact, setHomeCompact] = useState(false) // 시안 비교용 ?compact=1(17차 시안 크기)
+    useEffect(() => {
+    // 메인 화면 A/B(homeExperiment.js): 2026-10-05 00:00부터 방문자 반반. 쿠폰 카드는 촘촘한 안이 기본(?compact=0이면 큰 안).
+    try {
+      const q = new URLSearchParams(window.location.search)
+      if (currentHomeArm(getAnalyticsContext().visitorId).arm === 'coupon') startTransition(() => { setHomeA(true); setHomePhoto(q.get('photo') === '1'); setHomeCompact(q.get('compact') !== '0') })
+    } catch { /* 주소를 못 읽으면 운영 카드 */ }
+  }, [])
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
   useEffect(() => { startTransition(() => setDev(Boolean(getAnalyticsContext().dev))) }, [])
@@ -564,19 +577,21 @@ export default function App({ initial = null }) {
               </button>
             )
           })}
-          {/* 5천원 이상만(2026-10-03, 사용자). 시트의 같은 칸과 한 상태다. 기본은 켜짐. */}
-          <button
-            type="button"
-            className={`quick-bar__chip${filters.minAmount5k ? ' quick-bar__chip--on' : ''}`}
-            aria-pressed={filters.minAmount5k}
-            onClick={() => {
-              setFilters((f) => ({ ...f, minAmount5k: !f.minAmount5k }))
-              track('quick_filter', { key: 'min5k', on: !filters.minAmount5k })
-            }}
-          >
-            5천원 이상만
-          </button>
         </div>
+        {/* 5천원 이상만(2026-10-03, 사용자): 정렬 묶음에서 빼 같은 줄 오른쪽 끝의 ON/OFF 스위치로. 시트의 같은 칸과 한 상태, 기본은 켜짐. */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={filters.minAmount5k}
+          className="quick-bar__switch"
+          onClick={() => {
+            setFilters((f) => ({ ...f, minAmount5k: !f.minAmount5k }))
+            track('quick_filter', { key: 'min5k', on: !filters.minAmount5k })
+          }}
+        >
+          <span>5천원 이상만</span>
+          <span className="quick-bar__switch-track" aria-hidden="true" />
+        </button>
         {/* 숨긴 목록은 정렬과 다른 일이라 오른쪽에 따로 선다. 떠 있는 알약으로 두었더니
             하단 배너와 겹쳤다(2026-09-24 사용자). 숨긴 것이 없으면 안 그린다. */}
         {Object.keys(hidden).length > 0 && (
@@ -705,22 +720,27 @@ export default function App({ initial = null }) {
               }}
             />
           )}
-          {visibleBrands.slice(0, shown).map((b, index) => (
-            <BrandCard
-              key={b.name}
-              leaving={leaving === b.name}
-              onHide={onHide}
-              include={include}
-              brand={b}
-              position={index + 1}
-              highlighted={linkedBrand === brandCardId(b.name)}
-              onInteract={clearLinked}
-            />
-          ))}
+          {visibleBrands.slice(0, shown).map((b, index) => {
+            const props = { leaving: leaving === b.name, onHide, include, brand: b, position: index + 1,
+              highlighted: linkedBrand === brandCardId(b.name), onInteract: clearLinked }
+            return homeA
+              ? <Suspense key={b.name} fallback={<BrandCard {...props} />}><CouponCard {...props} photo={homePhoto} compact={homeCompact} /></Suspense>
+              : <BrandCard key={b.name} {...props} />
+          })}
         </div>
       )}
       {/* 목록 끝 표지. 화면 아래 1,500px 안에 들어오면 카드를 한 묶음 더 그린다. */}
       {visibleBrands && shown < visibleBrands.length && <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />}
+      {/* "5천원 이상만"이 켜져 있으면 목록 끝에서 한 번에 풀 수 있다(시트, 빠른 칩과 같은 상태). */}
+      {visibleBrands && shown >= visibleBrands.length && filters.minAmount5k && (
+        <button type="button" className="list-end-more"
+                onClick={() => {
+                  setFilters((f) => ({ ...f, minAmount5k: false }))
+                  track('quick_filter', { key: 'min5k', on: false, from: 'list_end' })
+                }}>
+          5천원 미만도 보기
+        </button>
+      )}
 
       {surveyOn && (
         <Suspense fallback={null}>
