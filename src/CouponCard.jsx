@@ -39,7 +39,7 @@ function Amt({ offer }) {
   )
 }
 
-function OfferLinkA({ offer, brand, position, best, className, children, ...rest }) {
+function OfferLinkA({ offer, brand, position, best, where, slot, expanded, className, children, ...rest }) {
   const href = offerLink(offer, brand.links, brand.name)
   const web = href.startsWith('http')
   return (
@@ -47,7 +47,7 @@ function OfferLinkA({ offer, brand, position, best, className, children, ...rest
        // 커스텀 스킴(coupangeats://, ddangyo://, baemin://)은 같은 탭에서 열어야 앱으로 간다(운영 칩과 같다).
        target={web ? '_blank' : undefined} rel={web ? 'noreferrer' : undefined}
        aria-label={`${brand.name} ${amountText(offer)}, 앱으로 이동`}
-       onClick={() => track('offer_link_click', offerClickProps({ offer, brandName: brand.name, position, best }))}>
+       onClick={() => track('offer_link_click', offerClickProps({ offer, brandName: brand.name, position, best, where, slot, expanded }))}>
       {children}
     </a>
   )
@@ -59,17 +59,17 @@ const LinkIcon = () => (
 
 // 쿠폰(메인, 캐러셀, 펼친 쿠폰 모두 같은 꼴과 크기, 17차 시안): 왼쪽 앱 로고, 금액과 최소주문, 오른쪽 앱 색 이동 꼭지(링크 아이콘).
 // 배지는 쿠폰 안에 두지 않는다(브랜드명 옆, 캐러셀이면 보이는 쿠폰 것).
-function Coupon({ o, brand, position, best, ...rest }) {
+function Coupon({ o, brand, position, best, where = 'main', slot, expanded, ...rest }) {
   return (
     // 감싸개: 쿠폰(마스크로 홈을 판다)은 바깥으로 삐져나온 것을 잘라서, 업데이트 탭은 감싸개에 단다
     <div className="cc-tkw">
-    {isUpdated(o) && <span className="cc-upd">업데이트</span>}
+    {isUpdated(o) && <span className="cc-upd">신규</span>}
     <div className="cc-ticket" data-platform={o.platform} {...rest}>
       <span className="cc-info">
         <PlatformBadge platformKey={o.platform} brand={brand.name} />
         <span className="cc-num"><Amt offer={o} /><Min value={o.minOrderAmount} /></span>
       </span>
-      <OfferLinkA offer={o} brand={brand} position={position} best={best} className="cc-stub"><LinkIcon /></OfferLinkA>
+      <OfferLinkA offer={o} brand={brand} position={position} best={best} where={where} slot={slot} expanded={expanded} className="cc-stub"><LinkIcon /></OfferLinkA>
     </div>
     </div>
   )
@@ -132,7 +132,7 @@ function Carousel({ brand, best, position, idx, setIdx }) {
       <div className="cc-carousel" ref={ref} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onClickCapture={onClickCapture}>
         {best.map((o, i) => (
           <div key={offerKey(o)} className={`cc-slide${i === idx ? ' cc-slide--cur' : ''}`}>
-            <Coupon o={o} brand={brand} position={position} best />
+            <Coupon o={o} brand={brand} position={position} best where="carousel" slot={i + 1} />
           </div>
         ))}
       </div>
@@ -221,7 +221,10 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
   const stack = best.length > 1
   const hasTbl = (o) => { const t = conditionTable(o); return t.rows.length > 0 || !!t.note }
   // 펼칠 게 없으면(하위 오퍼도, 최고 쿠폰의 상세 표도 없음) 자세히 보기를 숨기고 자리만 둔다
-  const canExpand = rest.length > 0 || stack || best.some(hasTbl)
+  // 상세 표가 쿠폰에 이미 보이는 것(금액, 최소주문, 채널·멤버십 배지)만 되풀이하면 펼칠 것이 없다:
+  // 구간이 둘 이상이거나 조건 문장이 있어야 더 볼 것이 있다(2026-10-05 사용자: 노모어피자처럼 다 보이면 자세히 보기를 없앤다).
+  const hasMore = (o) => { const t = conditionTable(o); return t.rows.length > 1 || !!t.note }
+  const canExpand = rest.length > 0 || stack || best.some(hasMore)
   const top = stack ? [best[cur] ?? best[0]] : best
   const bestTables = shown ? top.map((o) => ({ o, t: conditionTable(o) })).filter(({ t }) => t.rows.length || t.note) : []
   const listed = stack ? [...best.filter((o) => o !== top[0]), ...rest] : rest
@@ -257,10 +260,10 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
           ))}
         </div></div>
       )}
-      <button type="button" className="cc-hint" aria-expanded={open} style={canExpand ? undefined : { visibility: "hidden" }} aria-hidden={canExpand ? undefined : true} tabIndex={canExpand ? undefined : -1}>
+      {canExpand && <button type="button" className="cc-hint" aria-expanded={open}>
         자세히 보기
         <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      </button>
+      </button>}
       {onHide && (
         <button type="button" className="cc-hide" aria-label={`${brand.name} 숨기기`} title="숨기기"
                 onClick={() => onHide(brand.name, hasBest ? best[0].amount : null)}>
@@ -280,7 +283,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
                 <div className="cc-deal cc-deal--more" style={anim}>
                   <div className="cc-deal-col">
                     <Tags o={o} />
-                    <Coupon o={o} brand={brand} position={position} best={stack && i < best.length - 1} />
+                    <Coupon o={o} brand={brand} position={position} best={stack && i < best.length - 1} where="expanded" slot={i + 1} expanded />
                   </div>
                 </div>
                 {hasTbl && <DetailTable t={t} i={i + bestTables.length} fx={f} />}
