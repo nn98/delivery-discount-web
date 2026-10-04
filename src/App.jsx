@@ -6,6 +6,7 @@ import EventBanner from './EventBanner.jsx'
 import BrandSuggestions from './BrandSuggestions.jsx'
 import { PLATFORMS } from './logos.jsx'
 import TopBarA from './TopBarA.jsx'
+import TopBarB from './TopBarB.jsx'
 const FilterSheet = lazy(() => import('./FilterSheet.jsx'))
 import { useBrandAutocomplete } from './useBrandAutocomplete.js'
 import { CATEGORIES, applyFilters, defaultFilters, includesFrom, isDefaultFilters, primarySort, sortSignature, displayBestAmount } from './filters.js'
@@ -24,6 +25,7 @@ const SHIFT_PAUSE_MS = 400
 import SurveyCard from './SurveyCard.jsx'
 import { getStoredCode, markAnswered, shouldShow as surveyShouldShow } from './surveyDismiss.js'
 import { getAnalyticsContext } from './analytics-context.js'
+import { currentHomeArm } from './homeExperiment.js'
 import PushNotificationSetting from './PushNotificationSetting.jsx'
 import BrandCard, { brandCardId } from './BrandCard.jsx'
 import BrandGridSkeleton from './BrandGridSkeleton.jsx'
@@ -185,12 +187,16 @@ export default function App({ initial = null }) {
 
   const { search } = filters
   const [dev, setDev] = useState(false)
-  // 서버 렌더링 첫 화면은 늘 운영 카드다(하이드레이션 일치). 마운트 뒤 주소에 ?home=a가 있으면 쿠폰 카드로 바꾼다. 반반 배정은 5단계.
+  // 서버 렌더링 첫 화면은 늘 운영 카드다(하이드레이션 일치). 마운트 뒤 A/B 배정이 쿠폰 카드면 바꾼다.
   const [homeA, setHomeA] = useState(false)
   const [homePhoto, setHomePhoto] = useState(false) // 시안 비교용 ?photo=1
   const [homeCompact, setHomeCompact] = useState(false) // 시안 비교용 ?compact=1(17차 시안 크기)
     useEffect(() => {
-    try { const q = new URLSearchParams(window.location.search); if (q.get('home') === 'a') startTransition(() => { setHomeA(true); setHomePhoto(q.get('photo') === '1'); setHomeCompact(q.get('compact') === '1') }) } catch { /* 주소를 못 읽으면 운영 카드 */ }
+    // 메인 화면 A/B(homeExperiment.js): 2026-10-05 00:00부터 방문자 반반. 쿠폰 카드는 촘촘한 안이 기본(?compact=0이면 큰 안).
+    try {
+      const q = new URLSearchParams(window.location.search)
+      if (currentHomeArm(getAnalyticsContext().visitorId).arm === 'coupon') startTransition(() => { setHomeA(true); setHomePhoto(q.get('photo') === '1'); setHomeCompact(q.get('compact') !== '0') })
+    } catch { /* 주소를 못 읽으면 운영 카드 */ }
   }, [])
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
@@ -246,7 +252,9 @@ export default function App({ initial = null }) {
     ro.observe(el)
     setBarHeight(el.getBoundingClientRect().height)
     return () => ro.disconnect()
-  }, [])
+    // 메인 화면 A/B로 바가 바뀌면(운영 바 -> B안 바) 새 바를 다시 잰다. 안 그러면 떼어 낸 옛 바를 재
+    // 높이 0이 되고, 행사 배너가 바 밑에 깔린다(2026-10-04 실측).
+  }, [homeA])
 
   const isFiltered = !isDefaultFilters(filters)
   const resetFilters = () => {
@@ -524,6 +532,22 @@ export default function App({ initial = null }) {
 
       {/* A/B 실험 종료(2026-09-15): 한 줄 바 + 분류 캐러셀(a안)로 통일.
           결론은 docs/HANDOFF-20260914.md §4 — b(시트)는 내렸다. */}
+      {/* 메인 화면 A/B: 쿠폰 카드 쪽은 9월 실험의 B안 상단 바(검색 + 분류 메뉴 바, 앱·정렬은 시트) */}
+      {homeA ? (
+        <TopBarB
+          barRef={titleBarRef}
+          filters={filters}
+          setFilters={setFilters}
+          search={search}
+          setSearch={setSearch}
+          onSearchSubmit={submitSearch}
+          brands={brands}
+          isFiltered={isFiltered}
+          resetFilters={resetFilters}
+          sheetOpen={sheetOpen}
+          onOpenSheet={() => { setSheetOpen(true); track('filter_sheet_open') }}
+        />
+      ) : (
       <TopBarA
         barRef={titleBarRef}
         filters={filters}
@@ -537,6 +561,7 @@ export default function App({ initial = null }) {
         onOpenSheet={() => { setSheetOpen(true); track('filter_sheet_open') }}
         onHome={goHome}
       />
+      )}
 
       {/* 배너는 바 아래에 둔다. 흐름 맨 위에 두면 fixed인 타이틀바가
           그 자리를 덮어 스크롤하기 전에는 안 보였다. */}

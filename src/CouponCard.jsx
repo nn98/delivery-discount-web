@@ -5,7 +5,7 @@ import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { track } from './analytics.js'
 import { brandImpressionProps, observeBrandImpression } from './brandImpression.js'
 import { brandCardId } from './BrandCard.jsx'
-import { amountText, badgesOf, channelOf, conditionTable, shortBrandName, formulaOf, minLabel, nameCutPx, splitOffers } from './couponModel.js'
+import { amountText, badgesOf, isUpdated, channelOf, conditionTable, shortBrandName, formulaOf, minLabel, nameCutPx, splitOffers } from './couponModel.js'
 import { offerKey } from './filters.js'
 import { BrandLogo, PlatformBadge } from './logos.jsx'
 import { offerClickProps, offerLink } from './offerLink.js'
@@ -61,12 +61,16 @@ const LinkIcon = () => (
 // 배지는 쿠폰 안에 두지 않는다(브랜드명 옆, 캐러셀이면 보이는 쿠폰 것).
 function Coupon({ o, brand, position, best, ...rest }) {
   return (
+    // 감싸개: 쿠폰(마스크로 홈을 판다)은 바깥으로 삐져나온 것을 잘라서, 업데이트 탭은 감싸개에 단다
+    <div className="cc-tkw">
+    {isUpdated(o) && <span className="cc-upd">업데이트</span>}
     <div className="cc-ticket" data-platform={o.platform} {...rest}>
       <span className="cc-info">
         <PlatformBadge platformKey={o.platform} brand={brand.name} />
         <span className="cc-num"><Amt offer={o} /><Min value={o.minOrderAmount} /></span>
       </span>
       <OfferLinkA offer={o} brand={brand} position={position} best={best} className="cc-stub"><LinkIcon /></OfferLinkA>
+    </div>
     </div>
   )
 }
@@ -106,6 +110,13 @@ function Carousel({ brand, best, position, idx, setIdx }) {
     else drag.current = null
   }
   const onClickCapture = (e) => { if (drag.current?.moved) { e.preventDefault(); e.stopPropagation() } }
+  // 캐러셀을 넘겼다(사람이 넘긴 것만: 지금 쿠폰이 바뀐 때). 첫 그리기는 세지 않는다.
+  const shownIdx = useRef(idx)
+  useEffect(() => {
+    if (shownIdx.current === idx) return
+    track('coupon_carousel_swipe', { brand: brand.name, from: shownIdx.current, to: idx, count: best.length, platform: best[idx]?.platform ?? 'none' })
+    shownIdx.current = idx
+  }, [idx])
   useEffect(() => {
     const root = ref.current
     if (!root || typeof IntersectionObserver === 'undefined') return undefined
@@ -170,7 +181,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
   const toggle = () => {
     onInteract?.()
     if (phase === false) { track('brand_expand', { brand: brand.name, category: brand.category ?? 'none' }); setPhase('enter') }
-    else if (phase === 'open' || phase === 'enter') { setSettled(false); setPhase('leave') }
+    else if (phase === 'open' || phase === 'enter') { track('brand_collapse', { brand: brand.name, category: brand.category ?? 'none' }); setSettled(false); setPhase('leave') }
     else if (phase === 'leave') setPhase('open')
   }
   // 카드 아무 곳이나 누르면 펼치기/접기. 링크, 숨기기 버튼, 캐러셀 끌기는 제외한다.
