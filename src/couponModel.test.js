@@ -36,8 +36,8 @@ test('견줄 수 없는 오퍼만 있으면 맨 앞 하나를 대표로, hasBest
 test('최소주문 표기', () => {
   assert.equal(minLabel(18900), '18,900')
   assert.equal(minLabel(0), '최소주문 없음')
-  assert.equal(minLabel(null), '최소주문 ?')
-  assert.equal(minLabel(undefined), '최소주문 ?')
+  assert.equal(minLabel(null), null)
+  assert.equal(minLabel(undefined), null)
 })
 
 test('계산식은 최적이고 식 기호가 있을 때만', () => {
@@ -156,4 +156,13 @@ test('업데이트: 오늘(한국 시각) 처음 본 오퍼만', async () => {
   assert.equal(isUpdated({ firstSeenAt: '2026-10-04T23:59:00+09:00' }, now), false)
   assert.equal(isUpdated({ firstSeenAt: null }, now), false)
   assert.equal(isUpdated({}, now), false)
+})
+
+test('최적 상세 표: 겹친 구간에 계산식, 최소주문 모르면 미확인', () => {
+  const offer = { platform: 'yogiyo', amount: 7000, qualifier: '최적', conditions: '30,000원↑ 5,000+2,000=7,000원',
+    tiers: [{ minOrder: 21000, amount: 5000 }, { minOrder: 30000, amount: 7000, channel: '배달' }, { minOrder: null, amount: 7000, channel: '포장' }] }
+  const { rows } = conditionTable(offer)
+  assert.equal(rows[0].extra, '5,000+2,000')
+  assert.equal(rows[1].min, '최소주문 미확인')
+  assert.equal(rows[2].extra, '')
 })
