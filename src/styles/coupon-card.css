@@ -147,7 +147,7 @@
 @media (prefers-reduced-motion: reduce) { .cc-x, .cc-alts, .cc-hint, .cc-deal--more, .cc-tbl, .cc-hint svg { transition: none !important; } }
 
 /* ?compact=1 시안: 17차 시안처럼 낮고 촘촘한 쿠폰(높이 76px 안팎, 앱 로고 34px, 금액 25px, 꼭지 58px, 아래 띠 없음) */
-.cc--compact { --tk-h: 84px; } /* 위아래 4px씩 늘림(2026-10-06 사용자) */
+.cc--compact { --tk-h: 96px; } /* 76 -> 84 -> 96px(2026-10-06 사용자: 이동 영역 99px와 비율) */
 .cc--compact .cc-info { --pb: 34px; gap: 10px; padding: 0 14px; }
 .cc--compact .cc-ticket::after { display: none; }
 .cc--compact .cc-ticket { border-radius: 10px; }
@@ -187,8 +187,8 @@
 .cc--stack .cc-dots { transition: opacity 200ms ease; }
 .cc--stack.cc--open .cc-dots { opacity: 0; }
 /* 링크 꼭지: 앱 색 위에 옅은 그라데이션(위 살짝 밝게, 아래 살짝 어둡게). 접힌 귀는 넣지 않는다(2026-10-05 사용자). */
-/* 이동 영역: 로고 색을 파스텔로 낮춘 바탕 + 로고 색 아이콘(2026-10-06 사용자) */
-.cc-stub { background: linear-gradient(165deg, color-mix(in srgb, var(--pc, #4a4a4e) 18%, #fff) 0%, color-mix(in srgb, var(--pc, #4a4a4e) 30%, #fff) 100%); color: color-mix(in srgb, var(--pc, #4a4a4e) 88%, #000); box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .5); }
+/* 이동 영역: 진회색 바탕에 플랫폼 색을 옅게 섞은 그라데이션 + 흰 아이콘(2026-10-06 사용자) */
+.cc-stub { background: linear-gradient(165deg, color-mix(in srgb, var(--pc, #4a4a4e) 20%, #3a3a3f) 0%, color-mix(in srgb, var(--pc, #4a4a4e) 8%, #26262a) 100%); color: #fff; box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .12); }
 .cc-stub svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .25)); }
 
 /* 쿠폰 감싸개(폭은 감싸개가 갖고 쿠폰은 꽉 채운다)와 업데이트 탭: 쿠폰 오른쪽 위에 걸쳐 오른쪽으로 기운 포스트잇 */
