@@ -260,3 +260,8 @@
 .menu-bar__item--on::after { background: var(--sale); }
 /* 중복 할인 배지 글자: 옅은 주황 바탕 위 주황은 대비 기준 미달 — 진한 주황으로(2026-10-07 Lighthouse) */
 .cc .offer__range-badge--optimal, .cc-sheet .offer__range-badge--optimal { color: #a83a00; }
+/* 머리: 이름·배지 각 2px 키우고 간격 2px 더(2026-10-07 사용자) — 로고(72px)보다 조금 작은 묶음 */
+.cc--compact .cc-nm { font-size: max(16px, calc(22px - var(--cut, 0px))); }
+.cc--compact .cc-head { row-gap: 4px; }
+.cc .cc-tags .chip-tags > *, .cc--compact .cc-tags .chip-tags > * { height: 24px; font-size: 14px; }
+.cc .offer__range-badge--optimal::before { content: none; }
