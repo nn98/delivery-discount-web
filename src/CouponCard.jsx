@@ -9,7 +9,7 @@ import { brandCardId } from './BrandCard.jsx'
 import { amountText, badgesOf, isUpdated, channelOf, conditionTable, shortBrandName, formulaOf, minLabel, nameCutPx, splitOffers } from './couponModel.js'
 import { offerKey } from './filters.js'
 import { BrandLogo, PlatformBadge } from './logos.jsx'
-import { offerClickProps, offerLink } from './offerLink.js'
+import { offerClickProps, offerLink, COUPANGEATS_NOTICE } from './offerLink.js'
 import './styles/coupon-card.css'
 
 const Up = () => (
@@ -68,7 +68,7 @@ function Coupon({ o, brand, position, best, where = 'main', slot, expanded, ...r
   return (
     // 감싸개: 쿠폰(마스크로 홈을 판다)은 바깥으로 삐져나온 것을 잘라서, 업데이트 탭은 감싸개에 단다
     <div className="cc-tkw">
-    {isUpdated(o) && <span className="cc-upd">신규</span>}
+    {isUpdated(o) && <span className="cc-upd">신규 할인</span>}
     <div className="cc-ticket" data-platform={o.platform} {...rest}>
       <span className="cc-info">
         <PlatformBadge platformKey={o.platform} brand={brand.name} />
@@ -76,6 +76,7 @@ function Coupon({ o, brand, position, best, where = 'main', slot, expanded, ...r
       </span>
       <OfferLinkA offer={o} brand={brand} position={position} best={best} where={where} slot={slot} expanded={expanded} className="cc-stub"><LinkIcon /></OfferLinkA>
     </div>
+    {o.platform === 'coupangeats' && <p className="cc-hint">{COUPANGEATS_NOTICE}</p>}
     </div>
   )
 }
