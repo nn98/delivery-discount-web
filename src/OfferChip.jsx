@@ -1,15 +1,16 @@
 import { isUpdated } from './filters.js'
 import { track } from './analytics.js'
 import { badgesOf } from './couponModel.js'
-import { offerClickProps, offerLink } from './offerLink.js'
+import { COUPANGEATS_HINT, offerClickProps, offerLink, openWithNotice } from './offerLink.js'
 import { PlatformBadge } from './logos.jsx'
 
 export function won(value) {
   return `${value.toLocaleString()}원`
 }
 
-function offerAmountText(offer) {
-  return offer.amount != null ? won(offer.amount) : offer.rawText
+// 상위 오퍼(큰 칸)는 '원 할인'으로 끝낸다(2026-10-06 사용자). 아래 작은 칩은 자리가 좁아 그대로.
+function offerAmountText(offer, hero = false) {
+  return offer.amount != null ? `${won(offer.amount)}${hero ? ' 할인' : ''}` : offer.rawText
 }
 
 // 배지 계산(값의 성격, 멤버십, 한정)은 couponModel.badgesOf가 한다 — 쿠폰 카드와 같은 함수다.
@@ -76,10 +77,10 @@ export default function OfferChip({ offer, brandLinks, brandName, detailId, open
         </span>
         {offer.soldOut ? (
           <>
-            <s className="offer__amount--soldout">{offerAmountText(offer)}</s>
+            <s className="offer__amount--soldout">{offerAmountText(offer, hero)}</s>
             <span className="offer__soldout-label">품절</span>
           </>
-        ) : offerAmountText(offer)}
+        ) : offerAmountText(offer, hero)}
       </span>
       <span className="offer__icon-badge">
         <PlatformBadge platformKey={offer.platform} brand={brandName} />
@@ -100,7 +101,7 @@ export default function OfferChip({ offer, brandLinks, brandName, detailId, open
           rel={link.startsWith('http') ? 'noreferrer' : undefined}
           // 어느 오퍼를 눌렀는지까지 남긴다 — brand·platform만으로는 "bhc 배민"에
           // 여러 구간·멤버십 오퍼가 있을 때 무엇이 눌렸는지 못 본다(2026-09-17).
-          onClick={() => track('offer_link_click', offerClickProps({ offer, brandName, position, best, where: 'chip' }))}
+          onClick={(e) => { track('offer_link_click', offerClickProps({ offer, brandName, position, best, where: 'chip' })); openWithNotice(e, link) }}
         >
           {content}
         </a>
@@ -117,6 +118,8 @@ export default function OfferChip({ offer, brandLinks, brandName, detailId, open
           <span className="sr-only">상세 조건 {open ? '접기' : '펼치기'}</span>
         </button>
       )}
+      {/* 운영 카드: 큰 칸(메인 오퍼)에만 한 줄, 아래 작은 칩에는 안 붙인다(2026-10-06 사용자) */}
+      {hero && link && offer.platform === 'coupangeats' && <p className="ce-note">{COUPANGEATS_HINT}</p>}
     </li>
   )
 }
