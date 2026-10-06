@@ -258,3 +258,5 @@
 /* 포인트 색(--sale)을 몇 곳에만 절제해서(2026-10-06 사용자): 5천원 이상만 스위치 켜짐, 고른 분류 밑줄, 신규 탭 개수 */
 .quick-bar__switch[aria-checked="true"] .quick-bar__switch-track { background: var(--sale); }
 .menu-bar__item--on::after { background: var(--sale); }
+/* 중복 할인 배지 글자: 옅은 주황 바탕 위 주황은 대비 기준 미달 — 진한 주황으로(2026-10-07 Lighthouse) */
+.cc .offer__range-badge--optimal, .cc-sheet .offer__range-badge--optimal { color: #a83a00; }
