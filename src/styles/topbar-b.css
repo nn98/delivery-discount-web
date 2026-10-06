@@ -351,3 +351,8 @@
 
 /* 신규를 고르면 정렬 줄 아래 한 줄 안내(App.jsx) */
 .update-note { margin: 2px 4px 10px; font-size: 13px; color: var(--text-muted); }
+
+/* 토스 디자인 시스템(TDS) 정리(2026-10-06): 고른 분류는 굵게 + 강조색 2px 밑줄 */
+.menu-bar__item { font-size: 15px; padding: 10px 8px 12px; }
+.menu-bar__item--on { color: var(--text); font-weight: 700; }
+.menu-bar__item--on::after { left: 8px; right: 8px; bottom: 0; height: 2px; border-radius: 0; background: var(--accent); }

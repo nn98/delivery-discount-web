@@ -206,3 +206,11 @@
   .quick-bar__switch-track { width: 30px; height: 18px; }
   .quick-bar__switch-track::after { width: 14px; height: 14px; }
 }
+
+/* 토스 디자인 시스템(TDS) 정리(2026-10-06): 정렬은 낱개 칩(높이 32, 모서리 16). 고른 칩은 진한 채움 */
+.quick-bar__sorts { gap: 8px; padding: 0; background: none; }
+.quick-bar__chip { height: 32px; padding: 0 10px; border-radius: 16px; font-size: 13px; background: var(--surface); color: #4e5968; box-shadow: inset 0 0 0 1px var(--border); }
+.quick-bar__chip--on { background: var(--text); color: #fff; font-weight: 600; box-shadow: none; }
+.quick-bar__sorts { gap: 6px; }
+.quick-bar__switch { font-size: 13px; gap: 6px; padding-left: 4px; }
+@media (max-width: 370px) { .quick-bar__chip { padding: 0 8px; font-size: 12px; } .quick-bar__switch { font-size: 12px; } }
