@@ -234,10 +234,74 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
     else if (phase === 'leave') setPhase('open')
   }
   // 카드 아무 곳이나 누르면 펼치기/접기. 링크, 숨기기 버튼, 캐러셀 끌기는 제외한다.
-  const onCardClick = (e) => {
-    if (e.target.closest('a, .cc-hide, .cc-carousel.cc-dragging')) return
-    if (canExpand) toggle()
+  // 하단 시트 안(2026-10-06 시안): 카드 안에서 펼치지 않고 아래에서 올라오는 시트로 상세를 연다. 카드 높이는 그대로.
+  const [sheet, setSheet] = useState(false)
+  // 시트 끌기(2026-10-07 사용자): 시트 어디를 잡아도 아래로 끌면 시트 전체가 따라 내려온다.
+  // 본문이 스크롤된 상태면 먼저 본문을 맨 위까지 올린 뒤부터 시트가 움직인다. 놓았을 때 120px(또는 빠르게 40px)을
+  // 넘었으면 닫고, 아니면 제자리로. 손가락은 터치 이벤트로 받는다 — 포인터 이벤트는 브라우저가 스크롤로 가져가며
+  // 중간에 취소돼 시트가 저절로 돌아갔다.
+  const sheetRef = useRef(null)
+  const sdrag = useRef(null)
+  const settleSheet = (dy, fast) => {
+    const el = sheetRef.current
+    if (!el) return
+    el.style.transition = 'transform 220ms cubic-bezier(.2, 0, 0, 1)'
+    if (dy > 120 || (fast && dy > 40)) { el.style.transform = 'translateY(100%)'; setTimeout(() => setSheet(false), 200) }
+    else el.style.transform = ''
   }
+  const dragStart = (y, target) => { const body = target.closest?.('.cc-sheet__body'); sdrag.current = { y0: y, t: Date.now(), dy: 0, body, active: false } }
+  const dragMove = (y) => {
+    const d = sdrag.current
+    const el = sheetRef.current
+    if (!d || !el) return false
+    const raw = y - d.y0
+    if (!d.active) {
+      if (raw <= 4) return false                        // 위로 끌기나 작은 떨림은 본문 스크롤에 맡긴다
+      if (d.body && d.body.scrollTop > 0) { d.y0 = y; return false } // 본문을 먼저 맨 위까지
+      d.active = true; d.y0 = y
+    }
+    d.dy = Math.max(0, y - d.y0)
+    el.style.transition = 'none'
+    el.style.transform = `translateY(${d.dy}px)`
+    return true
+  }
+  const dragEnd = () => {
+    const d = sdrag.current
+    sdrag.current = null
+    if (d?.active) settleSheet(d.dy, Date.now() - d.t < 300)
+  }
+  // 마우스(데스크톱)
+  const onSheetDown = (e) => { if (e.pointerType === 'mouse' && e.button === 0) dragStart(e.clientY, e.target) }
+  const onSheetMove = (e) => { if (e.pointerType === 'mouse' && dragMove(e.clientY)) e.currentTarget.setPointerCapture?.(e.pointerId) }
+  const onSheetUp = (e) => { if (e.pointerType === 'mouse') dragEnd() }
+  const onCardClick = (e) => {
+    if (e.target.closest('a, .cc-hide, .cc-carousel.cc-dragging, .cc-combo__btn')) return
+    if (!canExpand) return
+    onInteract?.()
+    track('brand_expand', { brand: brand.name, category: brand.category ?? 'none', via: 'sheet' })
+    setSheet(true)
+  }
+  // 손가락: 끄는 동안 기본 스크롤을 막아야 하므로 passive가 아닌 네이티브 리스너
+  useEffect(() => {
+    const el = sheetRef.current
+    if (!sheet || !el) return undefined
+    const ts = (e) => dragStart(e.touches[0].clientY, e.target)
+    const tm = (e) => { if (dragMove(e.touches[0].clientY)) e.preventDefault() }
+    const te = () => dragEnd()
+    el.addEventListener('touchstart', ts, { passive: true })
+    el.addEventListener('touchmove', tm, { passive: false })
+    el.addEventListener('touchend', te)
+    el.addEventListener('touchcancel', te)
+    return () => { el.removeEventListener('touchstart', ts); el.removeEventListener('touchmove', tm); el.removeEventListener('touchend', te); el.removeEventListener('touchcancel', te) }
+  }, [sheet])
+  useEffect(() => {
+    if (!sheet) return undefined
+    const esc = (e) => { if (e.key === 'Escape') setSheet(false) }
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', esc)
+    return () => { document.body.style.overflow = prev; document.removeEventListener('keydown', esc) }
+  }, [sheet])
   // 딥링크(#brand-이름)로 들어오면 펼친 채로 그 카드로 스크롤한다(운영 카드와 같다).
   useEffect(() => {
     if (highlighted) { setPhase('enter'); cardRef.current?.scrollIntoView({ block: 'center' }) }
@@ -309,7 +373,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
           ))}
         </div></div>
       )}
-      {canExpand && <button type="button" className="cc-hint" aria-expanded={open}>
+      {canExpand && <button type="button" className="cc-hint" aria-haspopup="dialog" aria-expanded={sheet}>
         자세히 보기
         <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>}
@@ -343,6 +407,37 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
           <button type="button" className="cc-fold" aria-expanded={open}>접기<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 7.5L6 4l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
         </div></div></div>
       )}
+      {sheet && createPortal(
+        <>
+        {/* 막과 시트를 형제로 둔다 — 시트가 막 안에 있으면 막의 투명도·페이드를 같이 받아 흐려 보였다(2026-10-07) */}
+        {/* 포털이라도 React 이벤트는 카드(article)로 올라가 카드 클릭이 시트를 다시 연다 — 여기서 끊는다 */}
+        <div className="cc-sheet-dim" onClick={(e) => { e.stopPropagation(); setSheet(false) }} />
+        <div className="cc-sheet-wrap" onClick={(e) => { e.stopPropagation(); if (e.target === e.currentTarget) setSheet(false) }}>
+          <div className="cc-sheet" role="dialog" aria-modal="true" aria-label={`${brand.name} 할인 자세히`} ref={sheetRef}
+               onPointerDown={onSheetDown} onPointerMove={onSheetMove} onPointerUp={onSheetUp} onPointerCancel={onSheetUp}>
+            <div className="cc-sheet__grip" aria-hidden="true" />
+            <div className="cc-sheet__head">
+              <BrandLogo name={brand.name} size={40} />
+              <strong>{brand.name}</strong>
+              <button type="button" className="cc-sheet__close" aria-label="닫기" onClick={() => setSheet(false)}>×</button>
+            </div>
+            <div className="cc-sheet__body">
+              {[...best, ...rest].map((o, i) => {
+                const f = formulaOf(o)
+                const tb = conditionTable(o)
+                const hasTbl = tb.rows.length > 0 || tb.note || f
+                return (
+                  <div key={offerKey(o)} className="cc-sheet__item">
+                    <Tags o={o} />
+                    <Coupon o={o} brand={brand} position={position} best={i < best.length} where="sheet" slot={i + 1} expanded />
+                    {hasTbl && <DetailTable t={tb} i={0} fx={f} />}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+        </>, document.body)}
     </article>
   )
 }
