@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { offerLink, offerClickProps, COUPANGEATS_LINK } from './offerLink.js'
+import { offerLink, offerClickProps, appOnlyLink, COUPANGEATS_LINK } from './offerLink.js'
 
 test('오퍼 자신의 링크가 먼저, 그다음 브랜드 링크', () => {
   assert.equal(offerLink({ platform: 'baemin', link: 'https://a' }, { baemin: 'https://b' }, 'BBQ'), 'https://a')
@@ -28,4 +28,11 @@ test('쿠팡이츠: 탭 앱 링크가 있으면 그 탭, 없으면 공유 링크
   assert.equal(offerLink({ platform: 'coupangeats', link: tab }, {}, 'BBQ'), tab)
   assert.equal(offerLink({ platform: 'coupangeats' }, {}, 'BBQ'), COUPANGEATS_LINK)
   assert.equal(offerLink({ platform: 'coupangeats', link: 'https://share.coupangeats.com/old' }, {}, 'BBQ'), COUPANGEATS_LINK)
+})
+
+test('appOnlyLink: 앱 스킴과 쿠팡이츠 공유 링크만 PC에서 막는다', () => {
+  assert.equal(appOnlyLink('baemin://x'), true)
+  assert.equal(appOnlyLink('coupangeats://Web?url=x'), true)
+  assert.equal(appOnlyLink(COUPANGEATS_LINK), true)
+  assert.equal(appOnlyLink('https://fdofd.ddangyo.com/gateway4.html?x'), false)
 })

@@ -84,20 +84,45 @@ export const COUPANGEATS_HINT = '앱에서 "브랜드 할인 버튼"을 눌러�
 const NOTICE_MS = 1500 // 2026-10-06 사용자: 1초 -> 1.5초
 
 /** 쿠팡이츠 링크면 기본 이동을 막고 화면을 어둡게 깔아 안내를 1.5초 띄운 뒤 같은 탭에서 연다. 그 밖의 링크는 손대지 않는다. */
-export function openWithNotice(e, href) {
-  const tab = typeof href === 'string' && href.startsWith('coupangeats://')
-  if ((href !== COUPANGEATS_LINK && !tab) || typeof document === 'undefined') return
-  e.preventDefault()
+export const DESKTOP_NOTICE = '모바일 화면에서 클릭해주세요!'
+
+/** PC에서 못 여는 링크: 앱 전용 주소(baemin://, coupangeats:// 같은 앱 스킴)와 쿠팡이츠 공유 링크(앱으로만 넘긴다). */
+export function appOnlyLink(href) {
+  return typeof href === 'string' && (!/^https?:/i.test(href) || href.startsWith('https://share.coupangeats.com/'))
+}
+
+function isDesktop() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
+  return !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) && !!window.matchMedia?.('(pointer: fine)').matches
+}
+
+// 바텀시트처럼 화면을 어둡게 깔고 그 위에 안내를 띄운다(2026-10-06 사용자). 다 띄웠으면 dim을 돌려준다.
+function showNotice(text) {
   document.querySelector('.ce-dim')?.remove()
-  // 바텀시트처럼 화면을 어둡게 깔고 그 위에 안내를 띄운다(2026-10-06 사용자)
   const dim = document.createElement('div')
   dim.className = 'ce-dim'
   const el = document.createElement('div')
   el.className = 'ce-toast'
   el.setAttribute('role', 'status')
-  el.textContent = COUPANGEATS_NOTICE
+  el.textContent = text
   dim.appendChild(el)
   document.body.appendChild(dim)
+  return dim
+}
+
+export function openWithNotice(e, href) {
+  if (typeof document === 'undefined') return
+  // PC에서는 앱 전용 링크가 아무 일도 안 하거나 앱 설치 화면으로 간다 — 이동하지 않고 안내만(2026-10-07 사용자)
+  if (appOnlyLink(href) && isDesktop()) {
+    e.preventDefault()
+    const dim = showNotice(DESKTOP_NOTICE)
+    setTimeout(() => dim.remove(), NOTICE_MS)
+    return
+  }
+  const tab = typeof href === 'string' && href.startsWith('coupangeats://')
+  if (href !== COUPANGEATS_LINK && !tab) return
+  e.preventDefault()
+  const dim = showNotice(COUPANGEATS_NOTICE)
   setTimeout(() => {
     dim.remove()
     // 앱 링크(탭)는 앱이 없으면 아무 일도 안 일어난다 — 그때만 공유 링크로 다시 보낸다. 앱이 뜨는 동안에도

@@ -11,7 +11,6 @@ import { amountText, badgesOf, isUpdated, channelOf, conditionTable, shortBrandN
 import { offerKey } from './filters.js'
 import { BrandLogo, PlatformBadge } from './logos.jsx'
 import { COUPANGEATS_HINT, offerClickProps, offerLink, openWithNotice } from './offerLink.js'
-import './styles/coupon-card.css'
 
 const Up = () => (
   <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2l4 5H7.2v3H4.8V7H2z" fill="currentColor" /></svg>
@@ -383,7 +382,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
         </div></div>
       )}
       {canExpand && <button type="button" className="cc-hint" aria-haspopup="dialog" aria-expanded={sheet}>
-        자세히 보기
+        자세히
         <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>}
       {onHide && (
