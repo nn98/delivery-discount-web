@@ -321,3 +321,6 @@
 .cc-combo { cursor: pointer; }
 /* 쿠폰 카드 쪽만 토스처럼 옅은 회색 바탕. 이 파일은 쿠폰 카드 쪽에서만 불린다 */
 :root { --bg: #f2f4f6; }
+/* 카드 간격: 좌우와 상하를 같게, 조금 넓게(2026-10-07 사용자). 모바일 16px, 두 열 이상(PC) 20px */
+.brand-grid { gap: 16px; }
+@media (min-width: 640px) { .brand-grid { gap: 20px; } }
