@@ -13,6 +13,9 @@ import { optedOut } from './privacy.js'
 import { markVariantOnRoot } from './variant.js'
 import { getAnalyticsContext } from './analytics-context.js'
 import './App.css'
+// 쿠폰 카드 스타일은 처음부터, 공통 스타일 뒤에 싣는다. 지연 로드 덩어리에 두면 서버 렌더 첫 화면이 스타일 없이 떠 화살표와 로고가 크게 나왔다(2026-10-07).
+// 규칙은 .cc 안이나 html:has(.cc)로 묶어 운영 카드에 안 닿는다
+import './styles/coupon-card.css'
 
 function configured(value) {
   return typeof value === 'string' && value.trim() !== ''

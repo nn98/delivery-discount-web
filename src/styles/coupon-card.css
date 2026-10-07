@@ -339,4 +339,7 @@ html:has(.cc) { --bg: #f2f4f6; }
 .cc--compact { cursor: pointer; }
 .cc--compact > .cc-hint { width: auto; padding: 0 14px; }
 .cc--compact > .cc-deal--main { height: calc((var(--colw) - 30px) * 11 / 37 + 24px); align-items: flex-start; }
-.cc--compact > .cc-alts { align-self: end; height: 34px; margin: 0 0 calc(-1 * var(--pad)); padding-right: 80px; display: flex; align-items: center; }
+.cc--compact > .cc-alts { align-self: end; height: 34px; margin: 0 var(--pad) calc(-1 * var(--pad)); padding-right: 66px; display: flex; align-items: center; }
+.cc--compact > .cc-hint { padding: 0 10px; gap: 2px; }
+/* 좁은 화면(한 열)에서는 서브 오퍼 셋과 자세히 단추가 한 줄에 들어가게 서브 오퍼 글자와 간격을 줄인다 */
+@container (max-width: 619px) { .cc--compact .cc-alts-in { gap: 8px; } .cc--compact .cc-alt { font-size: 12px; } }
