@@ -1,3 +1,4 @@
+import { useBackClose } from './backClose.js'
 // 메인 화면 A안 16차 브랜드 카드(쿠폰 티켓형). 표시 규칙: tracker docs/superpowers/specs/2026-10-03-home-a-display-model.md
 // 쿠폰 구조는 늘 같다(앱 아이콘, 금액, 최소주문, 이동 꼭지). 배지와 계산식은 쿠폰 밖(또는 남는 칸)에 둔다.
 // 폭을 재는 코드를 두지 않는다(총 차단 시간). 이름 크기는 글자 수로, 절취 홈은 CSS 마스크로 판다.
@@ -65,12 +66,17 @@ const LinkIcon = () => (
 
 // 쿠폰(메인, 캐러셀, 펼친 쿠폰 모두 같은 꼴과 크기, 17차 시안): 왼쪽 앱 로고, 금액과 최소주문, 오른쪽 앱 색 이동 꼭지(링크 아이콘).
 // 배지는 쿠폰 안에 두지 않는다(브랜드명 옆, 캐러셀이면 보이는 쿠폰 것).
-function Coupon({ o, brand, position, best, where = 'main', slot, expanded, ...rest }) {
+function Coupon({ o, brand, position, best, where = 'main', slot, expanded, tags = null, ...rest }) {
   return (
     // 감싸개: 쿠폰(마스크로 홈을 판다)은 바깥으로 삐져나온 것을 잘라서, 업데이트 탭은 감싸개에 단다
     <div className="cc-tkw">
     {isUpdated(o) && <span className="cc-upd">신규 할인</span>}
-    <div className="cc-ticket" data-platform={o.platform} {...rest}>
+    {/* 쿠폰 어디를 눌러도 앱 링크로(2026-10-07 사용자): 이동 꼭지(a)를 대신 누른다 — 클릭 기록과 쿠팡이츠 안내가 그대로 간다.
+        카드의 나머지 영역은 하단 시트를 연다(onCardClick). */}
+    <div className="cc-ticket" data-platform={o.platform} {...rest}
+         onClick={(e) => { if (e.target.closest('a')) return; e.stopPropagation(); e.currentTarget.querySelector('a.cc-stub')?.click() }}>
+      {/* tags: 하단 시트에서는 배지를 쿠폰 안 위쪽에 따로 둔다. 금액·최소주문은 세로 가운데 그대로 */}
+      {tags && <span className="cc-ticket__tags">{tags}</span>}
       <span className="cc-info">
         <PlatformBadge platformKey={o.platform} brand={brand.name} />
         <span className="cc-num"><Amt offer={o} /><Min value={o.minOrderAmount} /></span>
@@ -236,6 +242,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
   // 카드 아무 곳이나 누르면 펼치기/접기. 링크, 숨기기 버튼, 캐러셀 끌기는 제외한다.
   // 하단 시트 안(2026-10-06 시안): 카드 안에서 펼치지 않고 아래에서 올라오는 시트로 상세를 연다. 카드 높이는 그대로.
   const [sheet, setSheet] = useState(false)
+  useBackClose(sheet, () => setSheet(false))
   // 시트 끌기(2026-10-07 사용자): 시트 어디를 잡아도 아래로 끌면 시트 전체가 따라 내려온다.
   // 본문이 스크롤된 상태면 먼저 본문을 맨 위까지 올린 뒤부터 시트가 움직인다. 놓았을 때 120px(또는 빠르게 40px)을
   // 넘었으면 닫고, 아니면 제자리로. 손가락은 터치 이벤트로 받는다 — 포인터 이벤트는 브라우저가 스크롤로 가져가며
@@ -428,8 +435,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
                 const hasTbl = tb.rows.length > 0 || tb.note || f
                 return (
                   <div key={offerKey(o)} className="cc-sheet__item">
-                    <Tags o={o} />
-                    <Coupon o={o} brand={brand} position={position} best={i < best.length} where="sheet" slot={i + 1} expanded />
+                    <Coupon o={o} brand={brand} position={position} best={i < best.length} where="sheet" slot={i + 1} expanded tags={<Tags o={o} />} />
                     {hasTbl && <DetailTable t={tb} i={0} fx={f} />}
                   </div>
                 )
