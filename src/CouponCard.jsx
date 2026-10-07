@@ -374,7 +374,8 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
         </div></div>
       )}
       {/* 접힌 하위 라벨(쿠폰 아래 한 줄, 최대 3개). 펼칠 때 먼저 사라지고(같은 grid 기법), 접으면 다시 나타난다. */}
-      {rest.length > 0 && (
+      {/* 서브 오퍼가 없어도 줄은 둔다 — 모든 카드가 같은 높이, 자세히 단추가 쿠폰에 안 겹친다(2026-10-07) */}
+      {(
         <div className="cc-alts"><div className="cc-alts-in">
           {rest.slice(0, 3).map((o) => (
             <span key={offerKey(o)} className={`cc-alt${o.soldOut ? ' cc-alt--sold' : ''}`}><PlatformBadge platformKey={o.platform} brand={brand.name} />{amountText(o)}</span>
