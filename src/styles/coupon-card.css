@@ -356,3 +356,4 @@ html:has(.cc) { --bg: #f2f4f6; }
   .cc--compact .cc-alts-in { gap: 6px; }
   .cc--compact .cc-alt { font-size: 11.5px; }
 }
+.cc--compact > .cc-alts { margin-top: 8px !important; } /* 서브 오퍼 유무와 상관없이 같은 간격 */
