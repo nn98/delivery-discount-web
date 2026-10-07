@@ -343,3 +343,10 @@ html:has(.cc) { --bg: #f2f4f6; }
 .cc--compact > .cc-hint { padding: 0 10px; gap: 2px; }
 /* 좁은 화면(한 열)에서는 서브 오퍼 셋과 자세히 단추가 한 줄에 들어가게 서브 오퍼 글자와 간격을 줄인다 */
 @container (max-width: 619px) { .cc--compact .cc-alts-in { gap: 8px; } .cc--compact .cc-alt { font-size: 12px; } }
+/* 2026-10-07 사용자 정정: 서브 오퍼는 원래 자리(쿠폰 바로 아래, 일정 간격). 쿠폰 영역은 쿠팡이츠 안내와 캐러셀 점까지 들어갈 높이로 고정해
+   어느 카드든 서브 오퍼가 같은 자리에 온다. 카드 아래 끝과도 같은 간격(서브 오퍼 줄 = 자세히 단추 높이 40px, 세로 가운데가 맞는다). */
+.cc--compact { min-height: 0 !important; padding-bottom: 0; }
+.cc--compact > .cc-deal--main { height: calc((var(--colw) - 30px) * 11 / 37 + 28px); }
+.cc--compact > .cc-alts { align-self: start; height: 40px; margin: 8px var(--pad) 0; padding-right: 104px; }
+.cc--compact > .cc-hint { height: 40px; padding: 0 20px; font-size: 14px; gap: 4px; }
+.cc--compact > .cc-hint svg { width: 14px; height: 14px; }
