@@ -434,7 +434,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
             </div>
             <div className="cc-sheet__body">
               {[...best, ...rest].map((o, i) => {
-                // 중복 할인 계산식은 시트에서 빼다(2026-10-07 사용자: 표 첫 줄에 이미 계산이 보인다)
+                // 중복 할인 계산식은 시트에서 뺐다(2026-10-07 사용자: 표 첫 줄에 이미 계산이 보인다)
                 const tb = conditionTable(o)
                 const hasTbl = tb.rows.length > 0 || tb.note
                 return (
