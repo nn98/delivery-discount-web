@@ -9,7 +9,6 @@ export const LOGO_MANIFEST = {
   "BBQ": "e18b3347",
   "CU": "fc976f47",
   "GS25": "63731fc6",
-  "GS더프레시": "4264a316",
   "KFC": "dce2058f",
   "bhc": "78343a38",
   "가마치통닭": "caa13dbf",

@@ -60,7 +60,8 @@
 .cc-tags .chip-tags > *::after { content: ''; position: absolute; right: 0; bottom: 0; width: 6px; height: 6px; background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, .18) 50%); border-bottom-right-radius: 3px; }
 .cc-deal-col { width: var(--tk-w); display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .cc-deal-col .cc-tkw { width: 100%; }
-.cc-amt { display: flex; align-items: baseline; font-size: clamp(25px, 7.7vw, 31px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 2026-10-07: flex였을 때 iOS 사파리가 글꼴 로딩 뒤 금액 글자 칸 폭을 다시 안 재서 "원 할인"과 겹쳤다. 줄글 흐름으로 둔다 */
+.cc-amt { display: block; font-size: clamp(25px, 7.7vw, 31px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cc-amt small { font-size: .6em; font-weight: 700; margin-left: 1px; }
 .cc-amt s { text-decoration-thickness: 2px; }
 .cc-soldout { font-style: normal; font-size: clamp(12.6px, 3.6vw, 14.4px); font-weight: 600; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: #eceae6; color: #6b6a66; letter-spacing: 0; vertical-align: middle; }
@@ -253,12 +254,12 @@
    남는 공간은 자세히 보기 위에 둔다. 펼친 카드는 높이 고정을 푼다. */
 .brand-grid { container-type: inline-size; }
 /* 한 줄에 카드 하나일 때만(목록 폭 = 카드 폭). PC 여러 열에서 100cqw는 목록 전체 폭이라 카드가 두 배로 커졌다(2026-10-07) — 여러 열은 grid 행이 높이를 맞춘다 */
-@container (max-width: 613px) { .cc--compact:not(.cc--open) { min-height: calc((100cqw - 30px) * 11 / 37 + 170px); grid-template-rows: auto auto auto auto 1fr; } }
+@container (max-width: 613px) { .cc--compact:not(.cc--open) { min-height: calc((100cqw - 30px) * 11 / 37 + 214px); grid-template-rows: auto auto auto auto 1fr; } }
 .cc--compact > .cc-hint { align-self: end; }
 .ce-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* 포인트 색(--sale)을 몇 곳에만 절제해서(2026-10-06 사용자): 5천원 이상만 스위치 켜짐, 고른 분류 밑줄, 신규 탭 개수 */
-html:has(.cc) .quick-bar__switch[aria-checked="true"] .quick-bar__switch-track { background: var(--sale); }
-html:has(.cc) .menu-bar__item--on::after { background: var(--sale); }
+.quick-bar__switch[aria-checked="true"] .quick-bar__switch-track { background: var(--sale); }
+.menu-bar__item--on::after { background: var(--sale); }
 
 /* 하단 시트(상세): 어두운 막 + 아래에서 올라오는 흰 판, 윗모서리 20px, 손잡이 36x4 */
 .cc-sheet-dim { position: fixed; inset: -120px 0 0; z-index: 90; background: rgba(0, 0, 0, .5); animation: ce-dim-in 150ms ease; }
@@ -302,7 +303,7 @@ html:has(.cc) .menu-bar__item--on::after { background: var(--sale); }
 .cc .offer__range-badge--optimal::before, .cc-sheet .offer__range-badge--optimal::before { content: none; }
 /* 머리: 이름·배지 각 2px 키우고 간격 2px 더(2026-10-07 사용자) — 로고(72px)보다 조금 작은 묶음 */
 .cc--compact .cc-nm { font-size: max(16px, calc(22px - var(--cut, 0px))); }
-.cc--compact .cc-head { row-gap: 4px; }
+.cc--compact .cc-head { row-gap: 6px; }
 .cc .cc-tags .chip-tags > *, .cc--compact .cc-tags .chip-tags > * { height: 24px; font-size: 14px; }
 .cc .offer__range-badge--optimal::before { content: none; }
 /* 시트: 오퍼마다 구분선(배지 줄 + 쿠폰 + 표가 한 묶음임을 보이게), 채널 배지는 회색 시트 바탕과 구분되게 흰 바탕+테두리(2026-10-07 사용자) */
@@ -320,41 +321,20 @@ html:has(.cc) .menu-bar__item--on::after { background: var(--sale); }
 .cc-sheet .offer__status-badge:not(.offer__status-badge--membership) { background: #ebedf0; color: var(--text-muted); }
 .cc-combo { cursor: pointer; }
 /* 쿠폰 카드 쪽만 토스처럼 옅은 회색 바탕. 이 파일은 쿠폰 카드 쪽에서만 불린다 */
-html:has(.cc) { --bg: #f2f4f6; }
-/* 카드 간격: 좌우와 상하를 같게, 조금 넓게(2026-10-07 사용자). 모바일 16px, 두 열 이상(PC) 20px */
-.brand-grid:has(.cc) { gap: 16px; }
-@media (min-width: 640px) { .brand-grid:has(.cc) { gap: 20px; } }
-/* 카드 크기 일원화(2026-10-07 사용자): 자세히 보기는 줄을 차지하지 않고 오른쪽 아래 모서리에 띄운다.
-   목록의 모든 카드는 같은 높이(가장 큰 카드 기준, grid 행 1fr) — 모바일 한 열, PC 여러 열 모두. */
-.cc--compact { position: relative; }
-.cc--compact > .cc-hint { position: absolute; right: 0; bottom: 0; margin: 0; }
-.cc--compact { --colw: 100cqw; min-height: calc((var(--colw) - 30px) * 11 / 37 + 170px); }
-@container (min-width: 620px) { .cc--compact { --colw: calc((100cqw - 20px) / 2); } }
-@container (min-width: 940px) { .cc--compact { --colw: calc((100cqw - 40px) / 3); } }
-/* 쿠팡이츠 안내와 서브 오퍼 사이를 좁힌다 */
-.cc > .cc-deal:has(.ce-note) + .cc-alts { margin-top: 2px; }
-.cc .ce-note { margin-top: 4px; }
-/* 2026-10-07 사용자: 자세히로 줄이고 폭은 글자에 맞춤. 카드 전체 누르기. 쿠폰 영역 높이를 고정(쿠팡이츠 안내 한 줄 포함)해
-   캐러셀로 쿠폰이 좁아져도 서브 오퍼가 따라 올라오지 않게, 서브 오퍼 줄은 자세히 단추와 같은 높이로 맨 아래 */
-.cc--compact { cursor: pointer; }
-.cc--compact > .cc-hint { width: auto; padding: 0 14px; }
-.cc--compact > .cc-deal--main { height: calc((var(--colw) - 30px) * 11 / 37 + 24px); align-items: flex-start; }
-.cc--compact > .cc-alts { align-self: end; height: 34px; margin: 0 var(--pad) calc(-1 * var(--pad)); padding-right: 66px; display: flex; align-items: center; }
-.cc--compact > .cc-hint { padding: 0 10px; gap: 2px; }
-/* 좁은 화면(한 열)에서는 서브 오퍼 셋과 자세히 단추가 한 줄에 들어가게 서브 오퍼 글자와 간격을 줄인다 */
-@container (max-width: 619px) { .cc--compact .cc-alts-in { gap: 8px; } .cc--compact .cc-alt { font-size: 12px; } }
-/* 2026-10-07 사용자 정정: 서브 오퍼는 원래 자리(쿠폰 바로 아래, 일정 간격). 쿠폰 영역은 쿠팡이츠 안내와 캐러셀 점까지 들어갈 높이로 고정해
-   어느 카드든 서브 오퍼가 같은 자리에 온다. 카드 아래 끝과도 같은 간격(서브 오퍼 줄 = 자세히 단추 높이 40px, 세로 가운데가 맞는다). */
-.cc--compact { min-height: 0 !important; padding-bottom: 0; }
-.cc--compact > .cc-deal--main { height: calc((var(--colw) - 30px) * 11 / 37 + 28px); }
-.cc--compact > .cc-alts { align-self: start; height: 40px; margin: 8px var(--pad) 0; padding-right: 104px; }
-.cc--compact > .cc-hint { height: 40px; padding: 0 20px; font-size: 14px; gap: 4px; }
-.cc--compact > .cc-hint svg { width: 14px; height: 14px; }
-@container (max-width: 619px) {
-  .cc--compact > .cc-hint { padding: 0 16px; }
-  .cc--compact > .cc-alts { padding-right: 92px; }
-  .cc--compact .cc-alts-in { gap: 6px; }
-  .cc--compact .cc-alt { font-size: 11.5px; }
-}
-.cc--compact > .cc-alts { margin-top: 8px !important; } /* 서브 오퍼 유무와 상관없이 같은 간격 */
-@container (max-width: 619px) { .cc--compact > .cc-alts { padding-right: 80px; } } /* 자세히(89px)는 카드 끝, 서브 오퍼 줄은 카드 안쪽 14px에서 끝난다 */
+:root { --bg: #f2f4f6; }
+/* 2026-10-07 사용자: 하단 시트 오른쪽 스크롤 막대는 숨긴다(스크롤은 된다) */
+.cc-sheet__body { scrollbar-width: none; }
+.cc-sheet__body::-webkit-scrollbar { display: none; }
+/* 2026-10-07 사용자: 쿠폰 아래 글자와 배지 1.4배(서브 오퍼 14.5 -> 20.3px, 배지 21 -> 29.4px, 쿠팡이츠 안내 12.5 -> 17.5px) */
+.cc .ce-note { font-size: 17.5px; }
+/* 2026-10-07 사용자: 모바일과 PC가 같은 비율로. 카드 폭 기준(cqw, 360px 화면의 카드 328px에서 위 px 값과 같다) */
+.cc--compact { container-type: inline-size; }
+.cc .ce-note { font-size: 5.34cqw; }
+/* 2026-10-07 사용자: 1.4배는 카드 폭을 넘어 1.2배로(서브 오퍼 17.4px, 배지 25.2px, 안내 15px 상당, 카드 폭 비율) */
+.cc .ce-note { font-size: 4.57cqw; }
+.cc .ce-note { font-size: 4.1cqw; } /* 안내 한 줄이 다 보이게(4.57cqw는 끝 몇 글자가 잘렸다) */
+.cc .ce-note { font-size: 3.75cqw; } /* 4.1cqw도 '돼요.'가 잘렸다 */
+/* 2026-10-07 사용자: 카드 안쪽 여백을 조금 넓히고, 단일 쿠폰만 96%(캐러셀 쿠폰은 그대로). 자세히 보기 왼쪽 끝은 줄어든 쿠폰의 구분선에 다시 맞춘다 */
+.cc--compact { --pad: 17px; }
+.cc--compact .cc-main-in > .cc-tkw { width: calc((100% - 30px) * .96); }
+.cc--compact > .cc-hint { width: calc((100% - 30px) * .96 * .294 + (100% - (100% - 30px) * .96) / 2); }

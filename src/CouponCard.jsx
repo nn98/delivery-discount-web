@@ -10,7 +10,8 @@ import { brandCardId } from './BrandCard.jsx'
 import { amountText, badgesOf, isUpdated, channelOf, conditionTable, shortBrandName, formulaOf, minLabel, nameCutPx, splitOffers } from './couponModel.js'
 import { offerKey } from './filters.js'
 import { BrandLogo, PlatformBadge } from './logos.jsx'
-import { COUPANGEATS_HINT, offerClickProps, offerLink, openWithNotice } from './offerLink.js'
+import { offerClickProps, offerLink, openWithNotice } from './offerLink.js'
+import './styles/coupon-card.css'
 
 const Up = () => (
   <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2l4 5H7.2v3H4.8V7H2z" fill="currentColor" /></svg>
@@ -82,7 +83,7 @@ function Coupon({ o, brand, position, best, where = 'main', slot, expanded, tags
       </span>
       <OfferLinkA offer={o} brand={brand} position={position} best={best} where={where} slot={slot} expanded={expanded} className="cc-stub"><LinkIcon /></OfferLinkA>
     </div>
-    {o.platform === 'coupangeats' && <p className="ce-note">{COUPANGEATS_HINT}</p>}
+    {/* 쿠팡이츠 안내는 이동 전 토스트로 한다(2026-10-07 사용자: 하단 문구 뺌) */}
     </div>
   )
 }
@@ -374,8 +375,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
         </div></div>
       )}
       {/* 접힌 하위 라벨(쿠폰 아래 한 줄, 최대 3개). 펼칠 때 먼저 사라지고(같은 grid 기법), 접으면 다시 나타난다. */}
-      {/* 서브 오퍼가 없어도 줄은 둔다 — 모든 카드가 같은 높이, 자세히 단추가 쿠폰에 안 겹친다(2026-10-07) */}
-      {(
+      {rest.length > 0 && (
         <div className="cc-alts"><div className="cc-alts-in">
           {rest.slice(0, 3).map((o) => (
             <span key={offerKey(o)} className={`cc-alt${o.soldOut ? ' cc-alt--sold' : ''}`}><PlatformBadge platformKey={o.platform} brand={brand.name} />{amountText(o)}</span>
@@ -383,7 +383,7 @@ function CouponCard({ brand, position, highlighted, onInteract, include = null, 
         </div></div>
       )}
       {canExpand && <button type="button" className="cc-hint" aria-haspopup="dialog" aria-expanded={sheet}>
-        자세히
+        자세히 보기
         <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>}
       {onHide && (
