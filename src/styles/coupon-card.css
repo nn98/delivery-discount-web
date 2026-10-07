@@ -1,113 +1,122 @@
-/* 메인 화면 A안 쿠폰 브랜드 카드. 절취 홈은 mask(요소 추가 없음), 그림자는 감싸는 .cc-deal의 drop-shadow. 폭을 재는 코드는 없다. */
+/* 메인 화면 A안 쿠폰 브랜드 카드. 절취 홈은 mask(요소 추가 없음), 그림자는 감싸는 .cc-deal의 drop-shadow. 폭을 재는 코드는 없다.
+   상세는 카드 안에서 펼치지 않고 하단 시트(.cc-sheet)로 연다. */
 .cc {
   --cc-edge: color-mix(in srgb, var(--text) 22%, transparent);
-  --logo: clamp(52px, 16vw, 64px); --tk-h: clamp(128px, 36vw, 140px); /* 위아래 여백 각 18px 늘림 */ --tk-w: calc(100% - 30px); /* 쿠폰 폭 = 쿠폰 줄 폭 - 2 x (이웃 8px + 간격 7px), 가운데 */ --stub: clamp(72px, 21vw, 84px);
-  --cc-fs-sm: clamp(10.5px, 3vw, 12px); --cc-fs-min: clamp(11px, 3.1vw, 12.5px);
+  /* 로고는 배지 1.3배에 맞춰 키워 머리 블록 높이를 맞춘다(2026-10-06 사용자). --tk-h는 쿠폰 줄 자리 미리 확보용 */
+  --logo: 72px; --tk-h: 96px; --tk-w: calc(100% - 30px); /* 쿠폰 폭 = 쿠폰 줄 폭 - 2 x (이웃 8px + 간격 7px), 가운데 */
+  --cc-fs-sm: clamp(10.5px, 3vw, 12px);
   position: relative; background: var(--surface); color: var(--text);
-  border: 1px solid var(--border); border-radius: 12px;
+  /* 토스 요소(2026-10-06 사용자): 카드 테두리 대신 아주 얕은 그림자 */
+  border: 0; border-radius: 14px; box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 2px 8px rgba(0, 0, 0, .03);
   /* 좌우 안쪽 여백은 카드가 아니라 내용이 갖는다: 쿠폰 줄(캐러셀)만 카드 좌우 끝까지 쓴다(배너 캐러셀과 같은 꼴) */
-  --pad: clamp(14px, 4.4vw, 18px); padding: var(--pad) 0;
-  display: grid; grid-template-columns: calc(var(--logo) + var(--pad)) minmax(0, 1fr); gap: 0 clamp(10px, 3.2vw, 14px); /* 세로 간격은 gap이 아니라 아래 항목의 margin-top으로(0높이 래퍼가 간격을 남기지 않게) */
+  --pad: 14px; padding: var(--pad) 0;
+  display: grid; grid-template-columns: calc(var(--logo) + var(--pad)) minmax(0, 1fr); gap: 0 clamp(10px, 3.2vw, 14px); /* 세로 간격은 gap이 아니라 아래 항목의 margin-top으로 */
+  /* 카드 높이를 모두 같게(2026-10-06 사용자): 가장 큰 경우(캐러셀 + 쿠팡이츠 안내 + 하위 오퍼)로 고정한다.
+     쿠폰 높이가 폭 비율이라 목록 폭(100cqw) 기준으로 계산: 쿠폰 = (카드 폭 - 30px) x 11/37, 나머지 고정 214px(360px 실측).
+     남는 공간은 자세히 보기 위에 둔다. */
+  min-height: calc((100cqw - 30px) * 11 / 37 + 214px); grid-template-rows: auto auto auto auto 1fr;
   content-visibility: auto; contain-intrinsic-size: auto 200px;
 }
+.brand-grid { container-type: inline-size; }
 /* 투명 로고가 다크 모드에서도 보이게 바탕은 늘 흰색. 래퍼 없이 brand-logo가 곧 로고 칸 */
-.cc > .brand-logo { grid-column: 1; grid-row: 1; margin-left: var(--pad); width: var(--logo); height: var(--logo); border-radius: 12px; background: #fff; border: 1px solid var(--border); }
+.cc > .brand-logo { grid-column: 1; grid-row: 1; margin-left: var(--pad); width: var(--logo); height: var(--logo); border-radius: 10px; background: #fff; border: 1px solid var(--border); }
 .cc > .brand-logo img { object-fit: contain; }
-.cc .platform-badge { width: var(--pb, 20px); height: var(--pb, 20px); border-radius: calc(var(--pb, 20px) * .28); flex: none; }
+.cc .platform-badge, .cc-sheet .platform-badge { width: var(--pb, 20px); height: var(--pb, 20px); border-radius: calc(var(--pb, 20px) * .28); flex: none; }
 
-/* 머리: 로고 오른쪽 고정 크기 블록(높이 = 로고). 세 줄 고정 칸: 이름, 배지, 설명/계산식. 비어도 자리 유지, 넘치면 말줄임 */
-.cc-head { grid-column: 2; grid-row: 1; margin-right: var(--pad); height: var(--logo); min-width: 0; padding-right: 28px; display: grid; grid-template-rows: 58% 42%; align-items: center; overflow: hidden; }
+/* 머리: 로고 오른쪽 고정 크기 블록(높이 = 로고). 이름과 배지를 위로 붙여 쌓고 세로 가운데(2026-10-06~07 사용자) */
+.cc-head { grid-column: 2; grid-row: 1; margin-right: var(--pad); height: var(--logo); min-width: 0; padding: 0 28px 0 0; box-sizing: border-box; display: grid; grid-template-rows: auto auto; align-items: center; align-content: center; row-gap: 4px; overflow: hidden; }
 .cc-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cc-head button { all: unset; cursor: pointer; flex: 0 1 auto; min-width: 0; display: block; }
-.cc-head button:focus-visible, .cc-hint:focus-visible, .cc-fold:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.cc-head .cc-fx { grid-row: 2; }
-.cc-nm { display: block; font-size: max(14px, calc(clamp(18px, 5.4vw, 20px) - var(--cut, 0px))); font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cc-tags { display: flex; align-items: center; gap: 4px; }
+.cc-head button:focus-visible, .cc > .cc-hint:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cc-nm { display: block; font-size: max(16px, calc(22px - var(--cut, 0px))); font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 2줄: 배지(예전 계산식 자리) */
+.cc-badges { grid-row: 2; min-width: 0; display: flex; align-items: center; line-height: 1.3; font-size: var(--cc-fs-sm); white-space: nowrap; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 
-.cc-fx { grid-row: 2; }
-.cc-nm { display: block; font-size: max(14px, calc(clamp(18px, 5.4vw, 20px) - var(--cut, 0px))); font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cc-tags { display: flex; align-items: center; gap: 4px; }
+/* 배지: 운영 탭 마크업, 납작한 배지(토스 요소) */
+.cc-tags { display: inline-flex; align-items: center; gap: 4px; flex: none; min-width: 0; }
+.cc-tags .chip-tags { position: static; display: flex; gap: 4px; padding: 0; transform: none; }
+.cc .cc-tags .chip-tags > *, .cc-sheet .cc-tags .chip-tags > * { position: relative; inset: auto; box-sizing: border-box; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; line-height: 1; letter-spacing: .01em; padding: 0 7px; border: 0; border-radius: 6px; box-shadow: none; white-space: nowrap; transform: none; }
+/* 브랜드 카드 머리 배지는 조금 크게(2026-10-07 사용자) */
+.cc .cc-tags .chip-tags > * { height: 24px; font-size: 14px; line-height: 16px; letter-spacing: 0; }
+.cc .cc-tags .chip-tags > *::after, .cc .cc-tags .chip-tags > *::before, .cc-sheet .cc-tags .chip-tags > *::after { content: none; }
+.cc .offer__status-badge:not(.offer__status-badge--membership) { background: var(--bg); color: #4e5968; }
+/* 시트 채널 배지는 회색 시트 바탕과 구분되게, 상세 표 줄의 채널 배지와 같은 색(2026-10-07 사용자) */
+.cc-sheet .offer__status-badge:not(.offer__status-badge--membership) { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text-muted); box-shadow: none; }
+/* 중복 할인 배지: 옅은 주황 바탕 위 진한 주황(대비, 2026-10-07 Lighthouse). 윤기(::before, absolute)는 납작한 배지에서 뺀다 —
+   배지가 static이면 시트 전체 기준으로 그려져 시트 위쪽을 흰 반투명으로 덮었다(2026-10-07) */
+.cc .offer__range-badge--optimal, .cc-sheet .offer__range-badge--optimal { background: var(--sale-weak); color: #a83a00; border: 0; }
+.cc .offer__range-badge--optimal::before, .cc-sheet .offer__range-badge--optimal::before { content: none; }
 
-/* 배지 라벨. 색은 운영 칩과 같다 */
-.cc-tag { display: inline-flex; align-items: center; justify-content: center; gap: 3px; font-size: clamp(10px, 2.9vw, 11px); font-weight: 600; line-height: 1; border-radius: 5px; padding: 1px 6px; white-space: nowrap; background: color-mix(in srgb, var(--text) 8%, var(--surface)); color: var(--text-muted); }
-.cc-tag--qualifier-random { background: #333; color: #fff; }
-.cc-tag--best-fit { background: #edf3ec; color: #346538; }
-.cc-tag--rate { background: #e3f2fd; color: #0a72c4; }
-.cc-tag--limited { background: #fff3da; color: #9a5b00; }
-.cc-tag--membership { background: #333; color: #fff; }
-.cc-tag--membership[data-platform="baemin"] { background: #0cefd3; color: #06382f; }
-.cc-tag--membership[data-platform="ddangyo"] { background: #f5a623; }
-.cc-tag--membership[data-platform="yogiyo"] { background: #d6004a; } /* #fa0050은 흰 글자 대비 4.0:1(2026-10-06) */
-.cc-fx { min-width: 0; line-height: 1.3; font-size: var(--cc-fs-sm); color: #346538; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
-:root[data-theme="dark"] .cc-head .cc-fx { color: #7fc48a; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cc-head .cc-fx { color: #7fc48a; } }
-
-/* 쿠폰 줄: 메인, 캐러셀, 펼친 쿠폰 모두 같은 폭(86%)과 높이. 마스크가 box-shadow를 자르므로 감싸는 요소에 drop-shadow */
+/* 쿠폰 줄. 마스크가 box-shadow를 자르므로 감싸는 요소에 drop-shadow */
 .cc-deal { grid-column: 1 / 3; display: flex; justify-content: center; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .12)) drop-shadow(0 6px 16px rgba(0, 0, 0, .10)); }
-.cc-ticket { position: relative; flex: none; width: var(--tk-w); height: var(--tk-h); min-width: 0; display: grid; grid-template-columns: 1fr var(--stub); border-radius: 12px;
+/* 자리 미리 확보: 쿠폰 줄 높이를 고정해 뒤늦게 그려져도 밀리지 않는다 */
+.cc > .cc-deal { grid-row: 2; margin-top: 10px; min-height: var(--tk-h); align-items: flex-start; }
+.cc-main-in { min-height: 0; flex: 1; min-width: 0; width: 100%; display: flex; justify-content: center; }
+.cc-ticket { position: relative; flex: none; width: var(--tk-w); min-width: 0; display: grid; border-radius: 12px;
   background: #fff; color: #1f1f1f; /* 정보 칸은 라이트, 다크 모두 흰색 */
+  /* 쿠폰 영역을 비율로(폭이 달라도 모양 유지, 2026-10-06 사용자): 가로:세로 = 37:11, 이동 영역 = 쿠폰 폭의 29.4%. 안 크기는 쿠폰 폭(cqw) 비율 */
+  height: auto; aspect-ratio: 37 / 11; --stub: 29.4%; grid-template-columns: 1fr var(--stub); container-type: inline-size;
   -webkit-mask: radial-gradient(circle 7px at calc(100% - var(--stub)) 0, #0000 98%, #000) top/100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--stub)) 100%, #0000 98%, #000) bottom/100% 51% no-repeat;
           mask: radial-gradient(circle 7px at calc(100% - var(--stub)) 0, #0000 98%, #000) top/100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - var(--stub)) 100%, #0000 98%, #000) bottom/100% 51% no-repeat; }
-/* 하단 검은 띠: 이동 영역을 뺀 정보 칸 아래(::after, 요소 없음) */
-.cc-ticket::after { content: ""; position: absolute; left: 0; bottom: 0; width: calc(100% - var(--stub)); height: 8px; background: #1f1f1f; border-bottom-left-radius: inherit; pointer-events: none; }
-/* 17차 시안: 왼쪽 앱 로고, 오른쪽에 금액과 최소주문 묶음. 아래 검은 띠 8px 위 영역에서 세로 가운데 */
-.cc-info { --ix: clamp(12px, 3.8vw, 16px); --pb: 53px; /* 로고 = 금액+최소주문 묶음 높이(360px 실측 53px) */ display: flex; align-items: center; gap: 12px; padding: 0 var(--ix) 8px; min-width: 0; overflow: hidden; }
+.cc .cc-ticket { border-radius: 10px; }
+/* 왼쪽 앱 로고, 오른쪽에 금액과 최소주문 묶음, 세로 가운데 */
+.cc-info { --pb: 12.45cqw; display: flex; align-items: center; gap: 10px; padding: 0 14px; min-width: 0; overflow: hidden; }
 .cc-num { display: grid; row-gap: 2px; min-width: 0; }
-/* 배지: 브랜드명 옆(캐러셀이면 보이는 쿠폰 것), 펼친 쿠폰은 쿠폰 바로 위. 운영 탭 마크업, 규격은 멤버십 포스트잇 하나로 통일 */
-.cc-tags { display: inline-flex; flex: none; min-width: 0; }
-.cc-tags .chip-tags { position: static; display: flex; gap: 4px; padding: 3px 2px; transform: none; }
-.cc-tags .chip-tags > * { position: relative; inset: auto; box-sizing: border-box; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: .62rem; font-weight: 800; line-height: 1; letter-spacing: .01em; padding: 0 .35rem; border: 0; border-radius: 3px 3px 5px 3px; box-shadow: 0 1px 1.5px rgba(0, 0, 0, .28); white-space: nowrap; transform: rotate(4deg); transform-origin: center; } /* 모든 배지는 오른쪽으로 기운다(신규와 같은 방향, 2026-10-05) */
-.cc-tags .chip-tags > *::after { content: ''; position: absolute; right: 0; bottom: 0; width: 6px; height: 6px; background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, .18) 50%); border-bottom-right-radius: 3px; }
-.cc-deal-col { width: var(--tk-w); display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-.cc-deal-col .cc-tkw { width: 100%; }
-.cc-amt { display: flex; align-items: baseline; font-size: clamp(25px, 7.7vw, 31px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 금액만 강조색(토스 요소) */
+.cc-amt { display: flex; align-items: baseline; font-size: 7.62cqw; color: var(--sale); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cc .cc-amt { line-height: 1.1; }
 .cc-amt small { font-size: .6em; font-weight: 700; margin-left: 1px; }
+.cc .cc-amt small { color: var(--ink); }
 .cc-amt s { text-decoration-thickness: 2px; }
 .cc-soldout { font-style: normal; font-size: clamp(12.6px, 3.6vw, 14.4px); font-weight: 600; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: #eceae6; color: #6b6a66; letter-spacing: 0; vertical-align: middle; }
-.cc-min { display: flex; align-items: center; gap: 3px; font-size: clamp(14.4px, 4.1vw, 16.2px); line-height: 1.3; color: #6b6a66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.cc-min { display: flex; align-items: center; gap: 3px; font-size: 3.96cqw; line-height: 1.3; color: #6b7684; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 .cc-min svg { width: 13px; height: 13px; flex: none; }
-/* 펼친 쿠폰의 배지: 금액 오른쪽, 이동 영역 왼쪽 빈칸에 라벨(쿠폰 높이를 밀지 않는다) */
-/* 이동 영역(링크): 앱 색 바탕, 가운데 흰 바탕 둥근 사각 앱 로고가 이동 버튼을 대신. 테두리 없음 */
 .cc [data-platform="baemin"] { --pc: #2ac1bc; }
 .cc [data-platform="coupangeats"] { --pc: #00a3e0; } /* 로고 색(2026-10-06 사용자) */
 .cc [data-platform="ddangyo"] { --pc: #ff5c00; }
 .cc [data-platform="yogiyo"] { --pc: #fa0050; }
-.cc-stub { display: flex; align-items: center; justify-content: center; text-decoration: none; background: var(--pc, #4a4a4e); color: #fff; }
-.cc-stub svg { width: 26px; height: 26px; }
+/* 이동 영역(링크): 검정에 아주 옅은 흰 광원(왼쪽 위)만(2026-10-06 사용자) */
+.cc-stub { display: flex; align-items: center; justify-content: center; text-decoration: none; background: radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 60%), #0c0c0d; color: #fff; box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .08); }
+.cc-stub svg { width: 8.08cqw; height: 8.08cqw; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .25)); }
+
+/* 쿠폰 감싸개(폭은 감싸개가 갖고 쿠폰은 꽉 채운다)와 업데이트 탭: 쿠폰 오른쪽 위에 걸친 납작한 배지 */
+.cc-tkw { position: relative; display: flex; flex-wrap: wrap; width: var(--tk-w); flex: none; }
+.cc-tkw > .cc-ticket { width: 100%; }
+.cc-upd { position: absolute; top: -9px; right: -6px; /* 링크 영역 오른쪽 위 모서리에 걸친다 */ z-index: 2; box-sizing: border-box; height: 22px; display: inline-flex; align-items: center; padding: 0 7px; font-size: 12px; font-weight: 600; line-height: 1; color: #fff; background: var(--sale); border-radius: 6px; white-space: nowrap; pointer-events: none; }
+.ce-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* 같은 금액이 여러 앱이면 우열을 꾸며내지 않는다: 쿠폰마다 하나씩 가로 캐러셀(CSS 스크롤 스냅). 그림자가 잘리지 않게 안쪽 여백을 둔다 */
-.cc-carousel-wrap { flex: 1; min-width: 0; container-type: inline-size; }
+.cc-carousel-wrap { position: relative; flex: 1; min-width: 0; min-height: var(--tk-h); container-type: inline-size; }
 /* 가운데 정렬 캐러셀: 간격 7px, 트랙 좌우 15px, 쿠폰 = 줄 폭 - 30px. 어느 쿠폰을 가운데 둬도 양쪽 15px, 이웃이 있으면 간격 7px 뒤 끝 8px만 보인다 */
-.cc-carousel { display: flex; gap: 7px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 18px calc(5cqw + 15px) 28px; margin: -18px 0 -28px; scrollbar-width: none; -ms-overflow-style: none; cursor: grab; }
+.cc-carousel { display: flex; gap: 7px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 12px calc(5cqw + 15px) 18px; margin: -12px 0 -18px; scrollbar-width: none; -ms-overflow-style: none; cursor: grab; }
 .cc-carousel::-webkit-scrollbar { display: none; }
 .cc-carousel.cc-dragging { scroll-snap-type: none; cursor: grabbing; user-select: none; }
-.cc-slide { flex: 0 0 calc(90cqw - 30px); /* 2026-10-05 사용자: 10% 줄여 양옆 노출을 5%씩 늘림 */ scroll-snap-align: center; position: relative; display: flex; }
+/* 슬라이드는 서로 키를 맞추지 않는다(안내 줄 있는 쿠팡이츠 슬라이드 때문에 옆 쿠폰이 늘어났다, 2026-10-06) */
+.cc-slide { flex: 0 0 calc(90cqw - 30px); /* 2026-10-05 사용자: 10% 줄여 양옆 노출을 5%씩 늘림 */ scroll-snap-align: center; position: relative; display: flex; align-items: flex-start; }
 .cc-slide .cc-tkw { width: 100%; }
-.cc-dots { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
+/* 점은 쿠폰과 하위 라벨 사이 여백 안에 겹쳐 둔다: 점 줄 자리를 따로 두지 않아 단독 쿠폰 카드에 빈칸이 안 생긴다(2026-10-05) */
+.cc-dots { position: absolute; left: 0; right: 0; bottom: -11px; display: flex; justify-content: center; gap: 5px; pointer-events: none; }
 /* 선 모양 점: 지금 쿠폰은 길게 */
 .cc-dots i { width: 6px; height: 4px; border-radius: 2px; background: var(--cc-edge); transition: width .25s ease, background-color .25s ease; }
 .cc-dots i.on { width: 18px; background: var(--text); }
 
-/* 하위 라벨 한 줄(쿠폰 아래). 펼치면 앱별 쿠폰이 대신하므로 CSS로만 숨긴다 */
-.cc-alts { grid-column: 1 / 3; margin-inline: var(--pad); opacity: 1; visibility: visible; transition: opacity 240ms ease 280ms, visibility 0s 280ms; }
-.cc-alts-in { display: flex; gap: clamp(9px, 3.3vw, 15.5px); min-width: 0; min-height: 0; overflow: hidden; }
-/* 펼치면 하위 라벨 줄은 높이를 그대로 두고 보이지만 않게 한다(카드가 줄었다 늘지 않게). 접을 때는 펼친 영역이 다 닫힌 뒤 240ms 페이드인 */
-.cc--open .cc-alts { opacity: 0; visibility: hidden; transition: opacity 140ms ease, visibility 0s 140ms; }
-.cc-alt { display: flex; align-items: center; gap: 5.5px; font-size: clamp(12.8px, 3.7vw, 14.4px); font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; --pb: 20px; }
+/* 하위 라벨 한 줄(쿠폰 아래). 없는 카드도 줄 자리를 둔다 */
+.cc > .cc-alts { grid-column: 1 / 3; grid-row: 4; margin: 18px var(--pad) 0; } /* 위 18px: 점(쿠폰 아래 11px)이 들어갈 틈 */
+.cc-alts-in { display: flex; align-items: center; gap: 14px; min-width: 0; min-height: 24px; overflow: hidden; }
+.cc-alt { display: flex; align-items: center; gap: 6px; font-size: 14.5px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; --pb: 21px; }
 .cc-alt--sold { text-decoration: line-through; }
-.cc-hint { all: unset; grid-column: 1 / 3; margin-inline: var(--pad); cursor: pointer; display: flex; align-items: center; justify-content: flex-end; gap: 5px; font-size: 14px; color: var(--text-muted); }
-.cc--open .cc-hint { opacity: 0; visibility: hidden; transition: opacity 140ms ease, visibility 0s 140ms; }
-.cc-hint { transition: opacity 240ms ease 280ms, visibility 0s 280ms; }
-.cc-fold { all: unset; margin-inline: var(--pad); cursor: pointer; display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 12px; font-size: 14px; color: var(--text-muted); }
-.cc-fold svg { width: 16px; height: 16px; }
-.cc-hint svg { width: 16px; height: 16px; transition: transform .28s cubic-bezier(.2, 0, 0, 1); }
-.cc--open .cc-hint svg { transform: rotate(180deg); }
+/* 자세히 보기: 카드 오른쪽 아래 모서리에 붙은 검은 영역(2026-10-06 사용자). 누르면 하단 시트.
+   왼쪽 끝은 쿠폰의 쿠폰/이동 구분선과 같은 x: 쿠폰 폭(카드 폭 - 30px)의 29.4% + 쿠폰 오른쪽 여백 15px */
+.cc > .cc-hint { all: unset; grid-column: 1 / 3; grid-row: 5; justify-self: end; align-self: end; box-sizing: border-box; width: calc((100% - 30px) * .294 + 15px); height: 34px; margin: 10px 0 calc(-1 * var(--pad)); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; background: #111; color: #fff; font-size: 12.5px; font-weight: 600; border-radius: 12px 0 12px 0; }
+.cc > .cc-hint svg { width: 13px; height: 13px; color: #fff; }
 .cc-hide { position: absolute; top: 8px; right: 8px; background: none; border: 0; color: var(--text-muted); opacity: .7; padding: 4px; cursor: pointer; }
+.cc--highlighted { outline: 2px solid #2f6fd1; outline-offset: 2px; }
+/* 숨긴 카드가 오른쪽 위로 쪼그라들며 사라진다(운영 카드와 같은 모션, 시간은 App.jsx의 값과 맞춘다) */
+.cc--leaving { pointer-events: none; transform-origin: 100% 0; animation: brand-card-leave .1s cubic-bezier(.55, 0, 1, .45) both; }
+@media (prefers-reduced-motion: reduce) { .cc--leaving { animation: none; opacity: 0; } }
 
-/* 펼침: 앱별 쿠폰(메인과 같은 꼴) + 바로 아래 작은 표 */
-.cc-more { grid-column: 1 / 3; min-width: 0; display: flex; flex-direction: column; }
-.cc-more > .cc-deal--more:not(:first-child) { margin-top: 14px; }
-.cc-tbl { grid-column: 1 / 3; margin: 8px var(--pad) 0; padding: 0 4px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 10px; font-size: 13.8px; line-height: 1.4; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+/* 상세 표(시트 안): 구간마다 한 줄 */
+.cc-tbl { margin: 2px 4px 0; padding: 0 4px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 10px; font-size: 13.8px; line-height: 1.4; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .cc-tbl > span { padding: 5px 0; border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent); min-width: 0; }
 .cc-tbl > span:first-child, .cc-tbl > span:nth-child(2), .cc-tbl > span:nth-child(3) { border-top: 0; }
 .cc-t-amt { color: var(--text); font-weight: 600; white-space: nowrap; }
@@ -115,203 +124,37 @@
 .cc-t-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .cc-t-chips .detail__channel { font-size: 12.6px; }
 .cc-t-min { white-space: nowrap; text-align: right; }
-.cc-t-head { grid-column: 1 / -1; display: flex; --pb: 18px; }
-.cc-tbl > .cc-t-head { border-top: 0; }
 .cc-t-fx { color: #346538; }
 .cc-tbl > .cc-t-note { grid-column: 1 / -1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cc--highlighted { outline: 2px solid #2f6fd1; outline-offset: 2px; }
-/* 숨긴 카드가 오른쪽 위로 쪼그라들며 사라진다(운영 카드와 같은 모션, 시간은 App.jsx의 값과 맞춘다) */
-.cc--leaving { pointer-events: none; transform-origin: 100% 0; animation: brand-card-leave .1s cubic-bezier(.55, 0, 1, .45) both; }
-@media (prefers-reduced-motion: reduce) { .cc--leaving { animation: none; opacity: 0; } }
-/* ?photo=1 시안: 정보 칸 오른쪽 빈 여백(금액 오른쪽, 이동 영역 왼쪽)에 음식 사진이 들어가고 왼쪽으로 흰색에 녹는다. 사진은 표본 하나(모든 쿠폰 같음, 브랜드별 실제 사진은 나중) */
-.cc--photo .cc-ticket::before { content: ""; position: absolute; top: 0; bottom: 7px; right: var(--stub); width: 34%; background: url("/sample/menu-sample.jpg") center / cover; -webkit-mask-image: linear-gradient(to right, transparent, #000 55%); mask-image: linear-gradient(to right, transparent, #000 55%); pointer-events: none; }
-.cc--photo .cc-info { position: relative; z-index: 1; }
-
-/* 펼침/접힘: grid 0fr 1fr 기법(CSS-Tricks, animationpatterns grid-row-accordion). 닫힌 상태(0fr)로 DOM에 먼저 들어가고 두 프레임 뒤 1fr로 바뀐다.
-   곡선은 높이가 한 프레임에 크게 뛰지 않도록 시작과 끝이 모두 완만한 곡선을 쓴다(M3 emphasized 곡선은 끝 프레임에서 200px 넘게 뛰었다, 실측). */
-.cc > .cc-deal, .cc > .cc-alts, .cc > .cc-hint { margin-top: 12px; }
-.cc > .cc-deal { grid-row: 2; }
-.cc > .cc-x:not(.cc-x--rest) { grid-row: 3; }
-.cc > .cc-alts { grid-row: 4; }
-.cc > .cc-hint { grid-row: 5; }
-/* 펼친 영역(나머지 쿠폰+접기)은 숨은 하위 라벨 줄과 "자세히 보기" 줄 자리(4~5행) 위에 겹쳐 시작한다: 두 행에 걸쳐 놓아 빈틈이 안 생긴다 */
-.cc > .cc-x--rest { grid-row: 4 / 6; }
-.cc-x { grid-column: 1 / 3; display: grid; grid-template-rows: 0fr; transition: grid-template-rows 260ms cubic-bezier(.4, 0, .2, 1); }
-.cc--open .cc-x { grid-template-rows: 1fr; transition: grid-template-rows 320ms cubic-bezier(.3, 0, .1, 1) 60ms; }
-.cc-x-in { min-height: 0; overflow: hidden; }
-.cc--settled .cc-x-in { overflow: visible; }
-.cc-x-in > .cc-tbl:first-child, .cc-more > .cc-deal--more:first-child { margin-top: 12px; }
-/* 안의 쿠폰과 표는 투명도와 6px 이동, 40ms씩 늦게 시작(끝날 때도 지연) */
-.cc-deal--more, .cc-tbl { opacity: 0; transform: translateY(-6px); transition: opacity 160ms ease calc(var(--i, 0) * 40ms), transform 160ms ease calc(var(--i, 0) * 40ms); }
-.cc--open .cc-deal--more, .cc--open .cc-tbl { opacity: 1; transform: none; transition: opacity 220ms ease calc(120ms + var(--i, 0) * 40ms), transform 260ms cubic-bezier(.2, 0, 0, 1) calc(120ms + var(--i, 0) * 40ms); }
-@media (prefers-reduced-motion: reduce) { .cc-x, .cc-alts, .cc-hint, .cc-deal--more, .cc-tbl, .cc-hint svg { transition: none !important; } }
-
-/* ?compact=1 시안: 17차 시안처럼 낮고 촘촘한 쿠폰(높이 76px 안팎, 앱 로고 34px, 금액 25px, 꼭지 58px, 아래 띠 없음) */
-.cc--compact { --tk-h: 96px; } /* 76 -> 84 -> 96px(2026-10-06 사용자: 이동 영역 99px와 비율) */
-.cc--compact .cc-info { --pb: 41px; /* 쿠폰 안 플랫폼 로고 34 -> 41px(1.2배) */ gap: 10px; padding: 0 14px; }
-.cc--compact .cc-ticket::after { display: none; }
-.cc--compact .cc-ticket { border-radius: 10px; }
-.cc--compact .cc-amt { font-size: 25px; line-height: 1.1; }
-.cc--compact .cc-min { font-size: 13px; }
-.cc--compact .cc-stub svg { width: 30px; height: 30px; } /* 20 -> 30px(1.5배, 2026-10-06 사용자) */
-.cc--compact .cc-carousel { padding-top: 12px; padding-bottom: 18px; margin: -12px 0 -18px; }
-.cc--compact > .cc-deal, .cc--compact > .cc-hint { margin-top: 10px; }
-.cc--compact > .cc-alts { margin-top: 18px; } /* 점(쿠폰 아래 11px)이 들어갈 틈 */
-.cc--compact { --logo: 72px; --pad: 14px; } /* 배지 1.3배에 맞춰 로고도 키워 머리 블록 높이를 맞춘다(2026-10-06 사용자) */
-.cc--compact > .brand-logo { border-radius: 10px; }
-.cc--compact .cc-nm { font-size: max(15px, calc(20px - var(--cut, 0px))); }
-.cc--compact > .cc-hint { font-size: 12.5px; margin-top: 6px; }
-.cc--compact .cc-hint svg { width: 13px; height: 13px; }
-.cc--compact .cc-alt { font-size: 13px; --pb: 18px; }
-
-/* 촘촘한 안 2차: 운영 브랜드 카드와 같은 테두리와 그림자, 꼭지 +8px, 접힌 하위 라벨 키움 */
-.cc--compact { --stub: 99px; /* 66->99px(1.5배, 2026-10-06 사용자) */ border: 1px solid color-mix(in srgb, var(--text) 14%, transparent); border-radius: 14px; box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 6px 16px rgba(0, 0, 0, .06); }
-.cc--compact .cc-alt { font-size: 14.5px; gap: 6px; --pb: 21px; }
-.cc--compact .cc-alts-in { gap: 14px; }
-/* 펼친 쿠폰의 배지는 쿠폰 위 모서리에 걸쳐 겹친다(운영 칩 탭처럼). 줄을 따로 쓰지 않는다 */
-.cc--compact .cc-deal-col { position: relative; }
-.cc--compact .cc-deal-col > .cc-tags { position: absolute; top: -10px; left: 8px; z-index: 2; }
-.cc--compact .cc-more > .cc-deal--more { margin-top: 18px; }
-/* 자리 미리 확보: 캐러셀(쿠폰 + 점 줄)과 하위 라벨 줄 높이를 고정해 뒤늦게 그려져도 밀리지 않는다 */
-/* 점은 쿠폰과 하위 라벨 사이 여백 안에 겹쳐 둔다: 점 줄 자리를 따로 두지 않아 단독 쿠폰 카드에 빈칸이 안 생긴다(2026-10-05) */
-.cc--compact .cc-carousel-wrap { position: relative; min-height: var(--tk-h); }
-.cc--compact .cc-dots { position: absolute; left: 0; right: 0; bottom: -11px; margin: 0; pointer-events: none; }
-.cc--compact .cc-alts-in { min-height: 24px; align-items: center; }
-.cc--compact > .cc-deal { min-height: var(--tk-h); align-items: flex-start; }
-.cc--compact { grid-template-rows: auto auto auto minmax(42px, auto) auto; } /* 하위 라벨이 없는 카드도 그 줄 자리를 둔다 */
-/* 동점 최고(캐러셀) 카드를 펼치면 지금 쿠폰은 제자리, 이웃 쿠폰과 점은 사라지고(자리는 유지) 나머지는 아래 목록으로 */
-.cc-main-in { min-height: 0; flex: 1; min-width: 0; width: 100%; display: flex; justify-content: center; }
-.cc-slide { transition: opacity 200ms ease; }
-.cc--stack.cc--open .cc-slide:not(.cc-slide--cur) { opacity: 0; }
-.cc--stack.cc--open .cc-carousel { overflow: hidden; touch-action: pan-y; }
-.cc--stack .cc-dots { transition: opacity 200ms ease; }
-.cc--stack.cc--open .cc-dots { opacity: 0; }
-/* 링크 꼭지: 앱 색 위에 옅은 그라데이션(위 살짝 밝게, 아래 살짝 어둡게). 접힌 귀는 넣지 않는다(2026-10-05 사용자). */
-/* 이동 영역: 검정에 아주 옅은 흰 광원(왼쪽 위)만(2026-10-06 사용자) */
-.cc-stub { background: radial-gradient(120% 90% at 18% 0%, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 60%), #0c0c0d; color: #fff; box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .08); }
-.cc-stub svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .25)); }
-
-/* 쿠폰 감싸개(폭은 감싸개가 갖고 쿠폰은 꽉 채운다)와 업데이트 탭: 쿠폰 오른쪽 위에 걸쳐 오른쪽으로 기운 포스트잇 */
-.cc-tkw { position: relative; display: flex; flex-wrap: wrap; width: var(--tk-w); flex: none; }
-.cc-tkw > .cc-ticket { width: 100%; }
-.cc-upd { position: absolute; top: -9px; right: -6px; /* 링크 영역 오른쪽 위 모서리에 걸친다 */ z-index: 2; box-sizing: border-box; height: 26px; display: inline-flex; align-items: center; padding: 0 .58rem; font-size: .86rem; font-weight: 800; line-height: 1; color: #fff; background: #2f6fd1; border-radius: 3px 3px 5px 3px; box-shadow: 0 1px 1.5px rgba(0, 0, 0, .28); white-space: nowrap; pointer-events: none; }
-.cc-upd::after { content: ''; position: absolute; right: 0; bottom: 0; width: 6px; height: 6px; background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, .18) 50%); border-bottom-right-radius: 3px; }
-
-/* 촘촘한 안의 펼친 상세 표: 120% 때 키운 글자(13.8px)가 76px 쿠폰보다 커 보였다. 쿠폰 최소주문 글자(13px)보다 한 단계 아래로 */
-.cc--compact .cc-tbl { font-size: 12.5px; column-gap: 8px; }
-.cc--compact .cc-tbl > span { padding: 4px 0; }
-.cc--compact .cc-t-amt small, .cc--compact .cc-t-chips .detail__channel { font-size: 11.5px; }
-.cc--compact .cc-tbl .cc-t-chips .detail__channel { font-size: 11px; line-height: 1.3; padding: 1px 6px; }
 
 /* 복합 배지 설명(i) */
 .cc-combo { gap: 4px; }
-.cc .cc-combo__btn, .cc-sheet .cc-combo__btn { box-sizing: border-box; width: 16px; height: 16px; border-radius: 50%; border: 1.3px solid currentColor; background: none; color: var(--text-muted); font: italic 700 10px/1 Georgia, serif; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+.cc .cc-combo__btn, .cc-sheet .cc-combo__btn { box-sizing: border-box; width: 14px; height: 14px; border-radius: 50%; border: 1.2px solid currentColor; background: none; color: inherit; font: italic 700 9px/1 Georgia, serif; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
 .cc-info__pop { position: fixed; z-index: 20; width: max-content; max-width: 240px; padding: 8px 10px; border-radius: 8px; background: #2b2b2f; color: #fff; font-size: 12px; font-weight: 500; line-height: 1.45; white-space: normal; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
 .cc-info__pop b { display: inline-block; margin-top: 4px; color: #b9f0c2; font-weight: 600; font-variant-numeric: tabular-nums; }
-.cc-fx.cc-badges { overflow: visible; color: inherit; display: flex; align-items: center; }
 
-/* 브랜드 카드 상단 배지 1.3배(2026-10-06 사용자) */
-.cc-tags .chip-tags > * { height: 23px; font-size: .8rem; padding: 0 .46rem; }
-.cc .cc-combo__btn, .cc-sheet .cc-combo__btn { width: 15px; height: 15px; font-size: 10px; color: inherit; }
-/* 이름과 배지를 위로 붙여 쌓는다(쿠폰과는 간격이 생긴다, 2026-10-06 사용자) */
-.cc-head { grid-template-rows: auto auto; align-content: center; row-gap: 2px; padding-top: 0; box-sizing: border-box; } /* 이름과 배지 간격 2px, 세로 가운데(2026-10-06) */ /* 로고·이름·배지를 한 머리로 묶어 세로 가운데(2026-10-06 사용자) */
-
-/* 쿠폰 영역을 비율로(폭이 달라도 모양 유지, 2026-10-06 사용자): 가로:세로 = 37:12, 이동 영역 = 쿠폰 폭의 1/3 */
-.cc--compact .cc-ticket { height: auto; aspect-ratio: 37 / 11; grid-template-columns: 1fr 29.4%; --stub: 29.4%; } /* 높이 -8px, 이동 영역 33.4 -> 29.4% */
-.cc--compact .cc-tags .chip-tags > * { height: 25px; transform: none; font-size: .88rem; padding: 0 .52rem; }
-/* 캐러셀 슬라이드는 서로 키를 맞추지 않는다(안내 줄 있는 쿠팡이츠 슬라이드 때문에 옆 쿠폰이 늘어났다, 2026-10-06) */
-.cc-slide { align-items: flex-start; }
-/* 쿠폰 안 크기를 쿠폰 폭 비율로(캐러셀처럼 쿠폰이 작아져도 모양이 같다, 2026-10-06 사용자). 기준: 폭 296px일 때 지금 크기 */
-.cc--compact .cc-ticket { container-type: inline-size; }
-.cc--compact .cc-amt { font-size: 6.35cqw; } /* 0.75배(2026-10-06) */
-.cc--compact .cc-min { font-size: 3.3cqw; }
-.cc--compact .cc-info { --pb: 12.45cqw; } /* 로고 0.9배 */
-.cc--compact .cc-stub svg { width: 10.1cqw; height: 10.1cqw; }
-/* 배지 줄 아래 끝을 로고 아래 끝에 맞춘다(배지 묶음 안쪽 여백 3px 몫) */
-
-/* ---- 토스 요소 가져오기(2026-10-06 사용자): 영역별 바탕색 차이, 납작한 배지, 금액 강조색, 카드 테두리 대신 아주 얕은 그림자 ---- */
-.cc, .cc--compact { border: 0; background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 2px 8px rgba(0, 0, 0, .03); }
-.cc .cc-tags .chip-tags { padding: 0; gap: 4px; }
-.cc .cc-tags .chip-tags > *, .cc--compact .cc-tags .chip-tags > * { height: 22px; padding: 0 7px; border-radius: 6px; font-size: 12px; font-weight: 600; line-height: 16px; letter-spacing: 0; transform: none; box-shadow: none; }
-.cc .cc-tags .chip-tags > *::after, .cc .cc-tags .chip-tags > *::before { content: none; }
-.cc .offer__status-badge:not(.offer__status-badge--membership) { background: var(--bg); color: #4e5968; }
-.cc .offer__range-badge--optimal, .cc-sheet .offer__range-badge--optimal { background: var(--sale-weak); color: var(--sale); border: 0; }
-.cc .cc-combo__btn, .cc-sheet .cc-combo__btn { width: 14px; height: 14px; font-size: 9px; border-width: 1.2px; color: inherit; }
-.cc-upd { height: 22px; padding: 0 7px; border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--sale); box-shadow: none; transform: none; }
-.cc-upd::after { content: none; }
-/* 금액만 강조색, 할인·최소주문 글자 1.2배, 이동 아이콘 0.8배 */
-.cc--compact .cc-amt { font-size: 7.62cqw; color: var(--sale); }
-.cc--compact .cc-amt small { color: var(--ink); }
-.cc--compact .cc-min { font-size: 3.96cqw; color: #6b7684; }
-.cc--compact .cc-stub svg { width: 8.08cqw; height: 8.08cqw; }
-/* 자세히 보기: 창의 최소화/최대화/닫기 묶음처럼 카드 오른쪽 아래 모서리에 붙은 검은 영역(2026-10-06 사용자).
-   왼쪽 끝은 쿠폰의 쿠폰/이동 구분선과 같은 x: 쿠폰 폭(카드 폭 - 30px)의 29.4% + 쿠폰 오른쪽 여백 15px */
-.cc--compact > .cc-hint { grid-column: 1 / 3; justify-self: end; box-sizing: border-box; width: calc((100% - 30px) * .294 + 15px); height: 34px; margin: 10px 0 calc(-1 * var(--pad)); justify-content: center; gap: 4px; padding-right: 0; background: #111; color: #fff; font-size: 12.5px; font-weight: 600; border-radius: 12px 0 12px 0; }
-.cc--compact > .cc-hint svg { color: #fff; }
-/* 카드 높이를 모두 같게(2026-10-06 사용자): 가장 큰 경우(캐러셀 + 쿠팡이츠 안내 + 하위 오퍼)로 고정한다.
-   쿠폰 높이가 폭 비율이라 목록 폭(100cqw) 기준으로 계산: 쿠폰 = (카드 폭 - 30px) x 11/37, 나머지 고정 214px(360px 실측).
-   남는 공간은 자세히 보기 위에 둔다. 펼친 카드는 높이 고정을 푼다. */
-.brand-grid { container-type: inline-size; }
-.cc--compact:not(.cc--open) { min-height: calc((100cqw - 30px) * 11 / 37 + 214px); grid-template-rows: auto auto auto auto 1fr; }
-.cc--compact > .cc-hint { align-self: end; }
-.ce-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* 포인트 색(--sale)을 몇 곳에만 절제해서(2026-10-06 사용자): 5천원 이상만 스위치 켜짐, 고른 분류 밑줄, 신규 탭 개수 */
 .quick-bar__switch[aria-checked="true"] .quick-bar__switch-track { background: var(--sale); }
 .menu-bar__item--on::after { background: var(--sale); }
 
 /* 하단 시트(상세): 어두운 막 + 아래에서 올라오는 흰 판, 윗모서리 20px, 손잡이 36x4 */
+/* 휴대폰에서 시트를 열 때 스크롤을 막으면 주소창 높이가 바뀌어 화면 위쪽이 막 밖으로 드러날 수 있다 — 막을 위로 넉넉히 늘린다 */
 .cc-sheet-dim { position: fixed; inset: -120px 0 0; z-index: 90; background: rgba(0, 0, 0, .5); animation: ce-dim-in 150ms ease; }
 .cc-sheet-wrap { position: fixed; inset: 0; z-index: 91; display: flex; align-items: flex-end; justify-content: center; }
 .cc-sheet { position: relative; width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column; background: var(--surface); border-radius: 20px 20px 0 0; padding: 8px 0 calc(16px + env(safe-area-inset-bottom, 0px)); animation: cc-sheet-up 220ms cubic-bezier(.2, 0, 0, 1); }
 @keyframes cc-sheet-up { from { transform: translateY(100%); } }
-.cc-sheet__grip { width: 36px; height: 4px; border-radius: 2px; background: #d1d6db; margin: 0 auto 8px; flex: none; }
+.cc-sheet__grip { width: 36px; height: 4px; border-radius: 2px; background: #d1d6db; background-clip: content-box; padding: 6px 0; margin: 0 auto 8px; flex: none; cursor: grab; }
 .cc-sheet__head { display: flex; align-items: center; gap: 10px; padding: 4px 20px 12px; flex: none; }
 .cc-sheet__head strong { font-size: 17px; font-weight: 700; flex: 1; min-width: 0; }
 .cc-sheet__head .brand-logo { width: 40px; height: 40px; border-radius: 10px; }
 .cc-sheet__close { all: unset; cursor: pointer; width: 32px; height: 32px; display: grid; place-items: center; font-size: 24px; line-height: 1; color: #6b7684; }
-.cc-sheet__body { overflow-y: auto; padding: 4px 16px 8px; display: flex; flex-direction: column; gap: 16px; }
-.cc-sheet__item { display: flex; flex-direction: column; gap: 6px; container-type: inline-size; }
+.cc-sheet__body { overflow-y: auto; overscroll-behavior: contain; padding: 12px 16px 8px; display: flex; flex-direction: column; gap: 0; background: var(--bg); }
+/* 오퍼마다 구분선(배지 줄 + 쿠폰 + 표가 한 묶음임을 보이게, 2026-10-07 사용자) */
+.cc-sheet__item { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 14px 0; container-type: inline-size; }
+.cc-sheet__item + .cc-sheet__item { border-top: 1px solid #dfe3e8; }
 .cc-sheet__item .cc-tkw { width: 100%; }
-.cc-sheet__item .cc-ticket { width: 100%; height: auto; aspect-ratio: 37 / 11; grid-template-columns: 1fr 29.4%; --stub: 29.4%; container-type: inline-size; }
-.cc-sheet__item .cc-amt { font-size: 7.62cqw; color: var(--sale); }
-.cc-sheet__item .cc-min { font-size: 3.96cqw; color: #6b7684; }
-.cc-sheet__item .cc-info { --pb: 12.45cqw; gap: 10px; padding: 0 14px; }
-.cc-sheet__item .cc-stub svg { width: 8.08cqw; height: 8.08cqw; }
-.cc-sheet__item .cc-tbl { margin: 4px 4px 0; }
-/* 시트 안은 카드(.cc) 밖이라 카드 안에서만 걸리던 규칙을 채운다 */
-.cc-sheet .cc-tbl { opacity: 1; transform: none; margin: 2px 4px 0; }
-.cc-sheet .cc-ticket::after { display: none; }
-.cc-sheet .platform-badge { width: var(--pb, 20px); height: var(--pb, 20px); border-radius: calc(var(--pb, 20px) * .28); flex: none; }
-.cc-sheet .cc-tags .chip-tags { position: static; display: flex; gap: 4px; padding: 0; transform: none; }
-.cc-sheet .cc-tags .chip-tags > * { position: static; height: 22px; display: inline-flex; align-items: center; padding: 0 7px; border-radius: 6px; font-size: 12px; font-weight: 600; transform: none; box-shadow: none; }
-.cc-sheet .cc-tags .chip-tags > *::after { content: none; }
-.cc-sheet .offer__status-badge:not(.offer__status-badge--membership) { background: var(--bg); color: #4e5968; }
-.cc-sheet .cc-item-gap, .cc-sheet__item > .cc-deal { margin: 0; }
 /* 시트 안 쿠폰도 목록과 같은 얕은 그림자로 바탕과 구분한다 */
 .cc-sheet .cc-tkw { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .08)) drop-shadow(0 4px 12px rgba(0, 0, 0, .08)); }
-.cc-sheet__body { background: var(--bg); padding-top: 12px; }
-/* 휴대폰에서 시트를 열 때 스크롤을 막으면 주소창 높이가 바뀌어 화면 위쪽이 막 밖으로 드러날 수 있다 — 막을 위로 넉넉히 늘린다 */
-/* 중복 할인 배지 글자: 옅은 주황 바탕 위 주황은 대비 기준 미달 — 진한 주황으로(2026-10-07 Lighthouse) */
-.cc .offer__range-badge--optimal, .cc-sheet .offer__range-badge--optimal { color: #a83a00; }
-.cc-sheet__body { overscroll-behavior: contain; }
-.cc-sheet__grip { cursor: grab; padding: 6px 0; background-clip: content-box; }
-/* 시트 상단 흰 막의 원인: 중복 할인 배지의 윤기(::before, absolute)가 배지가 static이라 시트 전체 기준으로 그려져
-   시트 위쪽 55%를 흰 반투명으로 덮었다(2026-10-07). 배지를 기준점으로 두고, 납작한 배지에는 윤기를 뺀다. */
-.cc-sheet .cc-tags .chip-tags > * { position: relative; }
-.cc .offer__range-badge--optimal::before, .cc-sheet .offer__range-badge--optimal::before { content: none; }
-/* 머리: 이름·배지 각 2px 키우고 간격 2px 더(2026-10-07 사용자) — 로고(72px)보다 조금 작은 묶음 */
-.cc--compact .cc-nm { font-size: max(16px, calc(22px - var(--cut, 0px))); }
-.cc--compact .cc-head { row-gap: 4px; }
-.cc .cc-tags .chip-tags > *, .cc--compact .cc-tags .chip-tags > * { height: 24px; font-size: 14px; }
-.cc .offer__range-badge--optimal::before { content: none; }
-/* 시트: 오퍼마다 구분선(배지 줄 + 쿠폰 + 표가 한 묶음임을 보이게), 채널 배지는 회색 시트 바탕과 구분되게 흰 바탕+테두리(2026-10-07 사용자) */
-.cc-sheet__body { gap: 0; }
-.cc-sheet__item { padding: 14px 0; }
-.cc-sheet__item + .cc-sheet__item { border-top: 1px solid #dfe3e8; }
-.cc-sheet .offer__status-badge:not(.offer__status-badge--membership) { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text-muted); box-shadow: none; } /* 상세 표 줄의 채널 배지와 같은 색 */
-/* 시트: 배지는 쿠폰 안 금액 위 한 줄. 쿠폰은 그만큼 키운다. 채널 배지는 상세 표 줄과 같은 색을 불투명으로 */
-.cc-sheet .cc-ticket { aspect-ratio: 37 / 14; }
-.cc-ticket { cursor: pointer; }
-.cc-ticket__tags { position: absolute; top: 8px; left: 14px; z-index: 1; pointer-events: none; }
-.cc-sheet .cc-tags .chip-tags > * { height: 20px; padding: 0 6px; font-size: 11.5px; }
-.cc-sheet .offer__status-badge:not(.offer__status-badge--membership) { background: #ebedf0; color: var(--text-muted); }
+/* 배지는 쿠폰 왼쪽 위에 걸친다(2026-10-07) */
+.cc-sheet__item > .cc-tags { position: absolute; top: 4px; left: 10px; z-index: 2; }
+.cc-sheet__item > .cc-tkw { margin-top: 6px; }
