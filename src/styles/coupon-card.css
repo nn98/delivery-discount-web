@@ -253,7 +253,7 @@
    남는 공간은 자세히 보기 위에 둔다. 펼친 카드는 높이 고정을 푼다. */
 .brand-grid { container-type: inline-size; }
 /* 한 줄에 카드 하나일 때만(목록 폭 = 카드 폭). PC 여러 열에서 100cqw는 목록 전체 폭이라 카드가 두 배로 커졌다(2026-10-07) — 여러 열은 grid 행이 높이를 맞춘다 */
-@container (max-width: 613px) { .cc--compact:not(.cc--open) { min-height: calc((100cqw - 30px) * 11 / 37 + 214px); grid-template-rows: auto auto auto auto 1fr; } }
+@container (max-width: 613px) { .cc--compact:not(.cc--open) { min-height: calc((100cqw - 30px) * 11 / 37 + 170px); grid-template-rows: auto auto auto auto 1fr; } }
 .cc--compact > .cc-hint { align-self: end; }
 .ce-note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* 포인트 색(--sale)을 몇 곳에만 절제해서(2026-10-06 사용자): 5천원 이상만 스위치 켜짐, 고른 분류 밑줄, 신규 탭 개수 */
@@ -328,7 +328,7 @@
    목록의 모든 카드는 같은 높이(가장 큰 카드 기준, grid 행 1fr) — 모바일 한 열, PC 여러 열 모두. */
 .cc--compact { position: relative; }
 .cc--compact > .cc-hint { position: absolute; right: 0; bottom: 0; margin: 0; }
-.cc--compact { --colw: 100cqw; min-height: calc((var(--colw) - 30px) * 11 / 37 + 214px); }
+.cc--compact { --colw: 100cqw; min-height: calc((var(--colw) - 30px) * 11 / 37 + 170px); }
 @container (min-width: 620px) { .cc--compact { --colw: calc((100cqw - 20px) / 2); } }
 @container (min-width: 940px) { .cc--compact { --colw: calc((100cqw - 40px) / 3); } }
 /* 쿠팡이츠 안내와 서브 오퍼 사이를 좁힌다 */
