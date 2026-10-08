@@ -8,7 +8,7 @@ import { track } from './analytics.js'
 import { brandImpressionProps, observeBrandImpression } from './brandImpression.js'
 import { brandCardId } from './BrandCard.jsx'
 import { amountText, badgesOf, isUpdated, channelOf, conditionTable, shortBrandName, formulaOf, minLabel, nameCutPx, splitOffers } from './couponModel.js'
-import { offerKey } from './filters.js'
+import { isLimitedBanner, offerKey } from './filters.js'
 import { BrandLogo, PlatformBadge } from './logos.jsx'
 import { COUPANGEATS_HINT, offerClickProps, offerLink, openWithNotice } from './offerLink.js'
 import './styles/coupon-card.css'
@@ -70,7 +70,8 @@ function Coupon({ o, brand, position, best, where = 'main', slot, expanded, tags
   return (
     // 감싸개: 쿠폰(마스크로 홈을 판다)은 바깥으로 삐져나온 것을 잘라서, 업데이트 탭은 감싸개에 단다
     <div className="cc-tkw">
-    {isUpdated(o) && <span className="cc-upd">신규 할인</span>}
+    {/* 배달 4사 배너 오퍼는 신규 대신 한정 할인(2026-10-08 사용자) */}
+    {isLimitedBanner(o) ? <span className="cc-upd">한정 할인</span> : isUpdated(o) && <span className="cc-upd">신규 할인</span>}
     {/* 하단 시트: 배지는 쿠폰 위 한 줄(쿠폰은 카드 쿠폰과 같은 모양, 2026-10-07 사용자) */}
     {tags && <span className="cc-ticket__tags">{tags}</span>}
     {/* 쿠폰 어디를 눌러도 앱 링크로(2026-10-07 사용자): 이동 꼭지(a)를 대신 누른다 — 클릭 기록과 쿠팡이츠 안내가 그대로 간다.

@@ -5,7 +5,7 @@ import { apiFile } from '../scripts/api-repo.mjs'
 import {
   applyFilters, bestConfirmedAmount, certaintyOf, comparable, defaultFilters, isBestCandidate, isDefaultFilters,
   displayBestAmount, offerKey, sortBrands, sortingAmount,
-  hasNewBest,
+  hasNewBest, bannerRanks, isLimitedBanner, pinBanners,
 } from './filters.js'
 
 const brand = (name, offers, extra = {}) => ({ name, offers, ...extra })
@@ -212,4 +212,24 @@ test('목록 검색은 대표명 밖에 별칭, 메뉴명, 초성으로도 찾�
   assert.deepEqual(f('비비큐'), ['BBQ'])
   assert.deepEqual(f('BHC'), ['bhc'])
   assert.deepEqual(f('ㅂㅂㅋ'), ['BBQ'])
+})
+
+test('전체에서는 배달 4사 배너 오퍼 브랜드를 배너 우선순위대로 맨 위에 둔다', () => {
+  const o = (platform, fromBanner = false) => ({ platform, amount: 3000, fromBanner })
+  const list = [
+    { name: 'A', offers: [o('baemin')] },
+    { name: 'B', offers: [o('coupangeats', true)] },
+    { name: 'C', offers: [o('own', true)] },
+    { name: 'D', offers: [o('yogiyo', true)] },
+  ]
+  const ranks = bannerRanks([
+    { platform: 'coupangeats', priority: 7, brand: 'B', members: [] },
+    { platform: 'yogiyo', priority: 3, brand: null, members: [{ brand: 'D', priority: 3 }] },
+    { platform: 'own', priority: -1, brand: 'C' },
+  ])
+  const all = defaultFilters()
+  assert.deepEqual(pinBanners(list, ranks, all).map((b) => b.name), ['D', 'B', 'A', 'C'])
+  assert.deepEqual(pinBanners(list, ranks, { ...all, categories: new Set(['chicken']) }).map((b) => b.name), ['A', 'B', 'C', 'D'])
+  assert.deepEqual(pinBanners(list, ranks, { ...all, search: 'b' }).map((b) => b.name), ['A', 'B', 'C', 'D'])
+  assert.equal(isLimitedBanner(o('own', true)), false)
 })

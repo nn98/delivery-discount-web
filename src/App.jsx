@@ -10,7 +10,7 @@ import TopBarA from './TopBarA.jsx'
 import TopBarB from './TopBarB.jsx'
 const FilterSheet = lazy(() => import('./FilterSheet.jsx'))
 import { useBrandAutocomplete } from './useBrandAutocomplete.js'
-import { CATEGORIES, applyFilters, defaultFilters, includesFrom, isDefaultFilters, primarySort, sortSignature, displayBestAmount } from './filters.js'
+import { CATEGORIES, applyFilters, bannerRanks, pinBanners, defaultFilters, includesFrom, isDefaultFilters, primarySort, sortSignature, displayBestAmount } from './filters.js'
 const SurveyDock = lazy(() => import('./SurveyDock.jsx'))
 const HiddenBrandsSheet = lazy(() => import('./HiddenBrandsSheet.jsx'))
 const HideBrandAsk = lazy(() => import('./HideBrandAsk.jsx'))
@@ -443,8 +443,8 @@ export default function App({ initial = null }) {
   }, [])
 
   const visibleBrands = useMemo(
-    () => (brands ? applyHidden(applyFilters(brands, filters), hidden, bestOf) : brands),
-    [brands, filters, hidden, bestOf],
+    () => (brands ? applyHidden(pinBanners(applyFilters(brands, filters), bannerRanks(banners), filters), hidden, bestOf) : brands),
+    [brands, banners, filters, hidden, bestOf],
   )
 
   // 숨겼는데 할인이 그때보다 커져서 다시 보이게 된 브랜드. 화면이 그 사실을 알린다.

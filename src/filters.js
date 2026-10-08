@@ -355,3 +355,36 @@ export function displayBestAmount(offers, include = false) {
   const plain = offers.filter((o) => comparable(o, include) && o.amount != null && !o.soldOut)
   return plain.length === 0 ? null : Math.max(...plain.map((o) => o.amount))
 }
+
+// 배너 오퍼 상단 노출(2026-10-08 사용자). 앱으로 바로 여는 버튼이 있는 배달 4사 배너만 대상이다.
+const BANNER_APPS = new Set(['baemin', 'coupangeats', 'yogiyo', 'ddangyo'])
+
+/** 배달 4사 배너에서 선 오퍼인가. 카드에는 신규 대신 "한정 할인" 탭이 붙는다. */
+export const isLimitedBanner = (offer) => !!offer?.fromBanner && BANNER_APPS.has(offer.platform)
+
+/** /api/banners(묶음은 구성원까지)에서 브랜드 -> 가장 작은 배너 우선순위. */
+export function bannerRanks(banners) {
+  const ranks = new Map()
+  for (const b of banners ?? []) {
+    if (!BANNER_APPS.has(b.platform)) continue
+    for (const m of [b, ...(b.members ?? [])]) {
+      for (const name of [m.brand, ...(m.brands ?? [])]) {
+        if (name && !(ranks.get(name) <= (m.priority ?? b.priority))) ranks.set(name, m.priority ?? b.priority ?? 0)
+      }
+    }
+  }
+  return ranks
+}
+
+/**
+ * "전체"(분류, 신규, 검색 없음)에서는 배달 4사 배너 오퍼가 있는 브랜드를 배너 우선순위대로 맨 위에 둔다.
+ * 고른 정렬은 그 아래 나머지에 그대로 걸린다. 우선순위를 모르면(배너 목록이 아직 없으면) 그 무리 맨 뒤.
+ */
+export function pinBanners(list, ranks, filters) {
+  if (filters.categories.size > 0 || filters.updatedOnly || filters.search.trim() !== '') return list
+  const pinned = list.filter((b) => b.offers.some(isLimitedBanner))
+  if (pinned.length === 0) return list
+  const rank = (b) => ranks?.get(b.name) ?? Number.MAX_SAFE_INTEGER
+  const top = pinned.map((b, i) => ({ b, i })).sort((x, y) => rank(x.b) - rank(y.b) || x.i - y.i).map((x) => x.b)
+  return [...top, ...list.filter((b) => !top.includes(b))]
+}
