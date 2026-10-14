@@ -94,10 +94,11 @@ export default function FirstVisitGuide({ arm, onClose }) {
   const go = (n, action) => { track('first_guide', { action, step: steps[n].key, index: n + 1, total: steps.length, arm }); setI(n) }
   return (
     <div className="fvg" role="dialog" aria-modal="true" aria-label="처음 오셨나요? 화면 안내" tabIndex={-1} ref={(n) => n && !n.contains(document.activeElement) && n.focus({ preventScroll: true })}>
-      <div className="fvg-hole" aria-hidden="true" style={{ top, left, width: right - left, height: bottom - top }} />
+      {/* 자리는 transform으로 옮긴다. top/left로 옮기면 카드를 따라갈 때마다 레이아웃 이동(CLS)으로 잡혔다(2026-10-14). */}
+      <div className="fvg-hole" aria-hidden="true" style={{ transform: `translate(${left}px, ${top}px)`, width: right - left, height: bottom - top }} />
       {rect.marks.map((m) => (
         <div key={m.label} className="fvg-mark" aria-hidden="true"
-             style={{ top: m.top - 3, left: m.left - 3, width: m.width + 6, height: m.height + 6, borderRadius: `calc(${m.radius} + 3px)` }}>
+             style={{ transform: `translate(${m.left - 3}px, ${m.top - 3}px)`, width: m.width + 6, height: m.height + 6, borderRadius: `calc(${m.radius} + 3px)` }}>
           <span className={`fvg-mark__label fvg-mark__label--${m.side}`}>{m.label}</span>
         </div>
       ))}
