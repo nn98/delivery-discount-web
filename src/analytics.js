@@ -13,6 +13,7 @@ import { optedOut } from './privacy.js'
 import { noteExit, noteHidden, takeReturn } from './linkReturn.js'
 import { uiVariant } from './variant.js'
 import { currentHomeArm } from './homeExperiment.js'
+import { inApp, standalone } from './telemetry.js'
 
 const MAX_PENDING_POSTHOG_EVENTS = 100
 
@@ -230,7 +231,8 @@ function sendExit() {
 
 export function startAnalytics() {
   if (optedOut()) return
-  track('page_view')
+  // inApp: 카카오톡 인앱 브라우저, standalone: 홈 화면에 설치해 연 것(2026-10-14)
+  track('page_view', { inApp: inApp(), standalone: !!standalone() })
   // 같은 탭으로 배달앱에 갔다가 새로 열린 경우(linkReturn.js)
   const reopened = takeReturn(Date.now(), undefined, { reloaded: true })
   if (reopened) track('app_return', reopened)
