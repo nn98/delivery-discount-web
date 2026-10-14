@@ -8,6 +8,8 @@ import BrandSuggestions from './BrandSuggestions.jsx'
 import { PLATFORMS } from './logos.jsx'
 import TopBarA from './TopBarA.jsx'
 import TopBarB from './TopBarB.jsx'
+import PopularStrip, { RankChange } from './PopularStrip.jsx'
+import { ranks } from './popularStrip.js'
 const FilterSheet = lazy(() => import('./FilterSheet.jsx'))
 import { useBrandAutocomplete } from './useBrandAutocomplete.js'
 import { CATEGORIES, applyFilters, defaultFilters, includesFrom, isDefaultFilters, primarySort, sortSignature, displayBestAmount, minAmountLabel, readMinAmount, saveMinAmount } from './filters.js'
@@ -674,6 +676,14 @@ export default function App({ initial = null }) {
         </div>
       )}
 
+      {/* 오늘 인기 띠(2026-10-14 시안). 누르면 그 카드로 간다(링크로 들어온 브랜드와 같은 길) */}
+      {visibleBrands && (
+        <PopularStrip
+          brands={visibleBrands}
+          onPick={(name) => { setLinkedBrand(null); requestAnimationFrame(() => setLinkedBrand(brandCardId(name))) }}
+        />
+      )}
+
       {/* 신규를 고르면 정렬 줄 아래 한 줄 안내(2026-10-05 사용자 문구) */}
 
       {asking && (
@@ -710,7 +720,7 @@ export default function App({ initial = null }) {
 
       {error && (
         <div className="load-error" role="alert">
-          <p className="load-error__title">할인 정보를 불러오지 못했습니다.</p>
+          <p className="load-error__title">할인 정보를 못 불러옴</p>
           <p className="load-error__detail">{error}</p>
           <button
             type="button"
@@ -732,7 +742,7 @@ export default function App({ initial = null }) {
         <div className="msg">
           {search.trim() ? (
             <>
-              <p>&quot;{search}&quot;와 이름이 겹치는 브랜드가 없습니다.</p>
+              <p>&quot;{search}&quot; 검색 결과 없음</p>
               {filters.platforms.size < PLATFORMS.length && (
                 <p>
                   지금 {filters.platforms.size}개 앱만 켜져 있습니다.
@@ -750,7 +760,7 @@ export default function App({ initial = null }) {
               </button>
             </>
           ) : (
-            <p>이 분류엔 브랜드가 없습니다.</p>
+            <p>브랜드 없음</p>
           )}
         </div>
       )}
@@ -787,13 +797,31 @@ export default function App({ initial = null }) {
               }}
             /></Suspense>
           )}
-          {visibleBrands.slice(0, shown).map((b, index) => {
-            const props = { leaving: leaving === b.name, onHide, include, brand: b, position: index + 1,
-              highlighted: linkedBrand === brandCardId(b.name), onInteract: clearLinked }
-            return homeA
-              ? <CouponCard key={b.name} {...props} photo={homePhoto} compact={homeCompact} />
-              : <BrandCard key={b.name} {...props} />
-          })}
+          {(() => {
+            // 인기순(2026-10-14 시안): 카드 위에 순위와 등락. 오늘은 그 전 24시간과 견주고, 이번 주는 순위만.
+            const popKey = primarySort(filters).key
+            const rankNow = popKey.startsWith('popularity') ? ranks(visibleBrands, popKey) : null
+            const rankBefore = popKey === 'popularityToday' ? ranks(visibleBrands, 'popularityYesterday') : null
+            return visibleBrands.slice(0, shown).map((b, index) => {
+              const props = { leaving: leaving === b.name, onHide, include, brand: b, position: index + 1,
+                highlighted: linkedBrand === brandCardId(b.name), onInteract: clearLinked }
+              const card = homeA
+                ? <CouponCard key={b.name} {...props} photo={homePhoto} compact={homeCompact} />
+                : <BrandCard key={b.name} {...props} />
+              const rank = rankNow?.get(b.name)
+              if (!rank) return card
+              const prev = rankBefore?.get(b.name)
+              return (
+                <div key={b.name} className="card-rank">
+                  <div className="card-rank__row">
+                    <span className="card-rank__num">{rank}</span>
+                    {rankBefore && <RankChange change={prev == null ? null : prev - rank} />}
+                  </div>
+                  {card}
+                </div>
+              )
+            })
+          })()}
         </div>
       )}
       {/* 목록 끝 표지. 화면 아래 1,500px 안에 들어오면 카드를 한 묶음 더 그린다. */}
