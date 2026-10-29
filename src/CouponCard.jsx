@@ -12,9 +12,6 @@ import { isBundle, offerKey } from './filters.js'
 import { BrandLogo, PlatformBadge } from './logos.jsx'
 import { COUPANGEATS_HINT, offerClickProps, offerLink, openWithNotice } from './offerLink.js'
 import BestHistoryChart from './BestHistoryChart.jsx'
-import OfferShareButton from './OfferShareButton.jsx'
-import { sharedOfferKey } from './offerSharing.js'
-import { useShareTargetFocus } from './useShareTargetFocus.js'
 // coupon-card.css는 여기서 싣지 않는다. :root 배경 같은 전역 규칙이 있어 운영 카드 쪽에 섞이면 안 된다.
 // 쿠폰 쪽일 때만 App이 따로 받고, 서버 렌더는 <head>에 링크를 단다(api/ssr.js).
 
@@ -81,16 +78,16 @@ function Coupon({ o, brand, position, best, where = 'main', slot, expanded, tags
     {where === 'sheet' && isUpdated(o) && <span className="cc-upd">신규 할인</span>}
     {/* 하단 시트: 배지는 쿠폰 위 한 줄(쿠폰은 카드 쿠폰과 같은 모양, 2026-10-07 사용자) */}
     {tags && <span className="cc-ticket__tags">{tags}</span>}
-    {/* 앱 이동은 오른쪽 검은색 링크 영역에서만 수행한다. */}
+    {/* 쿠폰 어디를 눌러도 앱 링크로(2026-10-07 사용자): 이동 꼭지(a)를 대신 누른다 — 클릭 기록과 쿠팡이츠 안내가 그대로 간다.
+        카드의 나머지 영역은 하단 시트를 연다(onCardClick). */}
     <div className="cc-ticket" data-platform={o.platform} {...rest}
-         onClick={(e) => e.stopPropagation()}>
+         onClick={(e) => { if (e.target.closest('a')) return; e.stopPropagation(); e.currentTarget.querySelector('a.cc-stub')?.click() }}>
       {/* tags: 하단 시트에서는 배지를 쿠폰 안 위쪽에 따로 둔다. 금액·최소주문은 세로 가운데 그대로 */}
       <span className="cc-info">
         <PlatformBadge platformKey={o.platform} brand={brand.name} />
         <span className="cc-num"><Amt offer={o} /><Min value={o.minOrderAmount} /></span>
       </span>
       <OfferLinkA offer={o} brand={brand} position={position} best={best} where={where} slot={slot} expanded={expanded} className="cc-stub"><LinkIcon /></OfferLinkA>
-      <OfferShareButton offer={o} brandName={brand.name} position={position} where={where} className="ticket-share" />
     </div>
     {/* 쿠팡이츠 안내: 카드에서는 이동 전 토스트로 대신하고, 하단 시트에서만 쿠폰 아래 문구를 둔다(2026-10-07 사용자) */}
     {where === 'sheet' && o.platform === 'coupangeats' && <p className="ce-note">{COUPANGEATS_HINT}</p>}
@@ -269,8 +266,7 @@ function Ticket({ brand, best, hasBest, position, idx, setIdx }) {
 // phase: false(접힘, DOM에 없음) → 'enter'(내용을 0fr로 먼저 DOM에 넣음) → 'open'(두 프레임 뒤 1fr) → 'leave'(0fr로 닫는 중) → false.
 const OPEN_MS = 280
 const LEAVE_MS = 220
-function CouponCard({ brand, position, rank, highlighted, onInteract, include = null, onHide, leaving = false, photo = false, compact = false, sharedKey, onShareTargetVisible }) {
-
+function CouponCard({ brand, position, highlighted, onInteract, include = null, onHide, leaving = false, photo = false, compact = false }) {
   const { best, rest, hasBest, bundles } = useMemo(() => splitOffers(brand.offers, include), [brand.offers, include?.random, include?.menu])
   const [phase, setPhase] = useState(false)
   const [cur, setCur] = useState(0) // 캐러셀에서 보이는 쿠폰. 브랜드명 옆 배지가 이걸 따른다
@@ -295,13 +291,6 @@ function CouponCard({ brand, position, rank, highlighted, onInteract, include = 
   // 넘었으면 닫고, 아니면 제자리로. 손가락은 터치 이벤트로 받는다 — 포인터 이벤트는 브라우저가 스크롤로 가져가며
   // 중간에 취소돼 시트가 저절로 돌아갔다.
   const sheetRef = useRef(null)
-  const previousSharedKey = useRef(null)
-  useEffect(() => {
-    if (sharedKey) setSheet(true)
-    else if (previousSharedKey.current) setSheet(false)
-    previousSharedKey.current = sharedKey
-  }, [sharedKey, onShareTargetVisible])
-  useShareTargetFocus(sheetRef, sharedKey, sheet, onShareTargetVisible)
   const sdrag = useRef(null)
   const settleSheet = (dy, fast) => {
     const el = sheetRef.current
@@ -369,11 +358,8 @@ function CouponCard({ brand, position, rank, highlighted, onInteract, include = 
   }, [sheet])
   // 딥링크(#brand-이름)로 들어오면 펼친 채로 그 카드로 스크롤한다(운영 카드와 같다).
   useEffect(() => {
-    if (highlighted) {
-      setPhase('enter')
-      if (!sharedKey) cardRef.current?.scrollIntoView({ block: 'center' })
-    }
-  }, [highlighted, sharedKey])
+    if (highlighted) { setPhase('enter'); cardRef.current?.scrollIntoView({ block: 'center' }) }
+  }, [highlighted])
   // 보이지 않는 영역에 먼저 배치(0fr)한 뒤 두 프레임 뒤에 1fr로 바꿔 커지는 도중 레이아웃이 튀지 않게 한다.
   useEffect(() => {
     if (phase !== 'enter') return undefined
@@ -412,10 +398,8 @@ function CouponCard({ brand, position, rank, highlighted, onInteract, include = 
   return (
     <article id={brandCardId(brand.name)} ref={cardRef} data-brand={brand.name} onClick={onCardClick}
              className={`cc${open ? ' cc--open' : ''}${settled ? ' cc--settled' : ''}${highlighted ? ' cc--highlighted' : ''}${leaving ? ' cc--leaving' : ''}${photo ? ' cc--photo' : ''}${compact ? ' cc--compact' : ''}${bundles.length > 0 && !canExpand && rest.length === 0 ? ' cc--bare' : ''}${stack ? ' cc--stack' : ''}`}>
-      {/* 왼쪽 위 리본: 인기 순번, 아니면 신규 오퍼가 있을 때 NEW!(2026-10-18 사용자). 둘 다면 순번 */}
-      {rank != null
-        ? <span className="cc-rank" aria-label={`인기 ${rank}위`}>{rank}</span>
-        : brand.offers.some(isUpdated) && <span className="cc-rank cc-rank--new" aria-label="신규 할인">NEW!</span>}
+      {/* 왼쪽 위 리본: 신규 오퍼가 있을 때 NEW!. 인기 순번은 2026-10-29에 지웠다(#201) */}
+      {brand.offers.some(isUpdated) && <span className="cc-rank cc-rank--new" aria-label="신규 할인">NEW!</span>}
       <BrandLogo name={brand.name} size={64} />
       {/* 로고 오른쪽 고정 크기 블록(높이 = 로고): 1줄 이름+배지, 2줄 설명/계산식. 비어도 자리 유지 */}
       <div className="cc-head" ref={headRef}>
@@ -507,16 +491,13 @@ function CouponCard({ brand, position, rank, highlighted, onInteract, include = 
             </div>
             <SheetTabs bodyRef={sheetBodyRef} histRef={sheetHistRef} brand={brand.name} />
             <div className="cc-sheet__body" ref={sheetBodyRef}>
-              {[...bundles, ...best, ...rest].map((o, i) => {
-
+              {[...best, ...rest].map((o, i) => {
                 // 중복 할인 계산식은 시트에서 뺐다(2026-10-07 사용자: 표 첫 줄에 이미 계산이 보인다)
                 const tb = conditionTable(o)
                 const hasTbl = tb.rows.length > 0 || tb.note
                 return (
-                  <div key={offerKey(o)} className={`cc-sheet__item${sharedKey === sharedOfferKey(o) ? ' shared-offer-target' : ''}`}
-                    tabIndex={-1} data-offer-key={sharedOfferKey(o)}>
-                    <Coupon o={o} brand={brand} position={position} best={best.includes(o)} where="sheet" slot={i + 1} expanded tags={<Tags o={o} detail />} />
-
+                  <div key={offerKey(o)} className="cc-sheet__item">
+                    <Coupon o={o} brand={brand} position={position} best={i < best.length} where="sheet" slot={i + 1} expanded tags={<Tags o={o} detail />} />
                     {hasTbl && <DetailTable t={tb} i={0} />}
                   </div>
                 )
