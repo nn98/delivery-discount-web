@@ -18,6 +18,7 @@ const HideBrandAsk = lazy(() => import('./HideBrandAsk.jsx'))
 // 정적으로 싣는다. lazy면 카드마다 하이드레이션 경계가 생겨, 조각을 받는 동안 급한 갱신이 닿으면 React가
 // 서버 화면을 버리고 다시 그렸다(React #421 x 카드 수, TBT 2.3초, 2026-10-14). 15KB.
 import CouponCard from './CouponCard.jsx'
+import { nextReaction, reactionOf, readReactions, setReaction } from './brandReactions.js'
 import { applyHidden, hideBrand, readHidden, revivedNames, setRule, showBrand } from './hiddenBrands.js'
 import { captureRects, playShift, readCards } from './cardShift.js'
 
@@ -29,7 +30,6 @@ const SHIFT_PAUSE_MS = 400
 // 설문 카드는 누른 뒤에만 열린다 — 첫 화면 묶음에서 뺀다(2026-10-06 성능).
 const SurveyCard = lazy(() => import('./SurveyCard.jsx'))
 import { useSurvey } from './useSurvey.js'
-import { useScrollMore } from './MenuBar.jsx'
 import { getAnalyticsContext } from './analytics-context.js'
 import { shouldShowGuide } from './firstVisitGuide.js'
 import PushNotificationSetting from './PushNotificationSetting.jsx'
@@ -122,7 +122,6 @@ export default function App({ initial = null }) {
   const [sheetOpen, setSheetOpen] = useState(false)
   useBackClose(sheetOpen, () => setSheetOpen(false))
   // 정렬 줄은 터치로 넘기고, 마우스로도 끌어 넘긴다. 끈 뒤의 클릭은 고르기로 치지 않는다(2026-11-04 사용자)
-  const [sortRef, sortMore] = useScrollMore()
   const dragScroll = useMemo(() => {
     let x0 = 0, left0 = 0, moved = false, el = null
     return {
@@ -391,6 +390,17 @@ export default function App({ initial = null }) {
   // startTransition: 하이드레이션이 덜 끝난 Suspense(필터 시트 등)에 급한 갱신이 닿으면
   // React가 그 경계를 버리고 다시 그린다(#421). 브라우저 값 반영은 급하지 않다.
   useEffect(() => { startTransition(() => setHidden(readHidden())) }, [])
+  // 좋아요/싫어요(brandReactions.js). 첫 렌더는 빈 값(서버 렌더와 같게), 마운트 뒤 채운다.
+  const [reactions, setReactions] = useState({})
+  const reactionsRef = useRef(reactions)
+  reactionsRef.current = reactions
+  useEffect(() => { startTransition(() => setReactions(readReactions())) }, [])
+  const onReact = useCallback((brand, pressed, position) => {
+    const prev = reactionOf(reactionsRef.current, brand)
+    const reaction = nextReaction(prev, pressed)
+    setReactions(setReaction(reactionsRef.current, brand, reaction))
+    track('brand_reaction', { brand: brand.name, reaction, prev, position: String(position) })
+  }, [])
   const [hiddenOpen, setHiddenOpen] = useState(false)
   const hiddenToggleRef = useRef(null)
   const primarySortRef = useRef(null)
@@ -595,11 +605,7 @@ export default function App({ initial = null }) {
           상태(filters)를 공유하므로 어느 쪽에서 바꿔도 같다. */}
       {brands && (
         <div className="quick-bar">
-        {/* 분류 바와 같은 양끝 페이드·화살표(useScrollMore, 2026-11-04 사용자) */}
-        <div className="quick-bar__sortwrap">
-        <span className={`menu-bar__more menu-bar__more--left quick-bar__more${sortMore.left ? ' menu-bar__more--on' : ''}`} aria-hidden="true">‹</span>
-        <span className={`menu-bar__more menu-bar__more--right quick-bar__more${sortMore.right ? ' menu-bar__more--on' : ''}`} aria-hidden="true">›</span>
-        <div className="quick-bar__sorts" role="group" aria-label="정렬" ref={sortRef} {...dragScroll}>
+        <div className="quick-bar__sorts" role="group" aria-label="정렬" {...dragScroll}>
           {/* 2026-11-04 사용자: 넷을 가로 캐러셀로(배경 없이 굵은 회색 글씨, 고른 것은 강조색). 인기순·최신순은 방향이 고정이다 */}
           {[['amount', 'desc', '할인금액 높은순'], ['minOrder', 'asc', '최소주문금액 낮은순'], ['popularity', 'desc', '인기순'], ['recent', 'desc', '최신순']].map(([key, dir, label]) => {
             const first = primarySort(filters)
@@ -622,17 +628,6 @@ export default function App({ initial = null }) {
               </button>
             )
           })}
-        </div>
-        </div>
-        <div className="quick-bar__tools">
-            <button type="button" className={`icon-btn${isFiltered ? ' icon-btn--active' : ''}`} disabled={!isFiltered}
-              onClick={resetFilters} aria-label="필터 초기화" title={isFiltered ? '필터 초기화' : '되돌릴 필터가 없습니다'}>
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7" /><polyline points="21 3 21 9 15 9" /></svg>
-            </button>
-            <button type="button" className={`icon-btn${sheetOpen ? ' icon-btn--on' : isFiltered ? ' icon-btn--active' : ''}`}
-              aria-expanded={sheetOpen} aria-label="필터 열기" title="필터" onClick={() => { setSheetOpen(true); track('filter_sheet_open') }}>
-              {/* 필터: flowbite filter-outline(MIT, 2026-11-04 사용자 선택) */}<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2"><path d="M18.796 4H5.204a1 1 0 0 0-.753 1.659l5.302 6.058a1 1 0 0 1 .247.659v4.874a.5.5 0 0 0 .2.4l3 2.25a.5.5 0 0 0 .8-.4v-7.124a1 1 0 0 1 .247-.659l5.302-6.059c.566-.646.106-1.658-.753-1.658Z" /></svg>
-            </button>
         </div>
         <div className="quick-bar__actions">
         {/* N천원 이상만은 메인에서 뺐다. 필터 시트에서만 켜고 끈다(2026-11-04 사용자) */}
@@ -759,7 +754,7 @@ export default function App({ initial = null }) {
             /></Suspense>
           )}
           {visibleBrands.slice(0, shown).map((b, index) => {
-            const props = { leaving: leaving === b.name, onHide, include, brand: b, position: index + 1,
+            const props = { leaving: leaving === b.name, onHide, onReact, reaction: reactionOf(reactions, b), include, brand: b, position: index + 1,
               highlighted: linkedBrand === brandCardId(b.name) || shared?.brand.name === b.name, onInteract: clearLinked,
               sharedKey: shared?.brand.name === b.name ? shared.key : null, onShareTargetVisible }
             const card = <CouponCard key={b.name} {...props} photo={homePhoto} compact={homeCompact} />
