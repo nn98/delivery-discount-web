@@ -11,7 +11,8 @@ import PopularDock from './PopularDock.jsx'
 const FilterSheet = lazy(() => import('./FilterSheet.jsx'))
 const FirstVisitGuide = lazy(() => import('./FirstVisitGuide.jsx'))
 import { useBrandAutocomplete } from './useBrandAutocomplete.js'
-import { CATEGORIES, applyFilters, pinKinds, defaultFilters, includesFrom, isDefaultFilters, primarySort, revealFilters, sortSignature, displayBestAmount, minAmountLabel, readMinAmount, saveMinAmount } from './filters.js'
+import { CATEGORIES, applyFilters, pinPopular, pinKinds, defaultFilters, includesFrom, isDefaultFilters, primarySort, sortSignature, displayBestAmount, minAmountLabel, readMinAmount, saveMinAmount } from './filters.js'
+import { cardRanks } from './popularStrip.js'
 const SurveyDock = lazy(() => import('./SurveyDock.jsx'))
 const HiddenBrandsSheet = lazy(() => import('./HiddenBrandsSheet.jsx'))
 const HideBrandAsk = lazy(() => import('./HideBrandAsk.jsx'))
@@ -29,7 +30,7 @@ const SHIFT_PAUSE_MS = 400
 // 설문 카드는 누른 뒤에만 열린다 — 첫 화면 묶음에서 뺀다(2026-10-06 성능).
 const SurveyCard = lazy(() => import('./SurveyCard.jsx'))
 import { useSurvey } from './useSurvey.js'
-import { useScrollMore } from './MenuBar.jsx'
+import { canPreviewSurvey } from './pmfSurvey.js'
 import { getAnalyticsContext } from './analytics-context.js'
 import { shouldShowGuide } from './firstVisitGuide.js'
 import PushNotificationSetting from './PushNotificationSetting.jsx'
@@ -121,20 +122,6 @@ export default function App({ initial = null }) {
   // 통째로 돌려주므로 "적용" 한 번에 setFilters 한 번이다.
   const [sheetOpen, setSheetOpen] = useState(false)
   useBackClose(sheetOpen, () => setSheetOpen(false))
-  // 정렬 줄은 터치로 넘기고, 마우스로도 끌어 넘긴다. 끈 뒤의 클릭은 고르기로 치지 않는다(2026-11-04 사용자)
-  const [sortRef, sortMore] = useScrollMore()
-  const dragScroll = useMemo(() => {
-    let x0 = 0, left0 = 0, moved = false, el = null
-    return {
-      onPointerDown: (e) => { if (e.pointerType !== 'mouse') return; el = e.currentTarget; x0 = e.clientX; left0 = el.scrollLeft; moved = false },
-      onPointerMove: (e) => { if (!el) return; const dx = e.clientX - x0; if (Math.abs(dx) > 4) moved = true; el.scrollLeft = left0 - dx },
-      onPointerUp: () => { el = null },
-      onPointerLeave: () => { el = null },
-      onClickCapture: (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false } },
-    }
-  }, [])
-  // 분류(또는 신규)를 고른 화면은 메인 위에 덮인 화면으로 본다: 뒤로 = 전체로(2026-11-04 사용자: 뒤로 누르면 사이트가 꺼졌다)
-  useBackClose(filters.categories.size > 0 || filters.updatedOnly, () => setFilters((f) => ({ ...f, categories: new Set(), updatedOnly: false })))
   const applyFromSheet = (draft) => {
     setFilters(draft)
     saveMinAmount(draft.minAmount)
@@ -309,18 +296,8 @@ export default function App({ initial = null }) {
   // 것이 하나도 없는데 이름만 남기면 빈 카드가 격자를 채운다.
   // 입력 중인 문자열이 아니라 사용자가 확정한 검색만 센다. 검색 개선(메뉴명, 미등록 브랜드 파악)을 위해
   // 확정한 검색어(40자까지)와 앞쪽 결과 브랜드 5개를 남긴다(2026-10-08 사용자). 하단 안내 문구에 적혀 있다.
-  // 인기 순위에서 브랜드를 고르면 그 카드로 간다(같은 이름을 다시 골라도 다시 가게 한 번 비운다).
-  // 분류나 검색 때문에 카드가 목록에 없으면 그 조건을 상태에서 실제로 지운 뒤 간다(#219, submitSearch와 같은 방향).
-  const pickPopular = (name) => {
-    const target = revealFilters(filters, name,
-      (f) => applyHidden(applyFilters(brands, f), hidden, bestOf).map((b) => b.name))
-    // ponytail: 어떻게 해도 안 서면(순위를 그린 뒤 목록이 바뀜) 지금은 아무 일도 안 한다. 안내 문구가 정해지면 띄운다(#219 열린 질문 3).
-    if (!target) return
-    // 실시간 순위에서 브랜드로 가면 분류는 늘 푼다(2026-11-04 사용자: 분류가 걸려 있으면 순위에서 바로 못 넘어간다)
-    setFilters({ ...target.filters, categories: new Set() })
-    setLinkedBrand(null)
-    requestAnimationFrame(() => setLinkedBrand(brandCardId(name)))
-  }
+  // 인기 순위에서 브랜드를 고르면 그 카드로 간다(같은 이름을 다시 골라도 다시 가게 한 번 비운다)
+  const pickPopular = (name) => { setLinkedBrand(null); requestAnimationFrame(() => setLinkedBrand(brandCardId(name))) }
   const submitSearch = (raw, submitMethod) => {
     const query = raw.trim()
     // 검색을 확정하면 켜둔 분류를 푼다.
@@ -444,20 +421,25 @@ export default function App({ initial = null }) {
   }, [])
 
   // 순위 기준 목록: 카테고리와 검색을 뺀다. 실시간 순위는 무엇을 보든 찾든 같다(#147).
-  // 여기서 떼는 조건과 pickPopular(revealFilters)가 푸는 조건이 같아야 순위의 브랜드가 늘 카드로 선다(#219).
   const rankBrands = useMemo(
     () => (brands ? applyHidden(applyFilters(brands, { ...filters, categories: new Set(), search: '' }), hidden, bestOf) : brands),
     [brands, filters, hidden, bestOf],
 
   )
-  // 맨 위로 올라온 이유(신규 앞)를 브랜드에 `pin`으로 붙인다. 카드가 노출과 클릭 이벤트에 싣는다(2026-10-27).
+  // 맨 위로 올라온 이유(HOT 고정, 신규 앞)를 브랜드에 `pin`으로 붙인다. 카드가 노출과 클릭 이벤트에 싣는다(2026-10-27).
   const visibleBrands = useMemo(() => {
     if (!brands) return brands
-    const ordered = applyHidden(applyFilters(brands, filters), hidden, bestOf)
-    const kinds = pinKinds(ordered, filters)
+    const ordered = pinPopular(applyHidden(applyFilters(brands, filters), hidden, bestOf), filters, rankBrands)
+    const kinds = pinKinds(ordered, filters, rankBrands)
     const visible = ordered.map((b) => ({ ...b, pin: kinds.get(b.name) ?? 'none' }))
     return shared ? [shared.brand, ...visible.filter((b) => b.name !== shared.brand.name)] : visible
-  }, [brands, filters, hidden, bestOf, shared?.brand])
+  }, [brands, filters, hidden, bestOf, rankBrands, shared?.brand])
+
+  // 카드 왼쪽 위 순번. 도크와 같은 rankBrands 표를 읽어 순위가 맞는다(popularStrip.js cardRanks).
+  const popRanks = useMemo(
+    () => cardRanks(rankBrands, visibleBrands, primarySort(filters).key === 'popularity'),
+    [rankBrands, visibleBrands, filters],
+  )
 
   // 숨겼는데 할인이 그때보다 커져서 다시 보이게 된 브랜드. 화면이 그 사실을 알린다.
   const revived = useMemo(
@@ -588,6 +570,9 @@ export default function App({ initial = null }) {
       {/* 2026-10-05 사용자: 운영 카드 쪽도 하단 도크로 */}
       {/* 2026-10-15 사용자: 하단 도크는 배너 대신 오늘 인기. 배너(한정 오퍼)는 목록 3번째 카드 뒤에 선다 */}
       <PushNotificationSetting toggleSlot={pushToggleSlot} />
+      {canPreviewSurvey(import.meta.env) && !(survey.isCardOpen || survey.confirmClose) && (
+        <button type="button" className="pmf-preview-toggle" onClick={survey.previewSurvey}>설문 안내 띄우기</button>
+      )}
     <main>
       {/* 빠른 필터. 시트를 열지 않고 자주 쓰는 정렬 둘만 배너와 카드 사이에 둔다: 할인금액
           높은순, 최소주문 낮은순. 랜덤쿠폰 토글은 2026-09-21에 여기서 뺐다(사용자) — 뽑기
@@ -595,13 +580,8 @@ export default function App({ initial = null }) {
           상태(filters)를 공유하므로 어느 쪽에서 바꿔도 같다. */}
       {brands && (
         <div className="quick-bar">
-        {/* 분류 바와 같은 양끝 페이드·화살표(useScrollMore, 2026-11-04 사용자) */}
-        <div className="quick-bar__sortwrap">
-        <span className={`menu-bar__more menu-bar__more--left quick-bar__more${sortMore.left ? ' menu-bar__more--on' : ''}`} aria-hidden="true">‹</span>
-        <span className={`menu-bar__more menu-bar__more--right quick-bar__more${sortMore.right ? ' menu-bar__more--on' : ''}`} aria-hidden="true">›</span>
-        <div className="quick-bar__sorts" role="group" aria-label="정렬" ref={sortRef} {...dragScroll}>
-          {/* 2026-11-04 사용자: 넷을 가로 캐러셀로(배경 없이 굵은 회색 글씨, 고른 것은 강조색). 인기순·최신순은 방향이 고정이다 */}
-          {[['amount', 'desc', '할인금액 높은순'], ['minOrder', 'asc', '최소주문금액 낮은순'], ['popularity', 'desc', '인기순'], ['recent', 'desc', '최신순']].map(([key, dir, label]) => {
+        <div className="quick-bar__sorts" role="group" aria-label="정렬">
+          {[['amount', 'desc', '할인금액 높은순'], ['minOrder', 'asc', '최소주문 낮은순']].map(([key, dir, label]) => {
             const first = primarySort(filters)
             const on = first.key === key && first.dir === dir
             return (
@@ -623,19 +603,22 @@ export default function App({ initial = null }) {
             )
           })}
         </div>
-        </div>
-        <div className="quick-bar__tools">
-            <button type="button" className={`icon-btn${isFiltered ? ' icon-btn--active' : ''}`} disabled={!isFiltered}
-              onClick={resetFilters} aria-label="필터 초기화" title={isFiltered ? '필터 초기화' : '되돌릴 필터가 없습니다'}>
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7" /><polyline points="21 3 21 9 15 9" /></svg>
-            </button>
-            <button type="button" className={`icon-btn${sheetOpen ? ' icon-btn--on' : isFiltered ? ' icon-btn--active' : ''}`}
-              aria-expanded={sheetOpen} aria-label="필터 열기" title="필터" onClick={() => { setSheetOpen(true); track('filter_sheet_open') }}>
-              {/* 필터: flowbite filter-outline(MIT, 2026-11-04 사용자 선택) */}<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2"><path d="M18.796 4H5.204a1 1 0 0 0-.753 1.659l5.302 6.058a1 1 0 0 1 .247.659v4.874a.5.5 0 0 0 .2.4l3 2.25a.5.5 0 0 0 .8-.4v-7.124a1 1 0 0 1 .247-.659l5.302-6.059c.566-.646.106-1.658-.753-1.658Z" /></svg>
-            </button>
-        </div>
         <div className="quick-bar__actions">
-        {/* N천원 이상만은 메인에서 뺐다. 필터 시트에서만 켜고 끈다(2026-11-04 사용자) */}
+        {/* N천원 이상만: 시트의 같은 칸과 한 상태, 기본은 켜짐.
+            2026-10-13 사용자: 금액은 시트에서 고르고 적용해야 바뀐다. */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={filters.minAmount5k}
+          className="quick-bar__switch"
+          onClick={() => {
+            setFilters((f) => ({ ...f, minAmount5k: !f.minAmount5k }))
+            track('quick_filter', { key: 'min5k', on: !filters.minAmount5k, amount: filters.minAmount })
+          }}
+        >
+          <span>{minAmountLabel(filters.minAmount)} 이상만</span>
+          <span className="quick-bar__switch-track" aria-hidden="true" />
+        </button>
         {/* 숨긴 목록은 정렬과 다른 일이라 오른쪽에 따로 선다. 떠 있는 알약으로 두었더니
             하단 배너와 겹쳤다(2026-09-24 사용자). 숨긴 것이 없으면 안 그린다. */}
         {Object.keys(hidden).length > 0 && (
@@ -749,17 +732,8 @@ export default function App({ initial = null }) {
         // fade-in 애니메이션이 다시 걸려 "갈아치웠다"가 아니라 "다음
         // 목록이 떠올랐다"로 읽힌다.
         <div className={gridKey === stillKey ? 'brand-grid brand-grid--still' : 'brand-grid'} key={gridKey} ref={gridRef}>
-          {/* 설문 카드는 기존 목록 첫 칸에 둔다. 발급 코드는 목록 밖 Hook이 보관한다. */}
-          {survey.isVisible && survey.isCardOpen && (
-            <Suspense fallback={null}><SurveyCard
-              visitorId={getAnalyticsContext().visitorId}
-              code={survey.code}
-              onCode={survey.receiveCode}
-              onClose={survey.closeCard}
-            /></Suspense>
-          )}
           {visibleBrands.slice(0, shown).map((b, index) => {
-            const props = { leaving: leaving === b.name, onHide, include, brand: b, position: index + 1,
+            const props = { leaving: leaving === b.name, onHide, include, brand: b, position: index + 1, rank: popRanks?.get(b.name),
               highlighted: linkedBrand === brandCardId(b.name) || shared?.brand.name === b.name, onInteract: clearLinked,
               sharedKey: shared?.brand.name === b.name ? shared.key : null, onShareTargetVisible }
             const card = <CouponCard key={b.name} {...props} photo={homePhoto} compact={homeCompact} />
@@ -788,11 +762,14 @@ export default function App({ initial = null }) {
 
       {survey.isVisible && (
         <Suspense fallback={null}>
-        <SurveyDock open={survey.isCardOpen} answered={Boolean(survey.code)}
+        <SurveyDock open={survey.isCardOpen || survey.confirmClose}
                     onOpen={survey.openCard}
-                    onDismiss={survey.dismissDock} />
+                    onDismiss={() => survey.requestClose('dock')} preview={survey.isPreview} />
         </Suspense>
       )}
+
+      {(survey.isCardOpen || survey.confirmClose) && <Suspense fallback={null}><SurveyCard survey={survey} /></Suspense>}
+      {survey.complete && <div role="status" className={`pmf-toast${survey.completeClosing ? ' pmf-toast--leaving' : ''}`}><button type="button" onClick={survey.clearComplete}><span>소중한 의견 감사합니다!</span></button></div>}
 
       <SiteFooter />
 
